@@ -9,9 +9,14 @@
 !====================================================================
 
 program MonteCarlo
-    implicit none
+
+
+    !use lib
+    !use interactions
+    !implicit none
 
     ! Variabelen
+    double precision, parameter :: PI = 4.D0 * DATAN(1.D0)
     integer :: i, j
     integer :: LJ_steps, Ga_steps ! Aantal stappen per loop
 
@@ -27,7 +32,7 @@ program MonteCarlo
 
     ! Initiële berekening interacties
 
-
+    write (*,*) PI
     ! Loop 1: LJ
     loop_LJ: do i=1,LJ_steps
         ! Doe MC
