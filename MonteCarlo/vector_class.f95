@@ -124,4 +124,28 @@ module vector_class
         w = w * a
     end function setlength
 
+    ! bereken afstand tussen 2 vectoren
+    function getDist(a, b) result(r)
+        TYPE (vector), INTENT(in) :: a, b
+        double precision :: r
+        r = length(b-a)
+    end function getDist
+
+    ! Geef een aray voor matrix multiplication
+    function getArray(v) result(a)
+        TYPE (vector), INTENT(in) :: v
+        double precision, dimension(3) :: a
+        a(1) = v%x
+        a(2) = v%y
+        a(3) = v%z
+    end function getArray
+
+    function fromArray(a) result(v)
+        double precision, dimension(3), INTENT(in) :: a
+        TYPE (vector) :: v
+        v%x = a(1)
+        v%y = a(2)
+        v%z = a(3)
+    end function fromArray
+
 end module vector_class
