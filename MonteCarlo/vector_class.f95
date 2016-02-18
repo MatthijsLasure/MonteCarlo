@@ -1,5 +1,5 @@
-!====================================================================
-! Vector class
+!========================================================================================
+! Vector_class.f95
 !
 ! Auteur: Matthijs Lasure
 !
@@ -9,7 +9,7 @@
 ! functies: +, -, * (met getal), / (met getal), . (scalair product), * (cross product)
 ! functies: length, length_sq, normalize (vec_norm), setlength
 !
-!====================================================================
+!========================================================================================
 
 module vector_class
     implicit none
@@ -95,8 +95,6 @@ module vector_class
         d = d + a%y + b%y
         d = d + a%z + b%z
     end function dot
-
-
 
     ! Niet arimetrische functies
     function length_sq(v) result(r)
