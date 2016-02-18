@@ -44,7 +44,9 @@ program MonteCarlo
 
     ! output calc
     double precision :: en
-    double precision, dimension(:,:), allocatable :: energy
+    double precision, dimension(:,:), allocatable :: solventsolvent
+    double precision, dimension(:), allocatable :: energy
+    double precision :: TotEng
 
     ! Arrays voor parameters van DMSO (Q, epsilon, sigma, mass)
     double precision, dimension(:), allocatable :: Q, epsilon, sigma, mass
@@ -108,16 +110,18 @@ program MonteCarlo
     close(10)
 
     ! Initiële berekening interacties
+    !================================
+    ! hoe kan dit in een functie?
+    ! Vars naar lib???
+
+    ! Arrays
     allocate(mol1(nDMSO))
     allocate(mol2(nDMSO))
-    do i=1,nCoM
-        do j=i+1,nCoM
-            mol1 = RotMatrix(CoM(i), DMSO, hoek(i))
-            mol2 = RotMatrix(CoM(j), DMSO, hoek(j))
-            call calcLJ(mol1, mol2, DMSO_sym, DMSO_sym, sym, Q, epsilon, sigma, en)
-            write (*,*) en
-        end do
-    end do
+    allocate(solventsolvent(nCoM, nCoM))
+    allocate(energy(nCoM))
+
+    call calculate
+
 
     ! Loop 1: LJ
     loop_LJ: do i=1,LJ_steps
@@ -141,5 +145,40 @@ program MonteCarlo
         ! Bepaal if succesvol -> volgende config
     end do loop_Ga
 
+contains
 
+subroutine calculate
+
+    ! Solvent-solvent
+    do i=1,nCoM
+        solventsolvent(i,i) = 0.D0
+        do j=i+1,nCoM
+            mol1 = RotMatrix(CoM(i), DMSO, hoek(i))
+            mol2 = RotMatrix(CoM(j), DMSO, hoek(j))
+            call calcLJ(mol1, mol2, DMSO_sym, DMSO_sym, sym, Q, epsilon, sigma, en)
+
+            solventsolvent(i,j) = en
+            solventsolvent(j,i) = en
+        end do
+    end do
+
+    ! Solvent-solute
+    do i=1,nCoM
+        mol1 = RotMatrix(CoM(i), DMSO, hoek(i))
+        call calcLJ(mol1, solute, DMSO_sym, sol_sym, sym, Q, epsilon, sigma, en)
+        energy(i) = en
+    end do
+
+    ! Totale E
+    totEng = 0.D0
+
+    do i=1, nCoM
+        totEng = totEng + energy(i) ! solv - solu
+        do j=i+1, nCoM
+            totEng = totEng + solventsolvent(i,j)
+        end do
+    end do
+    write (*,*) totEng
+
+end subroutine calculate
 end program MonteCarlo
