@@ -16,8 +16,8 @@ program MonteCarlo
 
     implicit none
 
-    ! Pi
-    double precision, parameter :: PI = 4.D0 * DATAN(1.D0)
+    ! Pi -> lib
+    !double precision, parameter :: PI = 4.D0 * DATAN(1.D0)
 
     ! Variabelen
     !===========
