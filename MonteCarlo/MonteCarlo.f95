@@ -1,8 +1,9 @@
 !====================================================================
 ! MonteCarlo.f95
+!
 ! Auteur: Matthijs Lasure
 !
-! Description:
+! Doel:
 ! Doe een Monte-Carlo simulatie met 1 solute in DMSO
 ! Eerst werken met LJ voor ruwe benadering (eg 10.000 stappen)
 ! Dan verfijnen met Gaussian (eg 250 stappen)
@@ -21,6 +22,7 @@ program MonteCarlo
     ! Variabelen
     !===========
 
+    double precision :: box_length ! box grootte
     integer :: i, j
     integer :: LJ_steps, Ga_steps ! Aantal stappen per loop
 
@@ -30,11 +32,15 @@ program MonteCarlo
     ! Vectoren voor moleculen & atoomtypes
     TYPE(vector), dimension(:), allocatable :: DMSO, CoM, solute, hoek
     character*4, dimension(:), allocatable :: DMSO_sym, sol_sym
-    integer :: nDMSO, nCoM, nSol ! Aantal units
+    integer :: nDMSO, nCoM, nSol, nParam ! Aantal units
     ! DMSO: relatieve coördinaten voor de atomen
     ! CoM: Centre of Mass: locaties van de DMSO moleculen
     ! solute: conformatie van de solute
     ! Hoek: oriëntatie van de DMSO moleculen -> RotMatrix
+
+    ! Arrays voor parameters van DMSO (Q, epsilon, sigma, mass)
+    double precision, dimension(:), allocatable :: Q, epsilon, sigma, mass
+    character*4, dimension(:), allocatable :: sym
 
     ! Config
     !=======
@@ -70,11 +76,26 @@ program MonteCarlo
 
     ! box.txt: plaatsen van de moleculen (CoM, hoek)
     open (unit=10, file="box.txt")
+    read (10, *) box_length ! Box grootte
     read (10, *) nCoM ! Lees aantal moleculen
     allocate(CoM(nCoM))
     allocate(hoek(nCoM))
     do i= 1, nCoM
         read(10,*) CoM(i)%x, CoM(i)%y, CoM(i)%z, hoek(i)%x, hoek(i)%y, hoek(i)%z
+    end do
+    close(10)
+
+    ! param.txt: parameters voor LJ etc
+    open (unit=10, file="param.txt")
+    read (10, *) nParam ! Aantal beschikbare parameters
+    read (10, *) ! skip comment line
+    allocate(sym(nParam))
+    allocate(Q(nParam))
+    allocate(epsilon(nParam))
+    allocate(sigma(nParam))
+    allocate(mass(nParam))
+    do i= 1,nParam
+        read (10,*) sym(i), Q(i), epsilon(i), sigma(i), mass(i)
     end do
     close(10)
 

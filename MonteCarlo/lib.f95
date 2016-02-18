@@ -1,3 +1,11 @@
+!====================================================================
+! lib.f95
+!
+! Auteur: Matthijs Lasure
+!
+! Doel:
+! Library met nuttige functies
+!====================================================================
 module lib
     use vector_class
 
@@ -61,4 +69,19 @@ module lib
         end do
 
     end function RotMatrix
+
+    function findSym(type, sym) result(pos)
+        character*4 :: type
+        integer :: pos, i, n
+        character*4, dimension(:) :: sym
+
+        n = size(sym)
+        do i=1,n
+            if( sym(i) .EQ. type) then
+                pos = i
+                return
+            end if
+            pos = 0
+        end do
+    end function findSym
 end module lib
