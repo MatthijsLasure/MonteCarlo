@@ -13,6 +13,7 @@ program MonteCarlo
 
     use vector_class
     use interactions
+    use lib
 
     implicit none
 
@@ -30,13 +31,20 @@ program MonteCarlo
     double precision :: E_DMSO, E_sol
 
     ! Vectoren voor moleculen & atoomtypes
-    TYPE(vector), dimension(:), allocatable :: DMSO, CoM, solute, hoek
+    TYPE (vector), dimension(:), allocatable :: DMSO, CoM, solute, hoek
     character*4, dimension(:), allocatable :: DMSO_sym, sol_sym
     integer :: nDMSO, nCoM, nSol, nParam ! Aantal units
     ! DMSO: relatieve coördinaten voor de atomen
     ! CoM: Centre of Mass: locaties van de DMSO moleculen
     ! solute: conformatie van de solute
     ! Hoek: oriëntatie van de DMSO moleculen -> RotMatrix
+
+    ! Tijdelijke vectoren voor mol
+    TYPE (vector), dimension(:), allocatable :: mol1, mol2
+
+    ! output calc
+    double precision :: en
+    double precision, dimension(:,:), allocatable :: energy
 
     ! Arrays voor parameters van DMSO (Q, epsilon, sigma, mass)
     double precision, dimension(:), allocatable :: Q, epsilon, sigma, mass
@@ -100,6 +108,16 @@ program MonteCarlo
     close(10)
 
     ! Initiële berekening interacties
+    allocate(mol1(nDMSO))
+    allocate(mol2(nDMSO))
+    do i=1,nCoM
+        do j=i+1,nCoM
+            mol1 = RotMatrix(CoM(i), DMSO, hoek(i))
+            mol2 = RotMatrix(CoM(j), DMSO, hoek(j))
+            call calcLJ(mol1, mol2, DMSO_sym, DMSO_sym, sym, Q, epsilon, sigma, en)
+            write (*,*) en
+        end do
+    end do
 
     ! Loop 1: LJ
     loop_LJ: do i=1,LJ_steps
