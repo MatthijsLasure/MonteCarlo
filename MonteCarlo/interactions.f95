@@ -48,16 +48,20 @@ module interactions
         sumR = 0.D0
 
         do i=1,n1
-            a = findSym(sym1(i), table_sym)
-            do j=i+1,n2
-            b = findSym(sym2(j), table_sym)
-                e = sqrt(table_e(a) * table_e(b))
-                r = getDist(mol1(i), mol2(i))
-                s = (table_s(a) + table_s(b))/2
+            if(sym1(i) .NE. "H") then
+                a = findSym(sym1(i), table_sym)
+                do j=i+1,n2
+                    if(sym2(j) .NE. "H") then
+                        b = findSym(sym2(j), table_sym)
+                        e = sqrt(table_e(a) * table_e(b))
+                        r = getDist(mol1(i), mol2(i))
+                        s = (table_s(a) + table_s(b))/2
 
-                sumL = sumL + table_Q(a) * table_Q(b) / r
-                sumR = sumR + 4 * e * (s**12 / r**12 - s**6 / r**6)
-            end do
+                        sumL = sumL + table_Q(a) * table_Q(b) / r
+                        sumR = sumR + 4 * e * (s**12 / r**12 - s**6 / r**6)
+                    end if
+                end do
+            end if
         end do
         sumL = sumL / (4 * pi * epsilon0)
 
