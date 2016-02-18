@@ -10,29 +10,76 @@
 
 program MonteCarlo
 
-
-    !use lib
+    use vector_class
     use interactions
-    !implicit none
+
+    implicit none
+
+    ! Pi
+    double precision, parameter :: PI = 4.D0 * DATAN(1.D0)
 
     ! Variabelen
-    double precision, parameter :: PI = 4.D0 * DATAN(1.D0)
+    !===========
+
     integer :: i, j
     integer :: LJ_steps, Ga_steps ! Aantal stappen per loop
 
+    ! Energiën van de moleculen, bekomen via extern programma
+    double precision :: E_DMSO, E_sol
+
+    ! Vectoren voor moleculen & atoomtypes
+    TYPE(vector), dimension(:), allocatable :: DMSO, CoM, solute, hoek
+    character*4, dimension(:), allocatable :: DMSO_sym, sol_sym
+    integer :: nDMSO, nCoM, nSol ! Aantal units
+    ! DMSO: relatieve coördinaten voor de atomen
+    ! CoM: Centre of Mass: locaties van de DMSO moleculen
+    ! solute: conformatie van de solute
+    ! Hoek: oriëntatie van de DMSO moleculen -> RotMatrix
+
     ! Config
+    !=======
+
     ! TODO inlezen uit config.txt?
     LJ_steps = 10000 ! Ruwe loop
     Ga_steps = 1 ! Loop met Gaussian
 
     ! Laden van configuraties
+    !========================
+
     ! DMSO.txt: conformatie DMSO
-    ! solute.txt: conformatie opgeloste molecule
-    ! box.txt: plaatsen van de moleculen (CoM)
+    open (unit=10, file="DMSO.txt")
+    read (10, *) nDMSO ! Lees aantal atomen
+    allocate(DMSO(nDMSO)) ! Ken correcte groottes toe aan de arrays
+    allocate(DMSO_sym(nDMSO))
+    do i=1, nDMSO
+        read (10,*) DMSO_sym(i), DMSO(i)%x, DMSO(i)%y, DMSO(i)%z
+    end do
+    read (10,*) E_DMSO
+    close(10)
+
+    ! solute.txt: conformatie opgeloste molecule (sol)
+    open (unit=10, file="solute.txt")
+    read (10, *) nSol ! Lees aantal atomen
+    allocate(solute(nSol)) ! Maak de arrays groot genoeg
+    allocate(sol_sym(nSol))
+    do i=1, nSol ! Lees de coördinaten uit
+        read (10,*) sol_sym(i), solute(i)%x, solute(i)%y, solute(i)%z
+    end do
+    read (10,*) E_sol
+    close(10)
+
+    ! box.txt: plaatsen van de moleculen (CoM, hoek)
+    open (unit=10, file="box.txt")
+    read (10, *) nCoM ! Lees aantal moleculen
+    allocate(CoM(nCoM))
+    allocate(hoek(nCoM))
+    do i= 1, nCoM
+        read(10,*) CoM(i)%x, CoM(i)%y, CoM(i)%z, hoek(i)%x, hoek(i)%y, hoek(i)%z
+    end do
+    close(10)
 
     ! Initiële berekening interacties
 
-    write (*,*) PI
     ! Loop 1: LJ
     loop_LJ: do i=1,LJ_steps
         ! Doe MC
