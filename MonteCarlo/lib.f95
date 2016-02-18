@@ -9,12 +9,12 @@
 module lib
     use vector_class
 
+    implicit none
+
     double precision, parameter :: PI = 4.D0 * DATAN(1.D0)
     double precision, parameter :: e = 2.71828182845904523536028747135266249775724709369995
     double precision, parameter :: epsilon0 = 8.854187817620
     ! epsilon0 in C^2 N^-1 m$^-2
-
-    implicit none
 
     contains
 
