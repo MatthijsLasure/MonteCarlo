@@ -1,5 +1,6 @@
 module interactions
     implicit none
+    private
     contains
 
 !====================================================================

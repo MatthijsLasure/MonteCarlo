@@ -12,7 +12,7 @@ program MonteCarlo
 
 
     !use lib
-    !use interactions
+    use interactions
     !implicit none
 
     ! Variabelen
