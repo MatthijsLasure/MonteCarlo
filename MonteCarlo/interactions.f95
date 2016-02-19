@@ -38,6 +38,7 @@ module interactions
         ! TEMP
         double precision :: r, e, s ! temp params
         double precision :: sumL, sumR ! sommen
+        double precision :: tempL, tempR ! tijdelijke optelling
         integer :: i, j, n1, n2 ! loop vars, totale grootte arrays
         integer :: a, b ! welke atoomsoort
 
@@ -50,15 +51,17 @@ module interactions
         do i=1,n1
             if(sym1(i) .NE. "H") then
                 a = findSym(sym1(i), table_sym)
-                do j=i+1,n2
+                do j=1,n2
                     if(sym2(j) .NE. "H") then
                         b = findSym(sym2(j), table_sym)
                         e = sqrt(table_e(a) * table_e(b))
-                        r = getDist(mol1(i), mol2(i))
+                        r = getDist(mol1(i), mol2(j))
                         s = (table_s(a) + table_s(b))/2
 
-                        sumL = sumL + table_Q(a) * table_Q(b) / r
-                        sumR = sumR + 4 * e * (s**12 / r**12 - s**6 / r**6)
+                        tempL = table_Q(a) * table_Q(b) / r
+                        tempR = 4 * e * (s**12 / r**12 - s**6 / r**6)
+                        sumL = sumL + tempL
+                        sumR = sumR + tempR
                     end if
                 end do
             end if

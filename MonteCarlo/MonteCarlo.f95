@@ -42,6 +42,9 @@ program MonteCarlo
     ! Tijdelijke vectoren voor mol
     TYPE (vector), dimension(:), allocatable :: mol1, mol2
 
+    ! Debug
+    !integer :: k
+
     ! output calc
     double precision :: en
     double precision, dimension(:,:), allocatable :: solventsolvent
@@ -122,6 +125,12 @@ program MonteCarlo
 
     call calculate
 
+    open(unit=10, file="solventsolvent.txt")
+    do i=1,nCoM
+        write(10,*) solventsolvent(i,:)
+    end do
+    close(10)
+
 
     ! Loop 1: LJ
     loop_LJ: do i=1,LJ_steps
@@ -152,9 +161,10 @@ subroutine calculate
     ! Solvent-solvent
     do i=1,nCoM
         solventsolvent(i,i) = 0.D0
+        mol1 = RotMatrix(CoM(i), DMSO, hoek(i))
         do j=i+1,nCoM
-            mol1 = RotMatrix(CoM(i), DMSO, hoek(i))
             mol2 = RotMatrix(CoM(j), DMSO, hoek(j))
+            write (*,*) "calcLJ on ", i, " + ", j
             call calcLJ(mol1, mol2, DMSO_sym, DMSO_sym, sym, Q, epsilon, sigma, en)
 
             solventsolvent(i,j) = en
@@ -162,9 +172,12 @@ subroutine calculate
         end do
     end do
 
+    write (*,*) "Solvent-Solute"
+
     ! Solvent-solute
     do i=1,nCoM
         mol1 = RotMatrix(CoM(i), DMSO, hoek(i))
+        write (*,*) "calcLJ on ", i, " + solute"
         call calcLJ(mol1, solute, DMSO_sym, sol_sym, sym, Q, epsilon, sigma, en)
         energy(i) = en
     end do
