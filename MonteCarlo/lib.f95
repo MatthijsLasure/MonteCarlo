@@ -12,6 +12,7 @@ module lib
     implicit none
 
     double precision, parameter :: PI = 4.D0 * DATAN(1.D0)
+    double precision, parameter :: TAU = 2.D0 * PI
     double precision, parameter :: e = 2.71828182845904523536028747135266249775724709369995
     double precision, parameter :: epsilon0 = 8.854187817620
     ! epsilon0 in C^2 N^-1 m^-2
@@ -75,6 +76,8 @@ module lib
 
     end function RotMatrix
 
+    ! findSym
+    !========
     function findSym(type, sym) result(pos)
         character*4 :: type
         integer :: pos, i, n
@@ -89,4 +92,17 @@ module lib
             pos = 0
         end do
     end function findSym
+
+    ! RandVec: maakt vector met willekeurige getallen tussen -max en +max
+    !====================================================================
+    function randVec(max) result(rv)
+        double precision, intent(in) :: max
+        TYPE (vector) :: rv
+
+        rv%x = (RAND() - 0.5D0) * 2 * max
+        rv%y = (RAND() - 0.5D0) * 2 * max
+        rv%z = (RAND() - 0.5D0) * 2 * max
+    end function randVec
+
+
 end module lib
