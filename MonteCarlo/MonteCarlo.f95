@@ -236,41 +236,6 @@ program MonteCarlo
 !====================================================================
 contains
 
-! DEPRECATED
-subroutine calculateInit
-
-    ! Solvent-solvent
-    do i=1,nCoM
-        solventsolvent(i,i) = 0.D0
-        mol1 = RotMatrix(CoM(i), DMSO, hoek(i))
-        do j=i+1,nCoM
-            mol2 = RotMatrix(CoM(j), DMSO, hoek(j))
-            call calcLJ(mol1, mol2, DMSO_sym, DMSO_sym, sym, Q, epsilon, sigma, en)
-
-            solventsolvent(i,j) = en
-            solventsolvent(j,i) = en
-        end do
-    end do
-
-    ! Solvent-solute
-    do i=1,nCoM
-        call calcLJ(mol1, solute, DMSO_sym, sol_sym, sym, Q, epsilon, sigma, en)
-        energy(i) = en
-    end do
-
-    ! Totale E
-    totEng = 0.D0
-
-    do i=1, nCoM
-        totEng = totEng + energy(i) ! solv - solu
-        do j=i+1, nCoM
-            totEng = totEng + solventsolvent(i,j)
-        end do
-    end do
-    write (*,*) totEng
-
-end subroutine calculateInit
-
 !====================================================================
 !====================================================================
 
