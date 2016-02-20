@@ -52,7 +52,7 @@ program MonteCarlo
     double precision :: en
     double precision, dimension(:,:), allocatable :: solventsolvent
     double precision, dimension(:), allocatable :: energy
-    double precision :: TotEng
+    double precision :: TotEng, tot
 
     ! Arrays voor parameters van DMSO (Q, epsilon, sigma, mass)
     double precision, dimension(:), allocatable :: Q, epsilon, sigma, mass
@@ -138,9 +138,18 @@ program MonteCarlo
     allocate(solventsolvent(nCoM, nCoM))
     allocate(energy(nCoM))
 
-    call calculateInit ! Bereken alle energiën!
+    do i=1,nCoM
+        call calculateLJ(i) ! Bereken alle energiën!
+    end do
+
+    totEng = 0.D0
+    call calcEnergy(totEng)
+    write(*,*) totEng
+
+    !!call calculateInit
 
     ! Dump energiën
+    !tot = 0.0D
     open(unit=10, file="solventsolvent.txt")
     do i=1,nCoM
         write(10,*) solventsolvent(i,:)
@@ -227,6 +236,7 @@ program MonteCarlo
 !====================================================================
 contains
 
+! DEPRECATED
 subroutine calculateInit
 
     ! Solvent-solvent
@@ -281,21 +291,28 @@ subroutine calculateLJ(i)
     end do
 
     ! Solvent-solute
-    do i=1,nCoM
+    !do i=1,nCoM ! Not needed!
         call calcLJ(mol1, solute, DMSO_sym, sol_sym, sym, Q, epsilon, sigma, en)
         energy(i) = en
-    end do
+    !end do
 
-        ! Totale E
-    totEng = 0.D0
 
-    do i=1, nCoM
-        totEng = totEng + energy(i) ! solv - solu
-        do j=i+1, nCoM
-            totEng = totEng + solventsolvent(i,j)
-        end do
-    end do
     !!write (*,*) totEng
 
 end subroutine calculateLJ
+
+subroutine calcEnergy(out)
+    double precision :: out
+
+    ! Totale E
+    out = 0.D0
+
+    do i=1, nCoM
+        out = out + energy(i) ! solv - solu
+        do j=i+1, nCoM
+            out = out + solventsolvent(i,j)
+        end do
+    end do
+
+end subroutine calcEnergy
 end program MonteCarlo
