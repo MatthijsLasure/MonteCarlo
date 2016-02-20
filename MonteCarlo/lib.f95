@@ -14,8 +14,8 @@ module lib
     double precision, parameter :: PI = 4.D0 * DATAN(1.D0)
     double precision, parameter :: TAU = 2.D0 * PI
     double precision, parameter :: e = 2.71828182845904523536028747135266249775724709369995
-    double precision, parameter :: epsilon0 = 8.854187817620
-    ! epsilon0 in C^2 N^-1 m^-2
+    ! double precision, parameter :: epsilon0 = 8.854187817620 ! C^2 N^-1 m^-2
+    double precision, parameter :: epsilon0 = 344.92767152262929094139750125 * 10**34 ! e^2 J^-1 a^-1
 
     contains
 

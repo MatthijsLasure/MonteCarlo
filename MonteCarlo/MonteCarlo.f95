@@ -242,6 +242,7 @@ contains
 subroutine calculateLJ(i)
 
     integer :: i
+    integer :: j
 
     ! Solvent solvent
     ! Notice: geen i loop: alleen molecule i is veranderd en moet opnieuw berekend worden
