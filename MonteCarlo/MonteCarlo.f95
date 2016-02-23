@@ -9,18 +9,12 @@
 ! Dan verfijnen met Gaussian (eg 250 stappen)
 !====================================================================
 
-! Calls in program MONTECARLO: 
-! => system_clock (on line <83>)
-! ==> SRAND (on line <84>)
-! ===> calculateLJ (on line <157>)
-! ====> calculateLJ (on line <252>)
 PROGRAM MonteCarlo
 
     USE vector_class
     USE interactions
     USE lib
     USE randgen
-    USE json_module
 
     IMPLICIT NONE
 
@@ -300,9 +294,6 @@ CONTAINS
 !====================================================================
 !====================================================================
 
-! Calls in subroutine CALCULATELJ: 
-! => calcLJ (on line <317>)
-! ==> calcLJ (on line <325>)
 SUBROUTINE calculateLJ(I)
 
     INTEGER :: I
