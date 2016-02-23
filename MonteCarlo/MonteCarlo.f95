@@ -34,7 +34,6 @@ PROGRAM MonteCarlo
     INTEGER:: RSOLV ! Geselecteerde molecule voor MC
     INTEGER:: NSUC = 0 ! Aantal succesvolle MC
     DOUBLE PRECISION:: RV, KANS,DELTA = 0, EXPONENT ! Random variabele en toebehoren voor Metropolis
-    CHARACTER(LEN=32), DIMENSION(5) :: ARG
 
     ! Energiën van de moleculen, bekomen via extern programma
     DOUBLE PRECISION:: E_DMSO, E_SOL
@@ -68,7 +67,6 @@ LOGICAL:: DODEBUG = .FALSE.                                          !
     DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: ENERGY, EOLD
     DOUBLE PRECISION:: TOTENG = 0.D0
     DOUBLE PRECISION:: TOTENG_OLD = 0.D0
-    DOUBLE PRECISION :: RADIUS
 
     ! Arrays voor parameters van DMSO (Q, epsilon, sigma, mass)
     DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: Q, EPSILON, SIGMA, MASS
@@ -230,12 +228,10 @@ WRITE (*,"(A, 1X, A, 1X, A, 1X, A, 1X, A, 1X, A, 1X, A)") "i", "TotEng", "TotEng
         HOEK(RSOLV)%Y = HOEK(RSOLV)%Y - TAU * ANINT(HOEK(RSOLV)%Y / PI)
         HOEK(RSOLV)%Z = HOEK(RSOLV)%Z - TAU * ANINT(HOEK(RSOLV)%Z / PI)
 
-        IF(.TRUE.)THEN
         ! Periodic boundaries => Computer Simulation of Liquids, p30
         COM(RSOLV)%X = COM(RSOLV)%X - BOXL2 * ANINT(COM(RSOLV)%X / BOXL)
         COM(RSOLV)%Y = COM(RSOLV)%Y - BOXL2 * ANINT(COM(RSOLV)%Y / BOXL)
         COM(RSOLV)%Z = COM(RSOLV)%Z - BOXL2 * ANINT(COM(RSOLV)%Z / BOXL)
-        END IF
 
         ! DUMP
         IF(DODEBUG) THEN
@@ -373,12 +369,11 @@ SUBROUTINE calculateLJ(I)
 
 END SUBROUTINE calculateLJ
 
-FUNCTION calcEnergy(ENERGY, SOLVENTSOLVENT) RESULT(out)
+FUNCTION calcEnergy(ENERGY, SOLVENTSOLVENT) RESULT(OUT)
     DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: ENERGY
     DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: SOLVENTSOLVENT
     DOUBLE PRECISION:: OUT
-    INTEGER:: I
-    INTEGER:: J
+    INTEGER:: I, J
 
     ! Totale E
     OUT = 0.D0

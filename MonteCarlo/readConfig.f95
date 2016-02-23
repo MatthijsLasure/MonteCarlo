@@ -8,7 +8,7 @@ subroutine rConfig(boxl, LJ_steps, Ga_steps, iseed, doDebug)
     integer, parameter    :: strlen = 100
     character(len=strlen) :: fst, snd
     character(len=1000)   :: line
-    integer               :: lun, stat,  j, j0, j1, ii = 1, z
+    integer               :: stat,  j, j0, z
     integer, parameter    :: state_begin=1, state_in_fst=2, state_in_sep=3
 
     ! Shit to read
