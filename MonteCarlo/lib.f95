@@ -6,112 +6,112 @@
 ! Doel:
 ! Library met nuttige functies
 !====================================================================
-module lib
-    use vector_class
-    use randgen
+MODULE lib
+    USE vector_class
+    USE randgen
 
-    implicit none
+    IMPLICIT NONE
 
-    double precision, parameter :: PI = 4.D0 * DATAN(1.D0)
-    double precision, parameter :: TAU = 2.D0 * PI
-    double precision, parameter :: e = 2.71828182845904523536028747135266249775724709369995
-    double precision, parameter :: epsilon0 = 8.854187817620 ! C^2 N^-1 m^-2
+    DOUBLE PRECISION, PARAMETER :: PI = 4.D0 * DATAN(1.D0)
+    DOUBLE PRECISION, PARAMETER :: TAU = 2.D0 * PI
+    DOUBLE PRECISION, PARAMETER :: E = 2.71828182845904523536028747135266249775724709369995
+    DOUBLE PRECISION, PARAMETER :: EPSILON0 = 8.854187817620 ! C^2 N^-1 m^-2
 
-    contains
+    CONTAINS
 
     ! RotMatrix
     !==========
     ! Roteer een set coördinaten rond de CoM met gegeven hoeken
     ! Hoek: in graden!
-    function RotMatrix(CoM, RelPos, hoek) result(AbsPos)
-        TYPE (vector), INTENT(in) :: CoM, hoek
-        TYPE (vector), DIMENSION(:), INTENT(in) :: RelPos
-        TYPE (vector), DIMENSION(size(RelPos)) :: AbsPos
+    FUNCTION RotMatrix(COM, RELPOS, HOEK) RESULT(AbsPos)
+        TYPE (vector), INTENT(IN) :: COM, HOEK
+        TYPE (vector), DIMENSION(:), INTENT(IN) :: RELPOS
+        TYPE (vector), DIMENSION(size(RELPOS)) :: ABSPOS
 
         ! Variabelen
         !===========
-        double precision, dimension(3,3) :: RM ! Rotatiematrix
-        double precision, dimension(3) :: temp ! Tijdelijke array
-        TYPE (vector) :: v ! Tijdelijke vector
+        DOUBLE PRECISION, DIMENSION(3,3) :: RM ! Rotatiematrix
+        DOUBLE PRECISION, DIMENSION(3) :: TEMP ! Tijdelijke array
+        TYPE (vector) :: V ! Tijdelijke vector
 
-        double precision :: cos1, cos2, cos3
-        double precision :: sin1, sin2, sin3
-        integer :: n ! Aantal atomen
-        integer :: i
+        DOUBLE PRECISION :: COS1, COS2, COS3
+        DOUBLE PRECISION :: SIN1, SIN2, SIN3
+        INTEGER :: N ! Aantal atomen
+        INTEGER :: I
 
-        n = size(RelPos)
+        N = size(RELPOS)
 
         ! Bereken cos / sin
         !==================
-        cos1 = cos(hoek%x)
-        cos2 = cos(hoek%y)
-        cos3 = cos(hoek%z)
-        sin1 = sin(hoek%x)
-        sin2 = sin(hoek%y)
-        sin3 = sin(hoek%z)
+        COS1 = cos(HOEK%x)
+        COS2 = cos(HOEK%y)
+        COS3 = cos(HOEK%z)
+        SIN1 = sin(HOEK%x)
+        SIN2 = sin(HOEK%y)
+        SIN3 = sin(HOEK%z)
 
         ! Opstellen matrix
         !=================
         ! Rij 1
-        RM(1,1) = cos1 * cos2 - sin1 * sin2 * cos3
-        RM(1,2) = sin1 * cos2 + cos1 * sin2 * cos3
-        RM(1,3) = sin2 * sin3
+        RM(1,1) = COS1 * COS2 - SIN1 * SIN2 * COS3
+        RM(1,2) = SIN1 * COS2 + COS1 * SIN2 * COS3
+        RM(1,3) = SIN2 * SIN3
         ! Rij 2
-        RM(2,1) = -1.D0 * cos1 * sin2 - sin1 * cos2 * cos3
-        RM(2,2) = -1.D0 * sin1 * sin2 + cos1 * cos2 * cos3
-        RM(2,3) = cos2 * sin3
+        RM(2,1) = -1.D0 * COS1 * SIN2 - SIN1 * COS2 * COS3
+        RM(2,2) = -1.D0 * SIN1 * SIN2 + COS1 * COS2 * COS3
+        RM(2,3) = COS2 * SIN3
         ! Rij 3
-        RM(3,1) = sin1 * sin3
-        RM(3,2) = -1.D0 * cos1 * sin3
-        RM(3,3) = cos3
+        RM(3,1) = SIN1 * SIN3
+        RM(3,2) = -1.D0 * COS1 * SIN3
+        RM(3,3) = COS3
 
         ! Roteren + transleren atomen
         !============================
-        do i=1,n
-            temp = getArray(RelPos(i))
-            temp = matmul(RM, temp)
-            v = fromArray(temp)
-            AbsPos(i) = CoM + v
-        end do
+        DO I=1,N
+            TEMP = getArray(RelPos(I))
+            TEMP = matmul(RM, TEMP)
+            V = fromArray(TEMP)
+            ABSPOS(I) = COM + V
+        END DO
 
-    end function RotMatrix
+    END FUNCTION RotMatrix
 
     ! findSym
     !========
-    function findSym(type, sym) result(pos)
-        character*4 :: type
-        integer :: pos, i, n
-        character*4, dimension(:) :: sym
+    FUNCTION findSym(TYPE, SYM) RESULT(pos)
+        CHARACTER*4 :: TYPE
+        INTEGER :: POS, I, N
+        CHARACTER*4, DIMENSION(:) :: SYM
 
-        n = size(sym)
-        do i=1,n
-            if( sym(i) .EQ. type) then
-                pos = i
-                return
-            end if
-            pos = 0
-        end do
-    end function findSym
+        N = size(SYM)
+        DO I=1,N
+            IF( sym(I) .EQ. TYPE) THEN
+                POS = I
+                RETURN
+            END IF
+            POS = 0
+        END DO
+    END FUNCTION findSym
 
     ! RandVec: maakt vector met willekeurige getallen tussen -max en +max
     !====================================================================
-    function randVec(max) result(rv)
-        double precision, intent(in) :: max
-        TYPE (vector) :: rv
+    FUNCTION randVec(MAX) RESULT(rv)
+        DOUBLE PRECISION, INTENT(IN) :: MAX
+        TYPE (vector) :: RV
 
-        rv%x = (RAND() - 0.5D0) * 2 * max
-        rv%y = (RAND() - 0.5D0) * 2 * max
-        rv%z = (RAND() - 0.5D0) * 2 * max
-    end function randVec
+        RV%x = (RAND() - 0.5D0) * 2 * MAX
+        RV%y = (RAND() - 0.5D0) * 2 * MAX
+        RV%z = (RAND() - 0.5D0) * 2 * MAX
+    END FUNCTION randVec
 
-    subroutine getConv(fuck)
-        double precision :: conv
-        double precision, intent(out) :: fuck
-        conv = 6.023 * (1.60217646)**2
-        conv = conv / 4
-        conv = conv / PI
-        conv = conv / 8.854187817620 ! J/mol * 10^-5
-        conv = conv * 10**(-8) ! kJ/mol
-    end subroutine getConv
+    SUBROUTINE getConv(FUCK)
+        DOUBLE PRECISION :: CONV
+        DOUBLE PRECISION, INTENT(OUT) :: FUCK
+        CONV = 6.023 * (1.60217646)**2
+        CONV = CONV / 4
+        CONV = CONV / PI
+        CONV = CONV / 8.854187817620 ! J/mol * 10^-5
+        CONV = CONV * 10**(-8) ! kJ/mol
+    END SUBROUTINE getConv
 
-end module lib
+END MODULE lib

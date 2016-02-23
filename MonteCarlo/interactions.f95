@@ -6,12 +6,12 @@
 ! Doel:
 ! Bereken energie via LJ of QC
 !====================================================================
-module interactions
-    use vector_class
-    use lib
+MODULE interactions
+    USE vector_class
+    USE lib
     !implicit none
 
-    contains
+    CONTAINS
 
 !====================================================================
 
@@ -27,60 +27,62 @@ module interactions
     ! table_sym: atoomtypes voor parameters
     ! table_Q/e/s: parameters voor LJ
 
-    subroutine calcLJ(mol1, mol2, sym1, sym2, table_sym, table_Q, table_e, table_s, en)
+    ! Calls in subroutine CALCLJ: 
+    ! => getConv (on line <49>)
+    SUBROUTINE calcLJ(MOL1, MOL2, SYM1, SYM2, TABLE_SYM, TABLE_Q, TABLE_E, TABLE_S, EN)
         ! INPUT
-        TYPE (vector), dimension(:), INTENT(in) :: mol1, mol2 ! absolute coords!
-        character*4, dimension(:), INTENT(in) :: sym1, sym2, table_sym ! Atoomtypes
-        double precision, dimension(:), INTENT(in) :: table_Q, table_e, table_s ! params
-        double precision :: conversion
+        TYPE (vector), DIMENSION(:), INTENT(IN) :: MOL1, MOL2 ! absolute coords!
+        CHARACTER*4, DIMENSION(:), INTENT(IN) :: SYM1, SYM2, TABLE_SYM ! Atoomtypes
+        DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: TABLE_Q, TABLE_E, TABLE_S ! params
+        DOUBLE PRECISION :: CONVERSION
 
         ! OUTPUT
-        double precision :: en
+        DOUBLE PRECISION :: EN
 
         ! TEMP
-        double precision :: r, e, s ! temp params
-        double precision :: sumL, sumR ! sommen
-        double precision :: tempL, tempR ! tijdelijke optelling
-        integer :: i, j, n1, n2 ! loop vars, totale grootte arrays
-        integer :: a, b ! welke atoomsoort
+        DOUBLE PRECISION :: R, E, S ! temp params
+        DOUBLE PRECISION :: SUML, SUMR ! sommen
+        DOUBLE PRECISION :: TEMPL, TEMPR ! tijdelijke optelling
+        INTEGER :: I, J, N1, N2 ! loop vars, totale grootte arrays
+        INTEGER :: A, B ! welke atoomsoort
 
-        call getConv(conversion)
+        CALL getConv(CONVERSION)
 
-        n1 = size(mol1)
-        n2 = size(mol2)
+        N1 = size(MOL1)
+        N2 = size(MOL2)
 
-        sumL = 0.D0
-        sumR = 0.D0
+        SUML = 0.D0
+        SUMR = 0.D0
 
-        do i=1,n1
-            if(sym1(i) .NE. "H") then
-                a = findSym(sym1(i), table_sym)
-                do j=1,n2
-                    if(sym2(j) .NE. "H") then
-                        b = findSym(sym2(j), table_sym)
-                        e = sqrt(table_e(a) * table_e(b))
-                        r = getDist(mol1(i), mol2(j))
-                        s = (table_s(a) + table_s(b))/2
+        DO I=1,N1
+            IF(sym1(I) .NE. "H") THEN
+                A = findSym(sym1(I), TABLE_SYM)
+                DO J=1,N2
+                    IF(sym2(J) .NE. "H") THEN
+                        B = findSym(sym2(J), TABLE_SYM)
+                        E = sqrt(table_e(A) * table_e(B))
+                        R = getDist(mol1(I), mol2(J))
+                        S = (table_s(A) + table_s(B))/2
 
-                        tempL = table_Q(a) * table_Q(b) / r
-                        tempR = 4 * e * (s**12 / r**12 - s**6 / r**6)
-                        sumL = sumL + tempL
-                        sumR = sumR + tempR
-                    end if
-                end do
-            end if
-        end do
-        sumL = sumL * conversion
+                        TEMPL = table_Q(A) * table_Q(B) / R
+                        TEMPR = 4 * E * (S**12 / R**12 - S**6 / R**6)
+                        SUML = SUML + TEMPL
+                        SUMR = SUMR + TEMPR
+                    END IF
+                END DO
+            END IF
+        END DO
+        SUML = SUML * CONVERSION
 
-        en = sumL + sumR
+        EN = SUML + SUMR
 
-    end subroutine calcLJ
+    END SUBROUTINE calcLJ
 
 !====================================================================
 
-    subroutine calcGa(i)
-    integer :: i
+    SUBROUTINE calcGa(I)
+    INTEGER :: I
 
-    end subroutine calcGa
+    END SUBROUTINE calcGa
 
-end module interactions
+END MODULE interactions

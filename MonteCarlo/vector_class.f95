@@ -11,13 +11,13 @@
 !
 !========================================================================================
 
-module vector_class
-    implicit none
-    public
+MODULE vector_class
+    IMPLICIT NONE
+    PUBLIC
 
-    type vector
-        double precision :: x, y, z
-    end type vector
+    TYPE vector
+        DOUBLE PRECISION :: x, y, z
+    END TYPE vector
 
     ! Overload arimetric operators
     INTERFACE OPERATOR (+)
@@ -40,112 +40,112 @@ module vector_class
         MODULE PROCEDURE cross
     END INTERFACE
 
-    contains
+    CONTAINS
 
     ! Arimetrische functies
-    function vecadd(a, b) result(c)
-        TYPE (vector), INTENT(in) :: a, b
-        TYPE (vector) :: c
-        c%x = a%x + b%x
-        c%y = a%y + b%y
-        c%z = a%z + b%z
-    end function vecadd
+    FUNCTION vecadd(A, B) RESULT(c)
+        TYPE (vector), INTENT(IN) :: A, B
+        TYPE (vector) :: C
+        C%x = A%x + B%x
+        C%y = A%y + B%y
+        C%z = A%z + B%z
+    END FUNCTION vecadd
 
-    function vecsub(a, b) result(c)
-        TYPE (vector), INTENT(in) :: a, b
-        TYPE (vector) :: c
-        c%x = a%x - b%x
-        c%y = a%y - b%y
-        c%z = a%z - b%z
-    end function vecsub
+    FUNCTION vecsub(A, B) RESULT(c)
+        TYPE (vector), INTENT(IN) :: A, B
+        TYPE (vector) :: C
+        C%x = A%x - B%x
+        C%y = A%y - B%y
+        C%z = A%z - B%z
+    END FUNCTION vecsub
 
-    function vecmult(a, m) result(c)
-        TYPE (vector), INTENT(in) :: a
-        TYPE (vector) :: c
-        double precision, INTENT(in) :: m
-        c%x = m * a%x
-        c%y = m * a%y
-        c%z = m * a%z
-    end function vecmult
+    FUNCTION vecmult(A, M) RESULT(c)
+        TYPE (vector), INTENT(IN) :: A
+        TYPE (vector) :: C
+        DOUBLE PRECISION, INTENT(IN) :: M
+        C%x = M * A%x
+        C%y = M * A%y
+        C%z = M * A%z
+    END FUNCTION vecmult
 
-    function vecdiv(a, m) result(c)
-        TYPE (vector), INTENT(in) :: a
-        double precision, INTENT(in) :: m
-        TYPE (vector) :: c
-        if (m /= 0) then
-            c = vecmult(a, 1.D0 / m)
-        else
-            c = vecmult(a, 0.D0)
-        end if
-    end function vecdiv
+    FUNCTION vecdiv(A, M) RESULT(c)
+        TYPE (vector), INTENT(IN) :: A
+        DOUBLE PRECISION, INTENT(IN) :: M
+        TYPE (vector) :: C
+        IF (M /= 0) THEN
+            C = vecmult(A, 1.D0 / M)
+        ELSE
+            C = vecmult(A, 0.D0)
+        END IF
+    END FUNCTION vecdiv
 
-    function cross(a, b) result(c)
-        TYPE (vector), INTENT(in) :: a, b
-        TYPE (vector) :: c
-        c%x = a%y * b%z - a%z * b%y
-        c%y = a%z * b%x - a%x * b%z
-        c%z = a%x * b%y - a%y * b%x
-    end function cross
+    FUNCTION cross(A, B) RESULT(c)
+        TYPE (vector), INTENT(IN) :: A, B
+        TYPE (vector) :: C
+        C%x = A%y * B%z - A%z * B%y
+        C%y = A%z * B%x - A%x * B%z
+        C%z = A%x * B%y - A%y * B%x
+    END FUNCTION cross
 
-    function dot(a, b) result(d)
-        TYPE (vector) :: a, b
-        double precision d
-        d = 0.D0
-        d = d + a%x + b%x
-        d = d + a%y + b%y
-        d = d + a%z + b%z
-    end function dot
+    FUNCTION dot(A, B) RESULT(d)
+        TYPE (vector) :: A, B
+        DOUBLE PRECISION D
+        D = 0.D0
+        D = D + A%x + B%x
+        D = D + A%y + B%y
+        D = D + A%z + B%z
+    END FUNCTION dot
 
     ! Niet arimetrische functies
-    function length_sq(v) result(r)
-        TYPE (vector) :: v
-        double precision :: r
-        r = v%x ** 2 + v%y ** 2 + v%z ** 2
-    end function
+    FUNCTION length_sq(V) RESULT(r)
+        TYPE (vector) :: V
+        DOUBLE PRECISION :: R
+        R = V%x ** 2 + V%y ** 2 + V%z ** 2
+    END FUNCTION
 
-    function length(v) result(r)
-        TYPE (vector) :: v
-        double precision :: r
-        r = sqrt(length_sq(v))
-    end function length
+    FUNCTION length(V) RESULT(r)
+        TYPE (vector) :: V
+        DOUBLE PRECISION :: R
+        R = sqrt(length_sq(V))
+    END FUNCTION length
 
     ! Normalize vector zodat r = 1
-    function norm(v) result(w)
-        TYPE (vector) :: v, w
-        double precision :: r
-        r = length(v)
-        w = v / r
-    end function norm
+    FUNCTION norm(V) RESULT(w)
+        TYPE (vector) :: V, W
+        DOUBLE PRECISION :: R
+        R = length(V)
+        W = V / R
+    END FUNCTION norm
 
-    function setlength(v, a) result(w)
-        TYPE (vector) :: v, w
-        double precision :: a
-        w = norm(v)
-        w = w * a
-    end function setlength
+    FUNCTION setlength(V, A) RESULT(w)
+        TYPE (vector) :: V, W
+        DOUBLE PRECISION :: A
+        W = norm(V)
+        W = W * A
+    END FUNCTION setlength
 
     ! bereken afstand tussen 2 vectoren
-    function getDist(a, b) result(r)
-        TYPE (vector), INTENT(in) :: a, b
-        double precision :: r
-        r = length(b-a)
-    end function getDist
+    FUNCTION getDist(A, B) RESULT(r)
+        TYPE (vector), INTENT(IN) :: A, B
+        DOUBLE PRECISION :: R
+        R = length(B-A)
+    END FUNCTION getDist
 
     ! Geef een aray voor matrix multiplication
-    function getArray(v) result(a)
-        TYPE (vector), INTENT(in) :: v
-        double precision, dimension(3) :: a
-        a(1) = v%x
-        a(2) = v%y
-        a(3) = v%z
-    end function getArray
+    FUNCTION getArray(V) RESULT(a)
+        TYPE (vector), INTENT(IN) :: V
+        DOUBLE PRECISION, DIMENSION(3) :: A
+        A(1) = V%x
+        A(2) = V%y
+        A(3) = V%z
+    END FUNCTION getArray
 
-    function fromArray(a) result(v)
-        double precision, dimension(3), INTENT(in) :: a
-        TYPE (vector) :: v
-        v%x = a(1)
-        v%y = a(2)
-        v%z = a(3)
-    end function fromArray
+    FUNCTION fromArray(A) RESULT(v)
+        DOUBLE PRECISION, DIMENSION(3), INTENT(IN) :: A
+        TYPE (vector) :: V
+        V%x = a(1)
+        V%y = a(2)
+        V%z = a(3)
+    END FUNCTION fromArray
 
-end module vector_class
+END MODULE vector_class
