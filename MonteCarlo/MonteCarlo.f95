@@ -50,12 +50,12 @@ program MonteCarlo
     integer :: k
     TYPE (vector), dimension(10) :: absPos
     integer :: start
-    type (vector) :: randH, randD
+    logical :: doDebug = .FALSE.
 
     ! output calc
     double precision :: en
-    double precision, dimension(:,:), allocatable :: solventsolvent
-    double precision, dimension(:), allocatable :: energy
+    double precision, dimension(:,:), allocatable :: solventsolvent, ssold
+    double precision, dimension(:), allocatable :: energy, eold
     double precision :: TotEng, tot
 
     ! Arrays voor parameters van DMSO (Q, epsilon, sigma, mass)
@@ -143,7 +143,9 @@ program MonteCarlo
     allocate(mol1(nDMSO))
     allocate(mol2(nDMSO))
     allocate(solventsolvent(nCoM, nCoM))
+    allocate(ssold(nCoM, nCoM))
     allocate(energy(nCoM))
+    allocate(eold(nCoM))
 
     do i=1,nCoM
         call calculateLJ(i) ! Bereken alle energiën!
@@ -161,6 +163,7 @@ program MonteCarlo
     end do
     close(10)
 
+if (doDebug) then
 open(unit=11, file="out/DUMP.txt")
         ! DUMP
         write (11,*) nCoM*nDMSO+nSol - 6*nCoM
@@ -177,10 +180,12 @@ open(unit=11, file="out/DUMP.txt")
             end do
         end do
 
+
 !====================================================================
 !====================================================================
 
-open (unit=12, file="out/rand.txt")
+end if
+write (*,*) "i   TotEng   TotEng_old   kans   rv   rSolv"
 
 
     ! Loop 1: LJ
@@ -191,14 +196,13 @@ open (unit=12, file="out/rand.txt")
         hoek_old = hoek
         !solute_old = solute ! Wordt nog niet gevariëerd
         TotEng_old = TotEng
+        eold = energy
+        ssold = solventsolvent
 
         ! Doe MC
         rSolv = INT(rand() * nCoM) + 1 ! Willekeurige DMSO molecule
-        randD = randVec(dposMax)
-        randH = randVec(dhoekMax)
-        write(12,*) i, randD%x, randD%y, randD%z, randH%x, randH%y, randH%z
-        CoM(rSolv) = CoM(rSolv) + randD
-        hoek(rSolv) = hoek(rSolv) + randH
+        CoM(rSolv) = CoM(rSolv) + randVec(dposMax)
+        hoek(rSolv) = hoek(rSolv) + randVec(dhoekMax)
 
         !Dump
 
@@ -220,6 +224,7 @@ open (unit=12, file="out/rand.txt")
         end if
 
         ! DUMP
+        if(doDebug) then
         write (11,*) nCoM*nDMSO+nSol - 6*nCoM
         write (11,*) "Timestep: ", i
         do j=1, nSol
@@ -233,6 +238,7 @@ open (unit=12, file="out/rand.txt")
                 end if
             end do
         end do
+        end if
 
         ! Periodic boundaries!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
@@ -243,12 +249,12 @@ open (unit=12, file="out/rand.txt")
 
         ! Doe Metropolis
         delta = totEng - totEng_old
-        exponent = -1.D0 * delta  * 1.D0 / (8.315D0 * 300.D0)
+        exponent = -1.D0 * delta  * 1000.D0 / (8.315D0 * 300.D0)
         kans = e ** exponent
         if (kans .GT. 1.D0) kans = 1.D0
         rv = rand()
 
-        write (*,*) i, TotEng, kans, rv, rSolv
+        write (*,*) i, TotEng, TotEng_old, kans, rv, rSolv
 
         ! Bepaal if succesvol -> volgende config
         if(rv .LE. kans) then ! Succes!
@@ -259,12 +265,13 @@ open (unit=12, file="out/rand.txt")
             hoek = hoek_old
             !solute = solute_old ! Wordt nog niet gevariëerd
             TotEng = TotEng_old
+            energy = eold ! Resetten!!
+            solventsolvent = ssold
         end if
 
     end do loop_LJ
 
-    close(11)
-    close(12)
+    if(doDebug) close(11)
 
 !====================================================================
 !====================================================================
