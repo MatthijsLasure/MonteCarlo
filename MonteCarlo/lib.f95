@@ -8,14 +8,14 @@
 !====================================================================
 module lib
     use vector_class
+    use randgen
 
     implicit none
 
     double precision, parameter :: PI = 4.D0 * DATAN(1.D0)
     double precision, parameter :: TAU = 2.D0 * PI
     double precision, parameter :: e = 2.71828182845904523536028747135266249775724709369995
-    ! double precision, parameter :: epsilon0 = 8.854187817620 ! C^2 N^-1 m^-2
-    double precision, parameter :: epsilon0 = 344.92767152262929094139750125 * 10**34 ! e^2 J^-1 a^-1
+    double precision, parameter :: epsilon0 = 8.854187817620 ! C^2 N^-1 m^-2
 
     contains
 
@@ -104,5 +104,14 @@ module lib
         rv%z = (RAND() - 0.5D0) * 2 * max
     end function randVec
 
+    subroutine getConv(fuck)
+        double precision :: conv
+        double precision, intent(out) :: fuck
+        conv = 6.023 * (1.60217646)**2
+        conv = conv / 4
+        conv = conv / PI
+        conv = conv / 8.854187817620 ! J/mol * 10^-5
+        conv = conv * 10**(-8) ! kJ/mol
+    end subroutine getConv
 
 end module lib

@@ -14,6 +14,7 @@ program MonteCarlo
     use vector_class
     use interactions
     use lib
+    use randgen
 
     implicit none
 
@@ -46,7 +47,10 @@ program MonteCarlo
     TYPE (vector), dimension(:), allocatable :: mol1, mol2
 
     ! Debug
-    !integer :: k
+    integer :: k
+    TYPE (vector), dimension(10) :: absPos
+    integer :: start
+    type (vector) :: randH, randD
 
     ! output calc
     double precision :: en
@@ -69,9 +73,12 @@ program MonteCarlo
 
     ! Config
     !=======
+    !call SRAND()
+    call system_clock (start)
+    call SRAND(REAL(start)) ! Prime randgen
 
     ! TODO inlezen uit config.txt?
-    LJ_steps = 10000 ! Ruwe loop
+    LJ_steps = 1000 ! Ruwe loop
     Ga_steps = 1 ! Loop met Gaussian
 
     ! Laden van configuraties
@@ -143,10 +150,8 @@ program MonteCarlo
     end do
 
     totEng = 0.D0
-    call calcEnergy(totEng)
-    write(*,*) totEng
+    totEng =  calcEnergy(energy, solventsolvent)
 
-    !!call calculateInit
 
     ! Dump energiën
     !tot = 0.0D
@@ -156,8 +161,27 @@ program MonteCarlo
     end do
     close(10)
 
+open(unit=11, file="out/DUMP.txt")
+        ! DUMP
+        write (11,*) nCoM*nDMSO+nSol - 6*nCoM
+        write (11,*) "Timestep: ", 0
+        do j=1, nSol
+            write(11,*) sol_sym(j), solute(j)%x, solute(j)%y, solute(j)%z
+        end do
+        do j=1,nCoM
+            absPos = RotMatrix(CoM(j), DMSO, hoek(j))
+            do k=1, nDMSO
+                if (DMSO_sym(k) .NE. "H") then
+                write(11,*) DMSO_Sym(k), absPos(k)%x, absPos(k)%y, absPos(k)%z
+                end if
+            end do
+        end do
+
 !====================================================================
 !====================================================================
+
+open (unit=12, file="out/rand.txt")
+
 
     ! Loop 1: LJ
     !===========
@@ -170,38 +194,61 @@ program MonteCarlo
 
         ! Doe MC
         rSolv = INT(rand() * nCoM) + 1 ! Willekeurige DMSO molecule
-        CoM(rSolv) = CoM(rSolv) + randVec(dposMax)
-        hoek(rSolv) = hoek(rSolv) + randVec(dhoekMax)
+        randD = randVec(dposMax)
+        randH = randVec(dhoekMax)
+        write(12,*) i, randD%x, randD%y, randD%z, randH%x, randH%y, randH%z
+        CoM(rSolv) = CoM(rSolv) + randD
+        hoek(rSolv) = hoek(rSolv) + randH
+
+        !Dump
 
         ! Check of hoeken nog binnen [-Pi, +Pi] liggen
         if(hoek(rSolv)%x .GT. PI) then ! H1
             hoek(rSolv)%x = hoek(rSolv)%x - TAU
-        elseif(hoek(rSolv)%x .LT. PI) then
+        elseif(hoek(rSolv)%x .LT. -1.D0 * PI) then
             hoek(rSolv)%x = hoek(rSolv)%x + TAU
         end if
         if(hoek(rSolv)%y .GT. PI) then ! H2
             hoek(rSolv)%y = hoek(rSolv)%y - TAU
-        elseif(hoek(rSolv)%x .LT. PI) then
+        elseif(hoek(rSolv)%x .LT. -1.D0 * PI) then
             hoek(rSolv)%y = hoek(rSolv)%y + TAU
         end if
         if(hoek(rSolv)%z .GT. PI) then ! H3
             hoek(rSolv)%z = hoek(rSolv)%z - TAU
-        elseif(hoek(rSolv)%x .LT. PI) then
+        elseif(hoek(rSolv)%x .LT. -1.D0 * PI) then
             hoek(rSolv)%z = hoek(rSolv)%z + TAU
         end if
+
+        ! DUMP
+        write (11,*) nCoM*nDMSO+nSol - 6*nCoM
+        write (11,*) "Timestep: ", i
+        do j=1, nSol
+            write(11,*) sol_sym(j), solute(j)%x, solute(j)%y, solute(j)%z
+        end do
+        do j=1,nCoM
+            absPos = RotMatrix(CoM(j), DMSO, hoek(j))
+            do k=1, nDMSO
+                if (DMSO_sym(k) .NE. "H") then
+                write(11,*) DMSO_Sym(k), absPos(k)%x, absPos(k)%y, absPos(k)%z
+                end if
+            end do
+        end do
 
         ! Periodic boundaries!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
         ! Bereken veranderde interacties
         call calculateLJ(rSolv)
+        TotEng = 0.D0
+        totEng = calcEnergy(energy, solventsolvent)
 
         ! Doe Metropolis
         delta = totEng - totEng_old
-        exponent = -1.D0 * delta * 2625.5D0 * 1000D0 / (8.315D0 * 300.D0)
+        exponent = -1.D0 * delta  * 1.D0 / (8.315D0 * 300.D0)
         kans = e ** exponent
+        if (kans .GT. 1.D0) kans = 1.D0
         rv = rand()
 
-        write (*,*) delta, exponent, kans, rv
+        write (*,*) i, TotEng, kans, rv, rSolv
 
         ! Bepaal if succesvol -> volgende config
         if(rv .LE. kans) then ! Succes!
@@ -214,9 +261,10 @@ program MonteCarlo
             TotEng = TotEng_old
         end if
 
-        !write (*,*) delta, TotEng, real(nSuc) / real(i)
-
     end do loop_LJ
+
+    close(11)
+    close(12)
 
 !====================================================================
 !====================================================================
@@ -267,8 +315,11 @@ subroutine calculateLJ(i)
 
 end subroutine calculateLJ
 
-subroutine calcEnergy(out)
+function calcEnergy(energy, solventsolvent) result(out)
+    double precision, dimension(:), intent(in) :: energy
+    double precision, dimension(:,:), intent(in) :: solventsolvent
     double precision :: out
+    integer :: i, j
 
     ! Totale E
     out = 0.D0
@@ -280,5 +331,5 @@ subroutine calcEnergy(out)
         end do
     end do
 
-end subroutine calcEnergy
+end function calcEnergy
 end program MonteCarlo

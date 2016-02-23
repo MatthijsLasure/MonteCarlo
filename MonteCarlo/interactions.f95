@@ -10,6 +10,7 @@ module interactions
     use vector_class
     use lib
     !implicit none
+
     contains
 
 !====================================================================
@@ -31,6 +32,7 @@ module interactions
         TYPE (vector), dimension(:), INTENT(in) :: mol1, mol2 ! absolute coords!
         character*4, dimension(:), INTENT(in) :: sym1, sym2, table_sym ! Atoomtypes
         double precision, dimension(:), INTENT(in) :: table_Q, table_e, table_s ! params
+        double precision :: conversion
 
         ! OUTPUT
         double precision :: en
@@ -41,6 +43,8 @@ module interactions
         double precision :: tempL, tempR ! tijdelijke optelling
         integer :: i, j, n1, n2 ! loop vars, totale grootte arrays
         integer :: a, b ! welke atoomsoort
+
+        call getConv(conversion)
 
         n1 = size(mol1)
         n2 = size(mol2)
@@ -66,7 +70,7 @@ module interactions
                 end do
             end if
         end do
-        sumL = sumL / (4 * pi * epsilon0)
+        sumL = sumL * conversion
 
         en = sumL + sumR
 
