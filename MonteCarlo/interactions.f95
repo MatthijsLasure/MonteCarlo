@@ -29,17 +29,14 @@ MODULE interactions
 
     ! Calls in subroutine CALCLJ: 
     ! => getConv (on line <49>)
-    SUBROUTINE calcLJ(MOL1, MOL2, SYM1, SYM2, TABLE_SYM, TABLE_Q, TABLE_E, TABLE_S, EN)
+    SUBROUTINE calcLJ(MOL1, MOL2, SYM1, SYM2, TABLE_SYM, TABLE_Q, TABLE_E, TABLE_S, EN, BOXL, BOXL2)
         ! INPUT
-        TYPE (vector), DIMENSION(:), INTENT(IN) :: MOL1 ! absolute coords!
-        TYPE (vector), DIMENSION(:), INTENT(IN) :: MOL2 ! absolute coords!
-        CHARACTER*4, DIMENSION(:), INTENT(IN) :: SYM1 ! Atoomtypes
-        CHARACTER*4, DIMENSION(:), INTENT(IN) :: SYM2 ! Atoomtypes
+        TYPE (vector), DIMENSION(:), INTENT(IN) :: MOL1, MOL2 ! absolute coords!
+        CHARACTER*4, DIMENSION(:), INTENT(IN) :: SYM1, SYM2 ! Atoomtypes
         CHARACTER*4, DIMENSION(:), INTENT(IN) :: TABLE_SYM ! Atoomtypes
-        DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: TABLE_Q ! params
-        DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: TABLE_E ! params
-        DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: TABLE_S ! params
+        DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: TABLE_Q, TABLE_E, TABLE_S ! params
         DOUBLE PRECISION:: CONVERSION
+        DOUBLE PRECISION :: BOXL, BOXL2
 
         ! OUTPUT
         DOUBLE PRECISION:: EN
@@ -76,13 +73,13 @@ MODULE interactions
                         B = findSym(sym2(J), TABLE_SYM)
                         E = sqrt(table_e(A) * table_e(B))
                         !R = getDist(mol1(I), mol2(J))
-                        R = mol1(I) - mol2(J)
+                        R = mol2(J) - mol1(I)
 
                         if(.true.)then
                         ! Minimal image convention
-                        R%X = R%X - BOXL * ANINT(R%X / BOXL)
-                        R%Y = R%Y - BOXL * ANINT(R%Y / BOXL)
-                        R%Z = R%Z - BOXL * ANINT(R%Z / BOXL)
+                        R%X = R%X - BOXL2 * ANINT(R%X / BOXL)
+                        R%Y = R%Y - BOXL2 * ANINT(R%Y / BOXL)
+                        R%Z = R%Z - BOXL2 * ANINT(R%Z / BOXL)
                         end if
                         RV = length(R)
 

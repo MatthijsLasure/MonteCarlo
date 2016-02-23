@@ -33,7 +33,7 @@ PROGRAM MonteCarlo
     INTEGER:: RSOLV ! Geselecteerde molecule voor MC
     INTEGER:: NSUC = 0 ! Aantal succesvolle MC
     DOUBLE PRECISION:: RV, KANS,DELTA = 0, EXPONENT ! Random variabele en toebehoren voor Metropolis
-    CHARACTER(len=32), dimension(2) :: ARG
+    CHARACTER(len=32), dimension(5) :: ARG
 
     ! Energiën van de moleculen, bekomen via extern programma
     DOUBLE PRECISION:: E_DMSO, E_SOL
@@ -78,14 +78,21 @@ LOGICAL:: DODEBUG = .TRUE.                                          !
     DHOEKMAX = PI
 
     ! Config
-    !=======
-    !call SRAND()
+!====================================================================
+!====================================================================
+
     CALL system_clock (START)
     CALL SRAND(REAL(START)) ! Prime randgen
-    CALL GETARG(1, ARG(1))
-    CALL GETARG(2, ARG(2))
+
+    ! Arguments
+    do i=1,3
+    CALL GETARG(i, ARG(i))
+    end do
     read(ARG(1),*) boxl
     read(ARG(2),*) LJ_STEPS
+    read(ARG(3),*) DODEBUG
+
+    BOXL2 = BOXL * 2
 
     ! TODO inlezen uit config.txt?
 
@@ -95,7 +102,8 @@ LOGICAL:: DODEBUG = .TRUE.                                          !
     !BOXL = 15.7D0
 
     ! Laden van configuraties
-    !========================
+!====================================================================
+!====================================================================
 
     ! DMSO.txt: conformatie DMSO
     OPEN (UNIT=10, FILE="DMSO.txt")
@@ -198,7 +206,7 @@ OPEN(UNIT=11, FILE="out/DUMP.txt")
 !====================================================================
 
 END IF
-WRITE (*,*) "i   TotEng   TotEng_old   kans   rv   rSolv"
+WRITE (*,"(A, 1X, A, 1X, A, 1X, A, 1X, A, 1X, A, 1X, A)") "i", "TotEng", "TotEng_old", "kans", "rv", "rSolv", "pSuc"
 
 
     ! Loop 1: LJ
@@ -219,15 +227,15 @@ WRITE (*,*) "i   TotEng   TotEng_old   kans   rv   rSolv"
 
 
         ! Check of hoeken nog binnen [-Pi, +Pi] liggen
-        HOEK(RSOLV)%X = HOEK(RSOLV)%X - PI * ANINT(HOEK(RSOLV)%X / PI)
-        HOEK(RSOLV)%Y = HOEK(RSOLV)%Y - PI * ANINT(HOEK(RSOLV)%Y / PI)
-        HOEK(RSOLV)%Z = HOEK(RSOLV)%Z - PI * ANINT(HOEK(RSOLV)%Z / PI)
+        HOEK(RSOLV)%X = HOEK(RSOLV)%X - TAU * ANINT(HOEK(RSOLV)%X / PI)
+        HOEK(RSOLV)%Y = HOEK(RSOLV)%Y - TAU * ANINT(HOEK(RSOLV)%Y / PI)
+        HOEK(RSOLV)%Z = HOEK(RSOLV)%Z - TAU * ANINT(HOEK(RSOLV)%Z / PI)
 
-        if(.false.)then
+        if(.true.)then
         ! Periodic boundaries => Computer Simulation of Liquids, p30
-        COM(RSOLV)%X = COM(RSOLV)%X - BOXL * ANINT(COM(RSOLV)%X / BOXL)
-        COM(RSOLV)%Y = COM(RSOLV)%Y - BOXL * ANINT(COM(RSOLV)%Y / BOXL)
-        COM(RSOLV)%Z = COM(RSOLV)%Z - BOXL * ANINT(COM(RSOLV)%Z / BOXL)
+        COM(RSOLV)%X = COM(RSOLV)%X - BOXL2 * ANINT(COM(RSOLV)%X / BOXL)
+        COM(RSOLV)%Y = COM(RSOLV)%Y - BOXL2 * ANINT(COM(RSOLV)%Y / BOXL)
+        COM(RSOLV)%Z = COM(RSOLV)%Z - BOXL2 * ANINT(COM(RSOLV)%Z / BOXL)
         end if
 
         ! DUMP
@@ -262,7 +270,12 @@ WRITE (*,*) "i   TotEng   TotEng_old   kans   rv   rSolv"
         IF (KANS .GT. 1.D0) KANS = 1.D0
         RV = RAND()
 
-        WRITE (*,*) I, TOTENG, TOTENG_OLD, KANS, RV, RSOLV
+        if(isnan(TOTENG)) THEN
+            TOTENG = 2**30
+            write (0,*) "NaN @ ", i
+        END IF
+        WRITE (*,"(I6.6, 1X, ES20.10, 1X, ES20.10, 1X, F6.4, 1X, F6.4, 1X, I3.3, 1X, F6.4)") &
+        I, TOTENG, TOTENG_OLD, KANS, RV, RSOLV, real(nsuc) / real(I)
 
         ! Bepaal if succesvol -> volgende config
         IF(RV .LE. KANS) THEN ! Succes!
@@ -316,7 +329,7 @@ SUBROUTINE calculateLJ(I)
     MOL1 = RotMatrix(CoM(I), DMSO, hoek(I))
     DO J=I+1,NCOM
         MOL2 = RotMatrix(CoM(J), DMSO, hoek(J))
-        CALL calcLJ(MOL1, MOL2, DMSO_SYM, DMSO_SYM, SYM, Q, EPSILON, SIGMA, EN)
+        CALL calcLJ(MOL1, MOL2, DMSO_SYM, DMSO_SYM, SYM, Q, EPSILON, SIGMA, EN, BOXL, BOXL2)
 
         SOLVENTSOLVENT(I,J) = EN
         SOLVENTSOLVENT(J,I) = EN
@@ -324,7 +337,7 @@ SUBROUTINE calculateLJ(I)
 
     ! Solvent-solute
     !do i=1,nCoM ! Not needed!
-        CALL calcLJ(MOL1, SOLUTE, DMSO_SYM, SOL_SYM, SYM, Q, EPSILON, SIGMA, EN)
+        CALL calcLJ(MOL1, SOLUTE, DMSO_SYM, SOL_SYM, SYM, Q, EPSILON, SIGMA, EN, BOXL, BOXL2)
         ENERGY(I) = EN
     !end do
 
