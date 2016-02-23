@@ -111,14 +111,5 @@ MODULE lib
         RV%z = (RAND() - 0.5D0) * 2 * MAX
     END FUNCTION randVec
 
-    SUBROUTINE getConv(FUCK)
-        DOUBLE PRECISION:: CONV
-        DOUBLE PRECISION, INTENT(OUT) :: FUCK
-        CONV = 6.023 * (1.60217646)**2
-        CONV = CONV / 4
-        CONV = CONV / PI
-        CONV = CONV / 8.854187817620 ! J/mol * 10^-5
-        CONV = CONV * 10**(-8) ! kJ/mol
-    END SUBROUTINE getConv
 
 END MODULE lib

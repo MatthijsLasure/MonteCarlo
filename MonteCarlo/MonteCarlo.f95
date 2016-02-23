@@ -20,6 +20,7 @@ PROGRAM MonteCarlo
     USE interactions
     USE lib
     USE randgen
+    USE readconfig
 
     IMPLICIT NONE
 
@@ -28,12 +29,12 @@ PROGRAM MonteCarlo
     !===========
 
     DOUBLE PRECISION:: BOXL, BOXL2 ! box grootte, halve box
-    INTEGER:: I, J, UNICORN
+    INTEGER:: I, J, UNICORN, ISEED
     INTEGER:: LJ_STEPS, GA_STEPS ! Aantal stappen per loop
     INTEGER:: RSOLV ! Geselecteerde molecule voor MC
     INTEGER:: NSUC = 0 ! Aantal succesvolle MC
     DOUBLE PRECISION:: RV, KANS,DELTA = 0, EXPONENT ! Random variabele en toebehoren voor Metropolis
-    CHARACTER(len=32), dimension(5) :: ARG
+    CHARACTER(LEN=32), DIMENSION(5) :: ARG
 
     ! Energiën van de moleculen, bekomen via extern programma
     DOUBLE PRECISION:: E_DMSO, E_SOL
@@ -58,7 +59,7 @@ PROGRAM MonteCarlo
     INTEGER:: K                                                     !
     TYPE (vector), DIMENSION(10) :: ABSPOS                          !
     INTEGER:: START                                                 !
-LOGICAL:: DODEBUG = .TRUE.                                          !
+LOGICAL:: DODEBUG = .FALSE.                                          !
 !====================================================================
 
     ! output calc
@@ -67,7 +68,7 @@ LOGICAL:: DODEBUG = .TRUE.                                          !
     DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: ENERGY, EOLD
     DOUBLE PRECISION:: TOTENG = 0.D0
     DOUBLE PRECISION:: TOTENG_OLD = 0.D0
-    DOUBLE PRECISION :: radius
+    DOUBLE PRECISION :: RADIUS
 
     ! Arrays voor parameters van DMSO (Q, epsilon, sigma, mass)
     DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: Q, EPSILON, SIGMA, MASS
@@ -81,17 +82,11 @@ LOGICAL:: DODEBUG = .TRUE.                                          !
     ! Config
 !====================================================================
 !====================================================================
+    CALL rConfig(BOXL, LJ_STEPS, Ga_STEPS, iseed, DoDebug)
 
     CALL system_clock (START)
-    CALL SRAND(REAL(START)) ! Prime randgen
-
-    ! Arguments
-    do i=1,3
-    CALL GETARG(i, ARG(i))
-    end do
-    read(ARG(1),*) boxl
-    read(ARG(2),*) LJ_STEPS
-    read(ARG(3),*) DODEBUG
+    write(*,*) START
+    CALL SRAND(REAL(iseed)) ! Prime randgen
 
     BOXL2 = BOXL * 2
 
@@ -187,30 +182,29 @@ LOGICAL:: DODEBUG = .TRUE.                                          !
 
 IF (DODEBUG) THEN
 OPEN(UNIT=11, FILE="out/DUMP.txt")
-        ! DUMP
-        !WRITE (11,*) NCOM*NDMSO+NSOL - 6*NCOM
-        WRITE (11,*) NCOM+NSOL
-        WRITE (11,*) "Timestep: ", 0
-        DO J=1, NSOL
-            WRITE(11,*) sol_sym(J), solute(J)%x, solute(J)%y, solute(J)%z
+! DUMP
+!WRITE (11,*) NCOM*NDMSO+NSOL - 6*NCOM
+WRITE (11,*) NCOM+NSOL
+WRITE (11,*) "Timestep: ", 0
+DO J=1, NSOL
+    WRITE(11,*) sol_sym(J), solute(J)%x, solute(J)%y, solute(J)%z
+END DO
+DO J=1,NCOM
+    WRITE (11,*) "S", CoM(J)%x, CoM(J)%y, CoM(J)%z
+    IF(.FALSE.) THEN
+        ABSPOS = RotMatrix(CoM(J), DMSO, hoek(J))
+        DO K=1, NDMSO
+            IF (DMSO_sym(K) .NE. "H") THEN
+            WRITE(11,*) DMSO_Sym(K), absPos(K)%x, absPos(K)%y, absPos(K)%z
+            END IF
         END DO
-        DO J=1,NCOM
-        write (11,*) "S", CoM(J)%x, CoM(J)%y, CoM(J)%z
-        if(.false.) then
-            ABSPOS = RotMatrix(CoM(J), DMSO, hoek(J))
-            DO K=1, NDMSO
-                IF (DMSO_sym(K) .NE. "H") THEN
-                WRITE(11,*) DMSO_Sym(K), absPos(K)%x, absPos(K)%y, absPos(K)%z
-                END IF
-            END DO
-            end if
-        END DO
-
-
-!====================================================================
-!====================================================================
-
+    END IF
+END DO
 END IF
+
+!====================================================================
+!====================================================================
+
 WRITE (*,"(A, 1X, A, 1X, A, 1X, A, 1X, A, 1X, A, 1X, A)") "i", "TotEng", "TotEng_old", "kans", "rv", "rSolv", "pSuc"
 
 
@@ -236,20 +230,12 @@ WRITE (*,"(A, 1X, A, 1X, A, 1X, A, 1X, A, 1X, A, 1X, A)") "i", "TotEng", "TotEng
         HOEK(RSOLV)%Y = HOEK(RSOLV)%Y - TAU * ANINT(HOEK(RSOLV)%Y / PI)
         HOEK(RSOLV)%Z = HOEK(RSOLV)%Z - TAU * ANINT(HOEK(RSOLV)%Z / PI)
 
-        if(.true.)then
+        IF(.TRUE.)THEN
         ! Periodic boundaries => Computer Simulation of Liquids, p30
         COM(RSOLV)%X = COM(RSOLV)%X - BOXL2 * ANINT(COM(RSOLV)%X / BOXL)
         COM(RSOLV)%Y = COM(RSOLV)%Y - BOXL2 * ANINT(COM(RSOLV)%Y / BOXL)
         COM(RSOLV)%Z = COM(RSOLV)%Z - BOXL2 * ANINT(COM(RSOLV)%Z / BOXL)
-        end if
-
-        radius = 0.D0
-        Do I=1, nCoM
-            DO j=1,nCoM
-                radius =  radius + getDist(Com(i),Com(j))
-            end do
-        end do
-        write (0,*) unicorn, radius / real(nCoM)
+        END IF
 
         ! DUMP
         IF(DODEBUG) THEN
@@ -259,17 +245,16 @@ WRITE (*,"(A, 1X, A, 1X, A, 1X, A, 1X, A, 1X, A, 1X, A)") "i", "TotEng", "TotEng
         DO J=1, NSOL
             WRITE(11,*) sol_sym(J), solute(J)%x, solute(J)%y, solute(J)%z
         END DO
-
         DO J=1,NCOM
-        write (11,*) "S", CoM(J)%x, CoM(J)%y, CoM(J)%z
-        if(.false.) then
+        WRITE (11,*) "S", CoM(J)%x, CoM(J)%y, CoM(J)%z
+        IF(.FALSE.) THEN
             ABSPOS = RotMatrix(CoM(J), DMSO, hoek(J))
             DO K=1, NDMSO
                 IF (DMSO_sym(K) .NE. "H") THEN
                 WRITE(11,*) DMSO_Sym(K), absPos(K)%x, absPos(K)%y, absPos(K)%z
                 END IF
             END DO
-            end if
+            END IF
         END DO
         END IF
 
@@ -285,15 +270,8 @@ WRITE (*,"(A, 1X, A, 1X, A, 1X, A, 1X, A, 1X, A, 1X, A)") "i", "TotEng", "TotEng
         IF (KANS .GT. 1.D0) KANS = 1.D0
         RV = RAND()
 
-        if(isnan(TOTENG)) THEN
-            TOTENG = 2**30
-            !write (0,"(A, I6.6)") "NaN @ ", UNICORN
-            call dumpss
-        ELSE
-            !write(0,"(A, I6.6)") "OK @ ", UNICORN
-        END IF
-        WRITE (*,"(I6.6, 1X, ES20.10, 1X, ES20.10, 1X, F6.4, 1X, F6.4, 1X, I3.3, 1X, F6.4)") &
-        UNICORN, TOTENG, TOTENG_OLD, KANS, RV, RSOLV, real(nsuc) / real(UNICORN)
+        WRITE (*,"(I12.12, 1X, ES20.10, 1X, ES20.10, 1X, F6.4, 1X, F6.4, 1X, I3.3, 1X, F6.4)") &
+        UNICORN, TOTENG, TOTENG_OLD, KANS, RV, RSOLV, real(NSUC) / real(UNICORN)
 
         ! Bepaal if succesvol -> volgende config
         IF(RV .LE. KANS) THEN ! Succes!
@@ -312,6 +290,34 @@ WRITE (*,"(A, 1X, A, 1X, A, 1X, A, 1X, A, 1X, A, 1X, A)") "i", "TotEng", "TotEng
 
     IF(DODEBUG) CLOSE(11)
 
+    ! DUMP
+OPEN(UNIT=11, FILE="DUMP.txt")
+WRITE (11,*) NCOM*NDMSO+NSOL - 6*NCOM
+!WRITE (11,*) NCOM+NSOL
+WRITE (11,*) "Timestep: ", UNICORN
+DO J=1, NSOL
+    WRITE(11,*) sol_sym(J), solute(J)%x, solute(J)%y, solute(J)%z
+END DO
+DO J=1,NCOM
+    !WRITE (11,*) "S", CoM(J)%x, CoM(J)%y, CoM(J)%z
+    ABSPOS = RotMatrix(CoM(J), DMSO, hoek(J))
+    DO K=1, NDMSO
+        IF (DMSO_sym(K) .NE. "H") THEN
+        WRITE(11,*) DMSO_Sym(K), absPos(K)%x, absPos(K)%y, absPos(K)%z
+        END IF
+    END DO
+END DO
+close(11)
+
+! Write box
+open(unit=10, file="backup.txt")
+write(10,*) boxl
+write(10,*) nCoM
+do I=1,nCoM
+    write(10,*) CoM(I)%x, CoM(I)%y, CoM(I)%z, hoek(I)%x, hoek(I)%y, hoek(I)%z
+end do
+close(10)
+
 !====================================================================
 !====================================================================
 
@@ -320,11 +326,14 @@ WRITE (*,"(A, 1X, A, 1X, A, 1X, A, 1X, A, 1X, A, 1X, A)") "i", "TotEng", "TotEng
         ! Doe MC
 
         ! Bereken veranderde interacties
-
+        J = I
         ! Doe Metropolis
 
         ! Bepaal if succesvol -> volgende config
     END DO loop_Ga
+
+    CALL system_clock(START)
+    write (*,*) START
 
 !====================================================================
 !====================================================================
@@ -383,11 +392,4 @@ FUNCTION calcEnergy(ENERGY, SOLVENTSOLVENT) RESULT(out)
 
 END FUNCTION calcEnergy
 
-subroutine dumpss()
-    OPEN(UNIT=10, FILE="solventsolvent_err.txt")
-    DO I=1,NCOM
-        WRITE(10,*) solventsolvent(I,:)
-    END DO
-    CLOSE(10)
-end subroutine dumpss
 END PROGRAM MonteCarlo

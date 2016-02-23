@@ -35,7 +35,7 @@ MODULE interactions
         CHARACTER*4, DIMENSION(:), INTENT(IN) :: SYM1, SYM2 ! Atoomtypes
         CHARACTER*4, DIMENSION(:), INTENT(IN) :: TABLE_SYM ! Atoomtypes
         DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: TABLE_Q, TABLE_E, TABLE_S ! params
-        DOUBLE PRECISION:: CONVERSION
+        DOUBLE PRECISION :: CONV
         DOUBLE PRECISION :: BOXL, BOXL2
 
         ! OUTPUT
@@ -57,7 +57,11 @@ MODULE interactions
         INTEGER:: A ! welke atoomsoort
         INTEGER:: B ! welke atoomsoort
 
-        CALL getConv(CONVERSION)
+        CONV = 6.023 * (1.60217646)**2
+        CONV = CONV / 4
+        CONV = CONV / PI
+        CONV = CONV / 8.854187817620 ! J/mol * 10^-5
+        CONV = CONV * 10**(-8) ! kJ/mol
 
         N1 = size(MOL1)
         N2 = size(MOL2)
@@ -91,7 +95,7 @@ MODULE interactions
                 END DO
             END IF
         END DO
-        SUML = SUML * CONVERSION
+        SUML = SUML * CONV
 
         EN = SUML + SUMR
 
@@ -101,7 +105,6 @@ MODULE interactions
 
     SUBROUTINE calcGa(I)
     INTEGER:: I
-
     END SUBROUTINE calcGa
 
 END MODULE interactions
