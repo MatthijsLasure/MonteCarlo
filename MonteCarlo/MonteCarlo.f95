@@ -9,6 +9,11 @@
 ! Dan verfijnen met Gaussian (eg 250 stappen)
 !====================================================================
 
+! Calls in program MONTECARLO: 
+! => system_clock (on line <82>)
+! ==> SRAND (on line <83>)
+! ===> calculateLJ (on line <156>)
+! ====> calculateLJ (on line <251>)
 PROGRAM MonteCarlo
 
     USE vector_class
@@ -294,6 +299,9 @@ CONTAINS
 !====================================================================
 !====================================================================
 
+! Calls in subroutine CALCULATELJ: 
+! => calcLJ (on line <316>)
+! ==> calcLJ (on line <324>)
 SUBROUTINE calculateLJ(I)
 
     INTEGER :: I

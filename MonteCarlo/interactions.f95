@@ -29,10 +29,6 @@ MODULE interactions
 
     ! Calls in subroutine CALCLJ: 
     ! => getConv (on line <49>)
-    ! Calls in subroutine CALCLJ: 
-    ! => getConv (on line <51>)
-    ! Calls in subroutine CALCLJ: 
-    ! => getConv (on line <53>)
     SUBROUTINE calcLJ(MOL1, MOL2, SYM1, SYM2, TABLE_SYM, TABLE_Q, TABLE_E, TABLE_S, EN)
         ! INPUT
         TYPE (vector), DIMENSION(:), INTENT(IN) :: MOL1, MOL2 ! absolute coords!
