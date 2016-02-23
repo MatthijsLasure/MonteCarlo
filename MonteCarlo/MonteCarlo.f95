@@ -23,26 +23,28 @@ PROGRAM MonteCarlo
 
     IMPLICIT NONE
 
-    ! Pi -> lib
-    !double precision, parameter :: PI = 4.D0 * DATAN(1.D0)
 
     ! Variabelen
     !===========
 
-    DOUBLE PRECISION :: BOX_LENGTH ! box grootte
-    INTEGER :: I, J
-    INTEGER :: LJ_STEPS, GA_STEPS ! Aantal stappen per loop
-    INTEGER :: RSOLV ! Geselecteerde molecule voor MC
-    INTEGER :: NSUC = 0 ! Aantal succesvolle MC
-    DOUBLE PRECISION :: RV, KANS, DELTA = 0, EXPONENT ! Random variabele
+    DOUBLE PRECISION:: BOXL, BOXL2 ! box grootte, halve box
+    INTEGER:: I, J
+    INTEGER:: LJ_STEPS, GA_STEPS ! Aantal stappen per loop
+    INTEGER:: RSOLV ! Geselecteerde molecule voor MC
+    INTEGER:: NSUC = 0 ! Aantal succesvolle MC
+    DOUBLE PRECISION:: RV, KANS,DELTA = 0, EXPONENT ! Random variabele en toebehoren voor Metropolis
+    CHARACTER(len=32), dimension(2) :: ARG
 
     ! Energiën van de moleculen, bekomen via extern programma
-    DOUBLE PRECISION :: E_DMSO, E_SOL
+    DOUBLE PRECISION:: E_DMSO, E_SOL
 
     ! Vectoren voor moleculen & atoomtypes
     TYPE (vector), DIMENSION(:), ALLOCATABLE :: DMSO, COM, SOLUTE, HOEK
+    ! Variabelen voor de vorige run van MC
+    TYPE (vector), DIMENSION(:), ALLOCATABLE :: COM_OLD, SOLUTE_OLD, HOEK_OLD
+
     CHARACTER*4, DIMENSION(:), ALLOCATABLE :: DMSO_SYM, SOL_SYM
-    INTEGER :: NDMSO, NCOM, NSOL, NPARAM ! Aantal units
+    INTEGER:: NDMSO, NCOM, NSOL, NPARAM ! Aantal units
     ! DMSO: relatieve coördinaten voor de atomen
     ! CoM: Centre of Mass: locaties van de DMSO moleculen
     ! solute: conformatie van de solute
@@ -52,27 +54,26 @@ PROGRAM MonteCarlo
     TYPE (vector), DIMENSION(:), ALLOCATABLE :: MOL1, MOL2
 
     ! Debug
-    INTEGER :: K
-    TYPE (vector), DIMENSION(10) :: ABSPOS
-    INTEGER :: START
-    LOGICAL :: DODEBUG = .FALSE.
+!====================================================================
+    INTEGER:: K                                                     !
+    TYPE (vector), DIMENSION(10) :: ABSPOS                          !
+    INTEGER:: START                                                 !
+LOGICAL:: DODEBUG = .TRUE.                                          !
+!====================================================================
 
     ! output calc
-    DOUBLE PRECISION :: EN
+    DOUBLE PRECISION:: EN
     DOUBLE PRECISION, DIMENSION(:,:), ALLOCATABLE :: SOLVENTSOLVENT, SSOLD
     DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: ENERGY, EOLD
-    DOUBLE PRECISION :: TOTENG, TOT
+    DOUBLE PRECISION:: TOTENG = 0.D0
+    DOUBLE PRECISION:: TOTENG_OLD = 0.D0
 
     ! Arrays voor parameters van DMSO (Q, epsilon, sigma, mass)
     DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: Q, EPSILON, SIGMA, MASS
     CHARACTER*4, DIMENSION(:), ALLOCATABLE :: SYM
 
-    ! Variabelen voor de vorige run van MC
-    TYPE (vector), DIMENSION(:), ALLOCATABLE :: COM_OLD, SOLUTE_OLD, HOEK_OLD
-    DOUBLE PRECISION :: TOTENG_OLD = 0
-
     ! Maximale verarndering bij MC
-    DOUBLE PRECISION :: DPOSMAX, DHOEKMAX
+    DOUBLE PRECISION:: DPOSMAX, DHOEKMAX
     DPOSMAX = 0.25D0
     DHOEKMAX = PI
 
@@ -81,10 +82,17 @@ PROGRAM MonteCarlo
     !call SRAND()
     CALL system_clock (START)
     CALL SRAND(REAL(START)) ! Prime randgen
+    CALL GETARG(1, ARG(1))
+    CALL GETARG(2, ARG(2))
+    read(ARG(1),*) boxl
+    read(ARG(2),*) LJ_STEPS
 
     ! TODO inlezen uit config.txt?
-    LJ_STEPS = 1000 ! Ruwe loop
+
+
+    !LJ_STEPS = 1000 ! Ruwe loop
     GA_STEPS = 1 ! Loop met Gaussian
+    !BOXL = 15.7D0
 
     ! Laden van configuraties
     !========================
@@ -113,7 +121,7 @@ PROGRAM MonteCarlo
 
     ! box.txt: plaatsen van de moleculen (CoM, hoek)
     OPEN (UNIT=10, FILE="box.txt")
-    READ (10, *) box_length ! Box grootte
+    READ (10, *) BOXL ! Box grootte
     READ (10, *) nCoM ! Lees aantal moleculen
     ALLOCATE(CoM(NCOM))
     ALLOCATE(hoek(NCOM))
@@ -209,24 +217,18 @@ WRITE (*,*) "i   TotEng   TotEng_old   kans   rv   rSolv"
         COM(RSOLV) = CoM(RSOLV) + randVec(DPOSMAX)
         HOEK(RSOLV) = hoek(RSOLV) + randVec(DHOEKMAX)
 
-        !Dump
 
         ! Check of hoeken nog binnen [-Pi, +Pi] liggen
-        IF(hoek(RSOLV)%x .GT. PI) THEN ! H1
-            HOEK(RSOLV)%x = hoek(RSOLV)%x - TAU
-        ELSEIF(hoek(RSOLV)%x .LT. -1.D0 * PI) THEN
-            HOEK(RSOLV)%x = hoek(RSOLV)%x + TAU
-        END IF
-        IF(hoek(RSOLV)%y .GT. PI) THEN ! H2
-            HOEK(RSOLV)%y = hoek(RSOLV)%y - TAU
-        ELSEIF(hoek(RSOLV)%x .LT. -1.D0 * PI) THEN
-            HOEK(RSOLV)%y = hoek(RSOLV)%y + TAU
-        END IF
-        IF(hoek(RSOLV)%z .GT. PI) THEN ! H3
-            HOEK(RSOLV)%z = hoek(RSOLV)%z - TAU
-        ELSEIF(hoek(RSOLV)%x .LT. -1.D0 * PI) THEN
-            HOEK(RSOLV)%z = hoek(RSOLV)%z + TAU
-        END IF
+        HOEK(RSOLV)%X = HOEK(RSOLV)%X - PI * ANINT(HOEK(RSOLV)%X / PI)
+        HOEK(RSOLV)%Y = HOEK(RSOLV)%Y - PI * ANINT(HOEK(RSOLV)%Y / PI)
+        HOEK(RSOLV)%Z = HOEK(RSOLV)%Z - PI * ANINT(HOEK(RSOLV)%Z / PI)
+
+        if(.false.)then
+        ! Periodic boundaries => Computer Simulation of Liquids, p30
+        COM(RSOLV)%X = COM(RSOLV)%X - BOXL * ANINT(COM(RSOLV)%X / BOXL)
+        COM(RSOLV)%Y = COM(RSOLV)%Y - BOXL * ANINT(COM(RSOLV)%Y / BOXL)
+        COM(RSOLV)%Z = COM(RSOLV)%Z - BOXL * ANINT(COM(RSOLV)%Z / BOXL)
+        end if
 
         ! DUMP
         IF(DODEBUG) THEN
@@ -246,6 +248,7 @@ WRITE (*,*) "i   TotEng   TotEng_old   kans   rv   rSolv"
         END IF
 
         ! Periodic boundaries!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
 
         ! Bereken veranderde interacties
         CALL calculateLJ(RSOLV)
@@ -304,8 +307,8 @@ CONTAINS
 ! ==> calcLJ (on line <324>)
 SUBROUTINE calculateLJ(I)
 
-    INTEGER :: I
-    INTEGER :: J
+    INTEGER:: I
+    INTEGER:: J
 
     ! Solvent solvent
     ! Notice: geen i loop: alleen molecule i is veranderd en moet opnieuw berekend worden
@@ -333,8 +336,9 @@ END SUBROUTINE calculateLJ
 FUNCTION calcEnergy(ENERGY, SOLVENTSOLVENT) RESULT(out)
     DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: ENERGY
     DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: SOLVENTSOLVENT
-    DOUBLE PRECISION :: OUT
-    INTEGER :: I, J
+    DOUBLE PRECISION:: OUT
+    INTEGER:: I
+    INTEGER:: J
 
     ! Totale E
     OUT = 0.D0

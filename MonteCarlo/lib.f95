@@ -24,7 +24,8 @@ MODULE lib
     ! Roteer een set coördinaten rond de CoM met gegeven hoeken
     ! Hoek: in graden!
     FUNCTION RotMatrix(COM, RELPOS, HOEK) RESULT(AbsPos)
-        TYPE (vector), INTENT(IN) :: COM, HOEK
+        TYPE (vector), INTENT(IN) :: COM
+        TYPE (vector), INTENT(IN) :: HOEK
         TYPE (vector), DIMENSION(:), INTENT(IN) :: RELPOS
         TYPE (vector), DIMENSION(size(RELPOS)) :: ABSPOS
 
@@ -32,12 +33,16 @@ MODULE lib
         !===========
         DOUBLE PRECISION, DIMENSION(3,3) :: RM ! Rotatiematrix
         DOUBLE PRECISION, DIMENSION(3) :: TEMP ! Tijdelijke array
-        TYPE (vector) :: V ! Tijdelijke vector
+        TYPE (vector):: V ! Tijdelijke vector
 
-        DOUBLE PRECISION :: COS1, COS2, COS3
-        DOUBLE PRECISION :: SIN1, SIN2, SIN3
-        INTEGER :: N ! Aantal atomen
-        INTEGER :: I
+        DOUBLE PRECISION:: COS1
+        DOUBLE PRECISION:: COS2
+        DOUBLE PRECISION:: COS3
+        DOUBLE PRECISION:: SIN1
+        DOUBLE PRECISION:: SIN2
+        DOUBLE PRECISION:: SIN3
+        INTEGER:: N ! Aantal atomen
+        INTEGER:: I
 
         N = size(RELPOS)
 
@@ -79,8 +84,10 @@ MODULE lib
     ! findSym
     !========
     FUNCTION findSym(TYPE, SYM) RESULT(pos)
-        CHARACTER*4 :: TYPE
-        INTEGER :: POS, I, N
+        CHARACTER*4:: TYPE
+        INTEGER:: POS
+        INTEGER:: I
+        INTEGER:: N
         CHARACTER*4, DIMENSION(:) :: SYM
 
         N = size(SYM)
@@ -97,7 +104,7 @@ MODULE lib
     !====================================================================
     FUNCTION randVec(MAX) RESULT(rv)
         DOUBLE PRECISION, INTENT(IN) :: MAX
-        TYPE (vector) :: RV
+        TYPE (vector):: RV
 
         RV%x = (RAND() - 0.5D0) * 2 * MAX
         RV%y = (RAND() - 0.5D0) * 2 * MAX
@@ -105,7 +112,7 @@ MODULE lib
     END FUNCTION randVec
 
     SUBROUTINE getConv(FUCK)
-        DOUBLE PRECISION :: CONV
+        DOUBLE PRECISION:: CONV
         DOUBLE PRECISION, INTENT(OUT) :: FUCK
         CONV = 6.023 * (1.60217646)**2
         CONV = CONV / 4

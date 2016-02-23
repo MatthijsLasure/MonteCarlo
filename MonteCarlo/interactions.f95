@@ -31,20 +31,34 @@ MODULE interactions
     ! => getConv (on line <49>)
     SUBROUTINE calcLJ(MOL1, MOL2, SYM1, SYM2, TABLE_SYM, TABLE_Q, TABLE_E, TABLE_S, EN)
         ! INPUT
-        TYPE (vector), DIMENSION(:), INTENT(IN) :: MOL1, MOL2 ! absolute coords!
-        CHARACTER*4, DIMENSION(:), INTENT(IN) :: SYM1, SYM2, TABLE_SYM ! Atoomtypes
-        DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: TABLE_Q, TABLE_E, TABLE_S ! params
-        DOUBLE PRECISION :: CONVERSION
+        TYPE (vector), DIMENSION(:), INTENT(IN) :: MOL1 ! absolute coords!
+        TYPE (vector), DIMENSION(:), INTENT(IN) :: MOL2 ! absolute coords!
+        CHARACTER*4, DIMENSION(:), INTENT(IN) :: SYM1 ! Atoomtypes
+        CHARACTER*4, DIMENSION(:), INTENT(IN) :: SYM2 ! Atoomtypes
+        CHARACTER*4, DIMENSION(:), INTENT(IN) :: TABLE_SYM ! Atoomtypes
+        DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: TABLE_Q ! params
+        DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: TABLE_E ! params
+        DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: TABLE_S ! params
+        DOUBLE PRECISION:: CONVERSION
 
         ! OUTPUT
-        DOUBLE PRECISION :: EN
+        DOUBLE PRECISION:: EN
 
         ! TEMP
-        DOUBLE PRECISION :: R, E, S ! temp params
-        DOUBLE PRECISION :: SUML, SUMR ! sommen
-        DOUBLE PRECISION :: TEMPL, TEMPR ! tijdelijke optelling
-        INTEGER :: I, J, N1, N2 ! loop vars, totale grootte arrays
-        INTEGER :: A, B ! welke atoomsoort
+        TYPE (vector):: R
+        DOUBLE PRECISION:: RV ! temp params
+        DOUBLE PRECISION:: E ! temp params
+        DOUBLE PRECISION:: S ! temp params
+        DOUBLE PRECISION:: SUML ! sommen
+        DOUBLE PRECISION:: SUMR ! sommen
+        DOUBLE PRECISION:: TEMPL ! tijdelijke optelling
+        DOUBLE PRECISION:: TEMPR ! tijdelijke optelling
+        INTEGER:: I ! loop vars, totale grootte arrays
+        INTEGER:: J ! loop vars, totale grootte arrays
+        INTEGER:: N1 ! loop vars, totale grootte arrays
+        INTEGER:: N2 ! loop vars, totale grootte arrays
+        INTEGER:: A ! welke atoomsoort
+        INTEGER:: B ! welke atoomsoort
 
         CALL getConv(CONVERSION)
 
@@ -61,11 +75,21 @@ MODULE interactions
                     IF(sym2(J) .NE. "H") THEN
                         B = findSym(sym2(J), TABLE_SYM)
                         E = sqrt(table_e(A) * table_e(B))
-                        R = getDist(mol1(I), mol2(J))
+                        !R = getDist(mol1(I), mol2(J))
+                        R = mol1(I) - mol2(J)
+
+                        if(.true.)then
+                        ! Minimal image convention
+                        R%X = R%X - BOXL * ANINT(R%X / BOXL)
+                        R%Y = R%Y - BOXL * ANINT(R%Y / BOXL)
+                        R%Z = R%Z - BOXL * ANINT(R%Z / BOXL)
+                        end if
+                        RV = length(R)
+
                         S = (table_s(A) + table_s(B))/2
 
-                        TEMPL = table_Q(A) * table_Q(B) / R
-                        TEMPR = 4 * E * (S**12 / R**12 - S**6 / R**6)
+                        TEMPL = table_Q(A) * table_Q(B) / RV
+                        TEMPR = 4 * E * (S**12 / RV**12 - S**6 / RV**6)
                         SUML = SUML + TEMPL
                         SUMR = SUMR + TEMPR
                     END IF
@@ -81,7 +105,7 @@ MODULE interactions
 !====================================================================
 
     SUBROUTINE calcGa(I)
-    INTEGER :: I
+    INTEGER:: I
 
     END SUBROUTINE calcGa
 

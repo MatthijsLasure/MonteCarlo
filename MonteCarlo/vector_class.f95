@@ -44,16 +44,18 @@ MODULE vector_class
 
     ! Arimetrische functies
     FUNCTION vecadd(A, B) RESULT(c)
-        TYPE (vector), INTENT(IN) :: A, B
-        TYPE (vector) :: C
+        TYPE (vector), INTENT(IN) :: A
+        TYPE (vector), INTENT(IN) :: B
+        TYPE (vector):: C
         C%x = A%x + B%x
         C%y = A%y + B%y
         C%z = A%z + B%z
     END FUNCTION vecadd
 
     FUNCTION vecsub(A, B) RESULT(c)
-        TYPE (vector), INTENT(IN) :: A, B
-        TYPE (vector) :: C
+        TYPE (vector), INTENT(IN) :: A
+        TYPE (vector), INTENT(IN) :: B
+        TYPE (vector):: C
         C%x = A%x - B%x
         C%y = A%y - B%y
         C%z = A%z - B%z
@@ -61,7 +63,7 @@ MODULE vector_class
 
     FUNCTION vecmult(A, M) RESULT(c)
         TYPE (vector), INTENT(IN) :: A
-        TYPE (vector) :: C
+        TYPE (vector):: C
         DOUBLE PRECISION, INTENT(IN) :: M
         C%x = M * A%x
         C%y = M * A%y
@@ -71,7 +73,7 @@ MODULE vector_class
     FUNCTION vecdiv(A, M) RESULT(c)
         TYPE (vector), INTENT(IN) :: A
         DOUBLE PRECISION, INTENT(IN) :: M
-        TYPE (vector) :: C
+        TYPE (vector):: C
         IF (M /= 0) THEN
             C = vecmult(A, 1.D0 / M)
         ELSE
@@ -80,16 +82,18 @@ MODULE vector_class
     END FUNCTION vecdiv
 
     FUNCTION cross(A, B) RESULT(c)
-        TYPE (vector), INTENT(IN) :: A, B
-        TYPE (vector) :: C
+        TYPE (vector), INTENT(IN) :: A
+        TYPE (vector), INTENT(IN) :: B
+        TYPE (vector):: C
         C%x = A%y * B%z - A%z * B%y
         C%y = A%z * B%x - A%x * B%z
         C%z = A%x * B%y - A%y * B%x
     END FUNCTION cross
 
     FUNCTION dot(A, B) RESULT(d)
-        TYPE (vector) :: A, B
-        DOUBLE PRECISION D
+        TYPE (vector):: A
+        TYPE (vector):: B
+        DOUBLE PRECISION :: D
         D = 0.D0
         D = D + A%x + B%x
         D = D + A%y + B%y
@@ -98,36 +102,39 @@ MODULE vector_class
 
     ! Niet arimetrische functies
     FUNCTION length_sq(V) RESULT(r)
-        TYPE (vector) :: V
-        DOUBLE PRECISION :: R
+        TYPE (vector):: V
+        DOUBLE PRECISION:: R
         R = V%x ** 2 + V%y ** 2 + V%z ** 2
     END FUNCTION
 
     FUNCTION length(V) RESULT(r)
-        TYPE (vector) :: V
-        DOUBLE PRECISION :: R
+        TYPE (vector):: V
+        DOUBLE PRECISION:: R
         R = sqrt(length_sq(V))
     END FUNCTION length
 
     ! Normalize vector zodat r = 1
     FUNCTION norm(V) RESULT(w)
-        TYPE (vector) :: V, W
-        DOUBLE PRECISION :: R
+        TYPE (vector):: V
+        TYPE (vector):: W
+        DOUBLE PRECISION:: R
         R = length(V)
         W = V / R
     END FUNCTION norm
 
     FUNCTION setlength(V, A) RESULT(w)
-        TYPE (vector) :: V, W
-        DOUBLE PRECISION :: A
+        TYPE (vector):: V
+        TYPE (vector):: W
+        DOUBLE PRECISION:: A
         W = norm(V)
         W = W * A
     END FUNCTION setlength
 
     ! bereken afstand tussen 2 vectoren
     FUNCTION getDist(A, B) RESULT(r)
-        TYPE (vector), INTENT(IN) :: A, B
-        DOUBLE PRECISION :: R
+        TYPE (vector), INTENT(IN) :: A
+        TYPE (vector), INTENT(IN) :: B
+        DOUBLE PRECISION:: R
         R = length(B-A)
     END FUNCTION getDist
 
@@ -142,7 +149,7 @@ MODULE vector_class
 
     FUNCTION fromArray(A) RESULT(v)
         DOUBLE PRECISION, DIMENSION(3), INTENT(IN) :: A
-        TYPE (vector) :: V
+        TYPE (vector):: V
         V%x = a(1)
         V%y = a(2)
         V%z = a(3)
