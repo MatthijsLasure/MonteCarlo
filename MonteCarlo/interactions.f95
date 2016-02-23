@@ -72,18 +72,16 @@ MODULE interactions
                     IF(sym2(J) .NE. "H") THEN
                         B = findSym(sym2(J), TABLE_SYM)
                         E = sqrt(table_e(A) * table_e(B))
+                        S = (table_s(A) + table_s(B))/2
                         !R = getDist(mol1(I), mol2(J))
                         R = mol2(J) - mol1(I)
 
-                        if(.true.)then
                         ! Minimal image convention
                         R%X = R%X - BOXL2 * ANINT(R%X / BOXL)
                         R%Y = R%Y - BOXL2 * ANINT(R%Y / BOXL)
                         R%Z = R%Z - BOXL2 * ANINT(R%Z / BOXL)
-                        end if
-                        RV = length(R)
 
-                        S = (table_s(A) + table_s(B))/2
+                        RV = length(R)
 
                         TEMPL = table_Q(A) * table_Q(B) / RV
                         TEMPR = 4 * E * (S**12 / RV**12 - S**6 / RV**6)

@@ -28,7 +28,7 @@ PROGRAM MonteCarlo
     !===========
 
     DOUBLE PRECISION:: BOXL, BOXL2 ! box grootte, halve box
-    INTEGER:: I, J
+    INTEGER:: I, J, UNICORN
     INTEGER:: LJ_STEPS, GA_STEPS ! Aantal stappen per loop
     INTEGER:: RSOLV ! Geselecteerde molecule voor MC
     INTEGER:: NSUC = 0 ! Aantal succesvolle MC
@@ -67,6 +67,7 @@ LOGICAL:: DODEBUG = .TRUE.                                          !
     DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: ENERGY, EOLD
     DOUBLE PRECISION:: TOTENG = 0.D0
     DOUBLE PRECISION:: TOTENG_OLD = 0.D0
+    DOUBLE PRECISION :: radius
 
     ! Arrays voor parameters van DMSO (Q, epsilon, sigma, mass)
     DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: Q, EPSILON, SIGMA, MASS
@@ -129,7 +130,7 @@ LOGICAL:: DODEBUG = .TRUE.                                          !
 
     ! box.txt: plaatsen van de moleculen (CoM, hoek)
     OPEN (UNIT=10, FILE="box.txt")
-    READ (10, *) BOXL ! Box grootte
+    READ (10, *) !BOXL ! Box grootte
     READ (10, *) nCoM ! Lees aantal moleculen
     ALLOCATE(CoM(NCOM))
     ALLOCATE(hoek(NCOM))
@@ -187,18 +188,22 @@ LOGICAL:: DODEBUG = .TRUE.                                          !
 IF (DODEBUG) THEN
 OPEN(UNIT=11, FILE="out/DUMP.txt")
         ! DUMP
-        WRITE (11,*) NCOM*NDMSO+NSOL - 6*NCOM
+        !WRITE (11,*) NCOM*NDMSO+NSOL - 6*NCOM
+        WRITE (11,*) NCOM+NSOL
         WRITE (11,*) "Timestep: ", 0
         DO J=1, NSOL
             WRITE(11,*) sol_sym(J), solute(J)%x, solute(J)%y, solute(J)%z
         END DO
         DO J=1,NCOM
+        write (11,*) "S", CoM(J)%x, CoM(J)%y, CoM(J)%z
+        if(.false.) then
             ABSPOS = RotMatrix(CoM(J), DMSO, hoek(J))
             DO K=1, NDMSO
                 IF (DMSO_sym(K) .NE. "H") THEN
                 WRITE(11,*) DMSO_Sym(K), absPos(K)%x, absPos(K)%y, absPos(K)%z
                 END IF
             END DO
+            end if
         END DO
 
 
@@ -211,7 +216,7 @@ WRITE (*,"(A, 1X, A, 1X, A, 1X, A, 1X, A, 1X, A, 1X, A)") "i", "TotEng", "TotEng
 
     ! Loop 1: LJ
     !===========
-    loop_LJ: DO I=1,LJ_STEPS
+    loop_LJ: DO UNICORN=1,LJ_STEPS
         ! Verhuis oude vars naar de _old vars
         COM_OLD = COM
         HOEK_OLD = HOEK
@@ -238,25 +243,35 @@ WRITE (*,"(A, 1X, A, 1X, A, 1X, A, 1X, A, 1X, A, 1X, A)") "i", "TotEng", "TotEng
         COM(RSOLV)%Z = COM(RSOLV)%Z - BOXL2 * ANINT(COM(RSOLV)%Z / BOXL)
         end if
 
+        radius = 0.D0
+        Do I=1, nCoM
+            DO j=1,nCoM
+                radius =  radius + getDist(Com(i),Com(j))
+            end do
+        end do
+        write (0,*) unicorn, radius / real(nCoM)
+
         ! DUMP
         IF(DODEBUG) THEN
-        WRITE (11,*) NCOM*NDMSO+NSOL - 6*NCOM
-        WRITE (11,*) "Timestep: ", I
+        !WRITE (11,*) NCOM*NDMSO+NSOL - 6*NCOM
+        WRITE (11,*) NCOM+NSOL
+        WRITE (11,*) "Timestep: ", UNICORN
         DO J=1, NSOL
             WRITE(11,*) sol_sym(J), solute(J)%x, solute(J)%y, solute(J)%z
         END DO
+
         DO J=1,NCOM
+        write (11,*) "S", CoM(J)%x, CoM(J)%y, CoM(J)%z
+        if(.false.) then
             ABSPOS = RotMatrix(CoM(J), DMSO, hoek(J))
             DO K=1, NDMSO
                 IF (DMSO_sym(K) .NE. "H") THEN
                 WRITE(11,*) DMSO_Sym(K), absPos(K)%x, absPos(K)%y, absPos(K)%z
                 END IF
             END DO
+            end if
         END DO
         END IF
-
-        ! Periodic boundaries!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
 
         ! Bereken veranderde interacties
         CALL calculateLJ(RSOLV)
@@ -272,10 +287,13 @@ WRITE (*,"(A, 1X, A, 1X, A, 1X, A, 1X, A, 1X, A, 1X, A)") "i", "TotEng", "TotEng
 
         if(isnan(TOTENG)) THEN
             TOTENG = 2**30
-            write (0,*) "NaN @ ", i
+            !write (0,"(A, I6.6)") "NaN @ ", UNICORN
+            call dumpss
+        ELSE
+            !write(0,"(A, I6.6)") "OK @ ", UNICORN
         END IF
         WRITE (*,"(I6.6, 1X, ES20.10, 1X, ES20.10, 1X, F6.4, 1X, F6.4, 1X, I3.3, 1X, F6.4)") &
-        I, TOTENG, TOTENG_OLD, KANS, RV, RSOLV, real(nsuc) / real(I)
+        UNICORN, TOTENG, TOTENG_OLD, KANS, RV, RSOLV, real(nsuc) / real(UNICORN)
 
         ! Bepaal if succesvol -> volgende config
         IF(RV .LE. KANS) THEN ! Succes!
@@ -364,4 +382,12 @@ FUNCTION calcEnergy(ENERGY, SOLVENTSOLVENT) RESULT(out)
     END DO
 
 END FUNCTION calcEnergy
+
+subroutine dumpss()
+    OPEN(UNIT=10, FILE="solventsolvent_err.txt")
+    DO I=1,NCOM
+        WRITE(10,*) solventsolvent(I,:)
+    END DO
+    CLOSE(10)
+end subroutine dumpss
 END PROGRAM MonteCarlo
