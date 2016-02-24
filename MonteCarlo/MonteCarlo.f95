@@ -33,7 +33,10 @@ PROGRAM MonteCarlo
     INTEGER:: LJ_STEPS, GA_STEPS ! Aantal stappen per loop
     INTEGER:: RSOLV ! Geselecteerde molecule voor MC
     INTEGER:: NSUC = 0 ! Aantal succesvolle MC
+    INTEGER :: NADJ, NPRINT, NACCEPT = 0 ! Aanpassen dposMax / printen om de n cycli
     DOUBLE PRECISION:: RV, KANS,DELTA = 0, EXPONENT ! Random variabele en toebehoren voor Metropolis
+    DOUBLE PRECISiON :: RATIO ! Percentage succes in NADJ trials
+    DOUBLE PRECISION :: PADJ ! Hoeveel de dposmax aangepast mag worden
 
     ! Energiën van de moleculen, bekomen via extern programma
     DOUBLE PRECISION:: E_DMSO, E_SOL
@@ -74,26 +77,24 @@ LOGICAL:: DODEBUG = .FALSE.                                          !
 
     ! Maximale verarndering bij MC
     DOUBLE PRECISION:: DPOSMAX, DHOEKMAX
-    DPOSMAX = 0.25D0
-    DHOEKMAX = PI
+    DPOSMAX = 0.35D0
+    DHOEKMAX = 1 ! In aantal * Pi
 
     ! Config
 !====================================================================
 !====================================================================
-    CALL rConfig(BOXL, LJ_STEPS, Ga_STEPS, iseed, DoDebug)
+    ! Read from config.ini
+    CALL rConfig(BOXL, LJ_STEPS, Ga_STEPS, iseed, DoDebug, nadj, nprint, dposmax, dhoekmax, padj)
 
     CALL system_clock (START)
-    write(*,*) START
+    write(0,*) START
     CALL SRAND(REAL(iseed)) ! Prime randgen
 
     BOXL2 = BOXL * 2
+    DHOEKMAX = DHOEKMAX * PI
 
-    ! TODO inlezen uit config.txt?
-
-
-    !LJ_STEPS = 1000 ! Ruwe loop
-    GA_STEPS = 1 ! Loop met Gaussian
-    !BOXL = 15.7D0
+    !NADJ = 10
+    !NPRINT = 100
 
     ! Laden van configuraties
 !====================================================================
@@ -261,17 +262,19 @@ WRITE (*,"(A, 1X, A, 1X, A, 1X, A, 1X, A, 1X, A, 1X, A)") "i", "TotEng", "TotEng
 
         ! Doe Metropolis
         DELTA = TOTENG - TOTENG_OLD
-        EXPONENT = -1.D0 * DELTA  * 1000.D0 / (8.315D0 * 300.D0)
-        KANS = E ** EXPONENT
+        EXPONENT = -5.D0 * DELTA  * 1000.D0 / (8.315D0 * 300.D0)
+        if (EXPONENT .LT. -75.D0) then ! e^-250 < 10^-30: 0% kans anyway
+            KANS = 0.D0
+        else
+            KANS = E ** EXPONENT
+        end if
         IF (KANS .GT. 1.D0) KANS = 1.D0
         RV = RAND()
-
-        WRITE (*,"(I12.12, 1X, ES20.10, 1X, ES20.10, 1X, F6.4, 1X, F6.4, 1X, I3.3, 1X, F6.4)") &
-        UNICORN, TOTENG, TOTENG_OLD, KANS, RV, RSOLV, real(NSUC) / real(UNICORN)
 
         ! Bepaal if succesvol -> volgende config
         IF(RV .LE. KANS) THEN ! Succes!
             NSUC = NSUC + 1
+            NACCEPT = NACCEPT + 1
         ELSE ! Fail!
             ! Verhuis oude vars terug naar de nieuwe
             COM = COM_OLD
@@ -281,6 +284,25 @@ WRITE (*,"(A, 1X, A, 1X, A, 1X, A, 1X, A, 1X, A, 1X, A)") "i", "TotEng", "TotEng
             ENERGY = EOLD ! Resetten!!
             SOLVENTSOLVENT = SSOLD
         END IF
+
+        RATIO = REAL(NACCEPT) / real(NADJ)
+
+        ! Prints every NPRINT times
+        if(mod(UNICORN, NPRINT) .EQ. 0) then
+            WRITE (*,"(I12.12, 1X, ES20.10, 1X, ES20.10, 1X, F6.4, 1X, F6.4, 1X, I3.3, 1X, F6.4, 1X, F6.4)") &
+        UNICORN, TOTENG, TOTENG_OLD, KANS, RV, RSOLV, REAL(NSUC) / real(UNICORN), ratio
+        end if
+
+        ! Pas de dposMax aan indien ratio =/= 50%
+        if (mod(UNICORN, NADJ) .EQ. 0) then
+
+            if (ratio .GT. 0.5) then
+                dposMax = dposMax * (1.D0 + pAdj)
+            else
+                dposMax = dposMax * (1.D0 - pAdj)
+            end if
+            NACCEPT = 0
+        end if
 
     END DO loop_LJ
 
@@ -329,7 +351,7 @@ close(10)
     END DO loop_Ga
 
     CALL system_clock(START)
-    write (*,*) START
+    write (0,*) START
 
 !====================================================================
 !====================================================================
@@ -337,10 +359,6 @@ CONTAINS
 
 !====================================================================
 !====================================================================
-
-! Calls in subroutine CALCULATELJ: 
-! => calcLJ (on line <316>)
-! ==> calcLJ (on line <324>)
 SUBROUTINE calculateLJ(I)
 
     INTEGER:: I
@@ -359,13 +377,8 @@ SUBROUTINE calculateLJ(I)
     END DO
 
     ! Solvent-solute
-    !do i=1,nCoM ! Not needed!
-        CALL calcLJ(MOL1, SOLUTE, DMSO_SYM, SOL_SYM, SYM, Q, EPSILON, SIGMA, EN, BOXL, BOXL2)
-        ENERGY(I) = EN
-    !end do
-
-
-    !!write (*,*) totEng
+    CALL calcLJ(MOL1, SOLUTE, DMSO_SYM, SOL_SYM, SYM, Q, EPSILON, SIGMA, EN, BOXL, BOXL2)
+    ENERGY(I) = EN
 
 END SUBROUTINE calculateLJ
 
