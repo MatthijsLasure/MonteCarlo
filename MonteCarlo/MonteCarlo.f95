@@ -40,6 +40,11 @@ PROGRAM MonteCarlo
     DOUBLE PRECISION :: PADJ ! Hoeveel de dposmax aangepast mag worden
     DOUBLE PRECISION :: BETA ! p = EXP(-BETA * DELTA / (RT)
 
+    ! FILES
+    !======
+    character*100 :: dmso_file, box_file, sol_file, param_file ! input files
+    CHARACTER*100 :: out_file, err_file, solvsolv_file ! output files
+
     ! Energiën van de moleculen, bekomen via extern programma
     DOUBLE PRECISION:: E_DMSO, E_SOL
 
@@ -89,21 +94,30 @@ LOGICAL:: DODEBUG = .FALSE.                                          !
     CALL rConfig(BOXL, LJ_STEPS, Ga_STEPS, iseed, DoDebug, nadj, nprint, dposmax, dhoekmax, padj, beta)
 
     CALL system_clock (START)
-    write(0,*) START
+    write(500,*) START
     CALL SRAND(REAL(iseed)) ! Prime randgen
 
     BOXL2 = BOXL * 2
     DHOEKMAX = DHOEKMAX * PI
 
-    !NADJ = 10
-    !NPRINT = 100
+
+    ! INPUT
+    dmso_file = "DMSO.txt"
+    box_file = "box.txt"
+    sol_file = "solute.txt"
+    param_file = "param.txt"
+
+    ! OUTPUT
+    solvsolv_file = "solventsolvent.txt"
+    out_file = "out.txt"
+    err_file = "err.txt"
 
     ! Laden van configuraties
 !====================================================================
 !====================================================================
 
     ! DMSO.txt: conformatie DMSO
-    OPEN (UNIT=10, FILE="DMSO.txt")
+    OPEN (UNIT=10, FILE=dmso_file)
     READ (10, *) nDMSO ! Lees aantal atomen
     ALLOCATE(DMSO(NDMSO)) ! Ken correcte groottes toe aan de arrays
     ALLOCATE(DMSO_sym(NDMSO))
@@ -114,7 +128,7 @@ LOGICAL:: DODEBUG = .FALSE.                                          !
     CLOSE(10)
 
     ! solute.txt: conformatie opgeloste molecule (sol)
-    OPEN (UNIT=10, FILE="solute.txt")
+    OPEN (UNIT=10, FILE=sol_file)
     READ (10, *) nSol ! Lees aantal atomen
     ALLOCATE(solute(NSOL)) ! Maak de arrays groot genoeg
     ALLOCATE(sol_sym(NSOL))
@@ -125,7 +139,7 @@ LOGICAL:: DODEBUG = .FALSE.                                          !
     CLOSE(10)
 
     ! box.txt: plaatsen van de moleculen (CoM, hoek)
-    OPEN (UNIT=10, FILE="box.txt")
+    OPEN (UNIT=10, FILE=box_file)
     READ (10, *) !BOXL ! Box grootte
     READ (10, *) nCoM ! Lees aantal moleculen
     ALLOCATE(CoM(NCOM))
@@ -138,7 +152,7 @@ LOGICAL:: DODEBUG = .FALSE.                                          !
     CLOSE(10)
 
     ! param.txt: parameters voor LJ etc
-    OPEN (UNIT=10, FILE="param.txt")
+    OPEN (UNIT=10, FILE=param_file)
     READ (10, *) nParam ! Aantal beschikbare parameters
     READ (10, *) ! skip comment line
     ALLOCATE(sym(NPARAM))
@@ -206,10 +220,16 @@ END IF
 !====================================================================
 !====================================================================
 
+OPEN(UNIT=501, FILE=out_file)
+OPEN(UNIT=500, FILE=err_file)
+
+OPEN(UNIT=20, FILE="DUMP.txt")
+CALL DUMP(0)
+
 901 FORMAT(A12, 1X, A20, 1X, A20, 1X, A6, 1X, A6, 1X, A3, 1X, A6, 1X, A6, 1X, A3)
 902 FORMAT(I12.12, 1X, ES20.10, 1X, ES20.10, 1X, F6.4, 1X, F6.4, 1X, I3.3, 1X, F6.4, 1X, F6.4, 1X, F3.2)
-WRITE (*,901) "i", "TotEng", "TotEng_old", "kans", "rv", "rSolv", "pSuc", "ratio","dposmax"
-WRITE (*,902) 0, TOTENG, 0.D0, 0.D0, 0.D0, 0, REAL(0) / real(1), 0.D0, dposmax
+WRITE (501,901) "i", "TotEng", "TotEng_old", "kans", "rv", "rSolv", "pSuc", "ratio","dposmax"
+WRITE (501,902) 0, TOTENG, 0.D0, 0.D0, 0.D0, 0, REAL(0) / real(1), 0.D0, dposmax
 
 
     ! Loop 1: LJ
@@ -239,26 +259,6 @@ WRITE (*,902) 0, TOTENG, 0.D0, 0.D0, 0.D0, 0, REAL(0) / real(1), 0.D0, dposmax
         COM(RSOLV)%Y = COM(RSOLV)%Y - BOXL2 * ANINT(COM(RSOLV)%Y / BOXL)
         COM(RSOLV)%Z = COM(RSOLV)%Z - BOXL2 * ANINT(COM(RSOLV)%Z / BOXL)
 
-        ! DUMP
-        IF(DODEBUG) THEN
-        !WRITE (11,*) NCOM*NDMSO+NSOL - 6*NCOM
-        WRITE (11,*) NCOM+NSOL
-        WRITE (11,*) "Timestep: ", UNICORN
-        DO J=1, NSOL
-            WRITE(11,*) sol_sym(J), solute(J)%x, solute(J)%y, solute(J)%z
-        END DO
-        DO J=1,NCOM
-        WRITE (11,*) "S", CoM(J)%x, CoM(J)%y, CoM(J)%z
-        IF(.FALSE.) THEN
-            ABSPOS = RotMatrix(CoM(J), DMSO, hoek(J))
-            DO K=1, NDMSO
-                IF (DMSO_sym(K) .NE. "H") THEN
-                WRITE(11,*) DMSO_Sym(K), absPos(K)%x, absPos(K)%y, absPos(K)%z
-                END IF
-            END DO
-            END IF
-        END DO
-        END IF
 
         ! Bereken veranderde interacties
         CALL calculateLJ(RSOLV)
@@ -277,13 +277,14 @@ WRITE (*,902) 0, TOTENG, 0.D0, 0.D0, 0.D0, 0, REAL(0) / real(1), 0.D0, dposmax
         ! Doe Metropolis
         DELTA = TOTENG - TOTENG_OLD
         EXPONENT = -1.D0 * BETA * DELTA  * 1000.D0 / (8.314D0 * 300.D0)
-        if (EXPONENT .LT. -75.D0) then ! e^-250 < 10^-30: 0% kans anyway
+        if (EXPONENT .LT. -75.D0) then ! e^-75 < 3*10^-33: 0% kans anyway
             KANS = 0.D0
+            RV = 1.D0 ! Skip rand() voor cpu tijd besparing
         else
             KANS = E ** EXPONENT
+            RV = RAND()
         end if
         IF (KANS .GT. 1.D0) KANS = 1.D0
-        RV = RAND()
 
         ! Bepaal if succesvol -> volgende config
         IF(RV .LE. KANS) THEN ! Succes!
@@ -303,7 +304,8 @@ WRITE (*,902) 0, TOTENG, 0.D0, 0.D0, 0.D0, 0, REAL(0) / real(1), 0.D0, dposmax
 
         ! Prints every NPRINT times
         if(mod(UNICORN, NPRINT) .EQ. 0) then
-            WRITE (*,902) UNICORN, TOTENG, TOTENG_OLD, KANS, RV, RSOLV, REAL(NSUC) / real(UNICORN), ratio, dposmax
+            CALL DUMP(UNICORN)
+            WRITE (501,902) UNICORN, TOTENG, TOTENG_OLD, KANS, RV, RSOLV, REAL(NSUC) / real(UNICORN), ratio, dposmax
         end if
 
         ! Pas de dposMax aan indien ratio =/= 50%
@@ -320,27 +322,6 @@ WRITE (*,902) 0, TOTENG, 0.D0, 0.D0, 0.D0, 0, REAL(0) / real(1), 0.D0, dposmax
 
     END DO loop_LJ
 
-    IF(DODEBUG) CLOSE(11)
-
-    ! DUMP
-OPEN(UNIT=11, FILE="DUMP.txt")
-WRITE (11,*) NCOM*NDMSO+NSOL - 6*NCOM
-!WRITE (11,*) NCOM+NSOL
-WRITE (11,*) "Timestep: ", UNICORN
-DO J=1, NSOL
-    WRITE(11,*) sol_sym(J), solute(J)%x, solute(J)%y, solute(J)%z
-END DO
-DO J=1,NCOM
-    !WRITE (11,*) "S", CoM(J)%x, CoM(J)%y, CoM(J)%z
-    ABSPOS = RotMatrix(CoM(J), DMSO, hoek(J))
-    DO K=1, NDMSO
-        IF (DMSO_sym(K) .NE. "H") THEN
-        WRITE(11,*) DMSO_Sym(K), absPos(K)%x, absPos(K)%y, absPos(K)%z
-        END IF
-    END DO
-END DO
-close(11)
-
 ! Write box
 open(unit=10, file="backup.txt")
 write(10,*) boxl
@@ -350,6 +331,11 @@ do I=1,nCoM
 end do
 close(10)
 
+CALL DUMP(UNICORN+1)
+close(20)
+close(501)
+close(500)
+stop
 !====================================================================
 !====================================================================
 
@@ -365,7 +351,7 @@ close(10)
     END DO loop_Ga
 
     CALL system_clock(START)
-    write (0,*) START
+    write (500,*) START
 
 !====================================================================
 !====================================================================
@@ -413,5 +399,28 @@ FUNCTION calcEnergy(ENERGY, SOLVENTSOLVENT) RESULT(OUT)
     END DO
 
 END FUNCTION calcEnergy
+
+subroutine dump(i)
+        INTEGER :: i
+
+        !WRITE (20,*) NCOM*NDMSO+NSOL - 6*NCOM
+        WRITE (20,*) NCOM+NSOL
+        WRITE (20,*) "Timestep: ", I
+        DO J=1, NSOL
+            WRITE(20,*) sol_sym(J), solute(J)%x, solute(J)%y, solute(J)%z
+        END DO
+        DO J=1,NCOM
+        WRITE (20,*) "S", CoM(J)%x, CoM(J)%y, CoM(J)%z
+        IF(.FALSE.) THEN
+            ABSPOS = RotMatrix(CoM(J), DMSO, hoek(J))
+            DO K=1, NDMSO
+                IF (DMSO_sym(K) .NE. "H") THEN
+                WRITE(20,*) DMSO_Sym(K), absPos(K)%x, absPos(K)%y, absPos(K)%z
+                END IF
+            END DO
+            END IF
+        END DO
+
+end subroutine dump
 
 END PROGRAM MonteCarlo
