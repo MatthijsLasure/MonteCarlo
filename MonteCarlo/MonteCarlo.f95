@@ -21,6 +21,7 @@ PROGRAM MonteCarlo
     USE lib
     USE randgen
     USE readconfig
+    !use iso_fortran_env
 
     IMPLICIT NONE
 
@@ -265,12 +266,12 @@ WRITE (*,902) 0, TOTENG, 0.D0, 0.D0, 0.D0, 0, REAL(0) / real(1), 0.D0, dposmax
         TOTENG = calcEnergy(ENERGY, SOLVENTSOLVENT)
 
         if(TOTENG > HUGE(TOTENG)) then
-            write (0,*) "TOTENG IS INFINITY @", UNICORN
-            TOTENG = HUGE(TOTENG)
+            write (0,*) "TOTENG IS INFINITY @", UNICORN, TOTENG
+            TOTENG = HUGE(TOTENG)-1
         end if
-        if(TOTENG /= TOTENG) then
-            write (0,*) "TOTENG IS NaN @", UNICORN
-            TOTENG = HUGE(TOTENG)
+        if(TOTENG .NE. TOTENG) then
+            write (0,*) "TOTENG IS NaN @", UNICORN, TOTENG
+            TOTENG = HUGE(TOTENG)-1
         end if
 
         ! Doe Metropolis
@@ -313,6 +314,7 @@ WRITE (*,902) 0, TOTENG, 0.D0, 0.D0, 0.D0, 0, REAL(0) / real(1), 0.D0, dposmax
             else
                 dposMax = dposMax * (1.D0 - pAdj)
             end if
+            if (dposMax .LT. 0.01) dposMax = 0.01
             NACCEPT = 0
         end if
 

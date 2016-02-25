@@ -77,7 +77,7 @@ subroutine rConfig(boxl, LJ_steps, Ga_steps, iseed, doDebug, nadj, nprint, dposm
         elseif (fst=="padj") then
           read(snd,"(F10.10)") padj
         elseif (fst=="beta") then
-          read(snd,"(F10.10)") beta
+          read(snd,"(F20.10)") beta
         else
           print *, "unknown option '"//trim(fst)//"'"; stop
         end if
