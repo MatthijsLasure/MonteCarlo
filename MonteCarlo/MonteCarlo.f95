@@ -264,6 +264,15 @@ WRITE (*,902) 0, TOTENG, 0.D0, 0.D0, 0.D0, 0, REAL(0) / real(1), 0.D0, dposmax
         TOTENG = 0.D0
         TOTENG = calcEnergy(ENERGY, SOLVENTSOLVENT)
 
+        if(TOTENG > HUGE(TOTENG)) then
+            write (0,*) "TOTENG IS INFINITY @", UNICORN
+            TOTENG = HUGE(TOTENG)
+        end if
+        if(TOTENG /= TOTENG) then
+            write (0,*) "TOTENG IS NaN @", UNICORN
+            TOTENG = HUGE(TOTENG)
+        end if
+
         ! Doe Metropolis
         DELTA = TOTENG - TOTENG_OLD
         EXPONENT = -1.D0 * BETA * DELTA  * 1000.D0 / (8.314D0 * 300.D0)
