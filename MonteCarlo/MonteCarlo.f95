@@ -37,6 +37,7 @@ PROGRAM MonteCarlo
     DOUBLE PRECISION:: RV, KANS,DELTA = 0, EXPONENT ! Random variabele en toebehoren voor Metropolis
     DOUBLE PRECISiON :: RATIO ! Percentage succes in NADJ trials
     DOUBLE PRECISION :: PADJ ! Hoeveel de dposmax aangepast mag worden
+    DOUBLE PRECISION :: BETA ! p = EXP(-BETA * DELTA / (RT)
 
     ! Energiën van de moleculen, bekomen via extern programma
     DOUBLE PRECISION:: E_DMSO, E_SOL
@@ -84,7 +85,7 @@ LOGICAL:: DODEBUG = .FALSE.                                          !
 !====================================================================
 !====================================================================
     ! Read from config.ini
-    CALL rConfig(BOXL, LJ_STEPS, Ga_STEPS, iseed, DoDebug, nadj, nprint, dposmax, dhoekmax, padj)
+    CALL rConfig(BOXL, LJ_STEPS, Ga_STEPS, iseed, DoDebug, nadj, nprint, dposmax, dhoekmax, padj, beta)
 
     CALL system_clock (START)
     write(0,*) START
@@ -204,7 +205,10 @@ END IF
 !====================================================================
 !====================================================================
 
-WRITE (*,"(A, 1X, A, 1X, A, 1X, A, 1X, A, 1X, A, 1X, A)") "i", "TotEng", "TotEng_old", "kans", "rv", "rSolv", "pSuc"
+901 FORMAT(A12, 1X, A20, 1X, A20, 1X, A6, 1X, A6, 1X, A3, 1X, A6, 1X, A6, 1X, A3)
+902 FORMAT(I12.12, 1X, ES20.10, 1X, ES20.10, 1X, F6.4, 1X, F6.4, 1X, I3.3, 1X, F6.4, 1X, F6.4, 1X, F3.2)
+WRITE (*,901) "i", "TotEng", "TotEng_old", "kans", "rv", "rSolv", "pSuc", "ratio","dposmax"
+WRITE (*,902) 0, TOTENG, 0.D0, 0.D0, 0.D0, 0, REAL(0) / real(1), 0.D0, dposmax
 
 
     ! Loop 1: LJ
@@ -262,7 +266,7 @@ WRITE (*,"(A, 1X, A, 1X, A, 1X, A, 1X, A, 1X, A, 1X, A)") "i", "TotEng", "TotEng
 
         ! Doe Metropolis
         DELTA = TOTENG - TOTENG_OLD
-        EXPONENT = -5.D0 * DELTA  * 1000.D0 / (8.315D0 * 300.D0)
+        EXPONENT = -1.D0 * BETA * DELTA  * 1000.D0 / (8.314D0 * 300.D0)
         if (EXPONENT .LT. -75.D0) then ! e^-250 < 10^-30: 0% kans anyway
             KANS = 0.D0
         else
@@ -289,8 +293,7 @@ WRITE (*,"(A, 1X, A, 1X, A, 1X, A, 1X, A, 1X, A, 1X, A)") "i", "TotEng", "TotEng
 
         ! Prints every NPRINT times
         if(mod(UNICORN, NPRINT) .EQ. 0) then
-            WRITE (*,"(I12.12, 1X, ES20.10, 1X, ES20.10, 1X, F6.4, 1X, F6.4, 1X, I3.3, 1X, F6.4, 1X, F6.4)") &
-        UNICORN, TOTENG, TOTENG_OLD, KANS, RV, RSOLV, REAL(NSUC) / real(UNICORN), ratio
+            WRITE (*,902) UNICORN, TOTENG, TOTENG_OLD, KANS, RV, RSOLV, REAL(NSUC) / real(UNICORN), ratio, dposmax
         end if
 
         ! Pas de dposMax aan indien ratio =/= 50%

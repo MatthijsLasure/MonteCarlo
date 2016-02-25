@@ -3,7 +3,7 @@ module readConfig
 
     contains
 
-subroutine rConfig(boxl, LJ_steps, Ga_steps, iseed, doDebug, nadj, nprint, dposmax, dhoekmax, padj)
+subroutine rConfig(boxl, LJ_steps, Ga_steps, iseed, doDebug, nadj, nprint, dposmax, dhoekmax, padj, beta)
 
     integer, parameter    :: strlen = 100
     character(len=strlen) :: fst, snd
@@ -12,7 +12,7 @@ subroutine rConfig(boxl, LJ_steps, Ga_steps, iseed, doDebug, nadj, nprint, dposm
     integer, parameter    :: state_begin=1, state_in_fst=2, state_in_sep=3
 
     ! Shit to read
-    double precision :: boxl, dposmax, dhoekmax, padj
+    double precision :: boxl, dposmax, dhoekmax, padj, beta
     integer :: LJ_steps, Ga_steps, nadj, nprint
     integer :: iseed
     logical :: doDebug
@@ -76,6 +76,8 @@ subroutine rConfig(boxl, LJ_steps, Ga_steps, iseed, doDebug, nadj, nprint, dposm
           read(snd,"(F10.10)") dhoekmax
         elseif (fst=="padj") then
           read(snd,"(F10.10)") padj
+        elseif (fst=="beta") then
+          read(snd,"(F10.10)") beta
         else
           print *, "unknown option '"//trim(fst)//"'"; stop
         end if
