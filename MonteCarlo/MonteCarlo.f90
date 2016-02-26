@@ -87,6 +87,10 @@ LOGICAL:: DODEBUG = .FALSE.                                          !
     DPOSMAX = 0.35D0
     DHOEKMAX = 1 ! In aantal * Pi
 
+    ! START ERR/OUT
+    OPEN(UNIT=501, FILE=out_file)
+    OPEN(UNIT=500, FILE=err_file)
+
     ! Config
 !====================================================================
 !====================================================================
@@ -220,8 +224,7 @@ END IF
 !====================================================================
 !====================================================================
 
-OPEN(UNIT=501, FILE=out_file)
-OPEN(UNIT=500, FILE=err_file)
+
 
 OPEN(UNIT=20, FILE="DUMP.txt")
 CALL DUMP(0)
@@ -230,6 +233,9 @@ CALL DUMP(0)
 902 FORMAT(I12.12, 1X, ES20.10, 1X, ES20.10, 1X, F6.4, 1X, F6.4, 1X, I3.3, 1X, F6.4, 1X, F6.4, 1X, F3.2)
 WRITE (501,901) "i", "TotEng", "TotEng_old", "kans", "rv", "rSolv", "pSuc", "ratio","dposmax"
 WRITE (501,902) 0, TOTENG, 0.D0, 0.D0, 0.D0, 0, REAL(0) / real(1), 0.D0, dposmax
+
+CALL sytem_clock(start)
+write(500, *) start
 
 
     ! Loop 1: LJ
@@ -258,6 +264,10 @@ WRITE (501,902) 0, TOTENG, 0.D0, 0.D0, 0.D0, 0, REAL(0) / real(1), 0.D0, dposmax
         COM(RSOLV)%X = COM(RSOLV)%X - BOXL2 * ANINT(COM(RSOLV)%X / BOXL)
         COM(RSOLV)%Y = COM(RSOLV)%Y - BOXL2 * ANINT(COM(RSOLV)%Y / BOXL)
         COM(RSOLV)%Z = COM(RSOLV)%Z - BOXL2 * ANINT(COM(RSOLV)%Z / BOXL)
+
+        ! Checks for OOB
+        if(COM(RSOLV)%X .GT. BOXL) THEN
+            write(500,*) "OOB on X with ", RSOLV, "@", UNICORN
 
 
         ! Bereken veranderde interacties
@@ -332,12 +342,11 @@ end do
 close(10)
 
 CALL DUMP(UNICORN+1)
-close(20)
-close(501)
-close(500)
-stop
+
 !====================================================================
 !====================================================================
+CALL system_clock(start)
+WRITE(500,*) START
 
     ! Loop 2: Gaussian
     loop_Ga: DO I=1,GA_STEPS
@@ -355,6 +364,11 @@ stop
 
 !====================================================================
 !====================================================================
+
+close(20)
+close(501)
+close(500)
+
 CONTAINS
 
 !====================================================================
