@@ -88,6 +88,8 @@ LOGICAL:: DODEBUG = .FALSE.                                          !
     DHOEKMAX = 1 ! In aantal * Pi
 
     ! START ERR/OUT
+    out_file = "out.txt"
+    err_file = "err.txt"
     OPEN(UNIT=501, FILE=out_file)
     OPEN(UNIT=500, FILE=err_file)
 
@@ -101,8 +103,9 @@ LOGICAL:: DODEBUG = .FALSE.                                          !
     write(500,*) START
     CALL SRAND(REAL(iseed)) ! Prime randgen
 
-    BOXL2 = BOXL * 2
+    BOXL2 = BOXL * 2.D0
     DHOEKMAX = DHOEKMAX * PI
+    write(0,*) BOXL, BOXL2
 
 
     ! INPUT
@@ -113,8 +116,7 @@ LOGICAL:: DODEBUG = .FALSE.                                          !
 
     ! OUTPUT
     solvsolv_file = "solventsolvent.txt"
-    out_file = "out.txt"
-    err_file = "err.txt"
+
 
     ! Laden van configuraties
 !====================================================================
@@ -234,7 +236,7 @@ CALL DUMP(0)
 WRITE (501,901) "i", "TotEng", "TotEng_old", "kans", "rv", "rSolv", "pSuc", "ratio","dposmax"
 WRITE (501,902) 0, TOTENG, 0.D0, 0.D0, 0.D0, 0, REAL(0) / real(1), 0.D0, dposmax
 
-CALL sytem_clock(start)
+CALL system_clock(start)
 write(500, *) start
 
 
@@ -256,18 +258,25 @@ write(500, *) start
 
 
         ! Check of hoeken nog binnen [-Pi, +Pi] liggen
-        HOEK(RSOLV)%X = HOEK(RSOLV)%X - TAU * ANINT(HOEK(RSOLV)%X / PI)
-        HOEK(RSOLV)%Y = HOEK(RSOLV)%Y - TAU * ANINT(HOEK(RSOLV)%Y / PI)
-        HOEK(RSOLV)%Z = HOEK(RSOLV)%Z - TAU * ANINT(HOEK(RSOLV)%Z / PI)
+        HOEK(RSOLV)%X = HOEK(RSOLV)%X - TAU * AINT(HOEK(RSOLV)%X / PI)
+        HOEK(RSOLV)%Y = HOEK(RSOLV)%Y - TAU * AINT(HOEK(RSOLV)%Y / PI)
+        HOEK(RSOLV)%Z = HOEK(RSOLV)%Z - TAU * AINT(HOEK(RSOLV)%Z / PI)
 
         ! Periodic boundaries => Computer Simulation of Liquids, p30
-        COM(RSOLV)%X = COM(RSOLV)%X - BOXL2 * ANINT(COM(RSOLV)%X / BOXL)
-        COM(RSOLV)%Y = COM(RSOLV)%Y - BOXL2 * ANINT(COM(RSOLV)%Y / BOXL)
-        COM(RSOLV)%Z = COM(RSOLV)%Z - BOXL2 * ANINT(COM(RSOLV)%Z / BOXL)
+        COM(RSOLV)%X = COM(RSOLV)%X - BOXL2 * AINT(COM(RSOLV)%X / BOXL)
+        COM(RSOLV)%Y = COM(RSOLV)%Y - BOXL2 * AINT(COM(RSOLV)%Y / BOXL)
+        COM(RSOLV)%Z = COM(RSOLV)%Z - BOXL2 * AINT(COM(RSOLV)%Z / BOXL)
 
         ! Checks for OOB
-        if(COM(RSOLV)%X .GT. BOXL) THEN
-            write(500,*) "OOB on X with ", RSOLV, "@", UNICORN
+        if(COM(RSOLV)%X .GT. BOXL .OR. COM(RSOLV)%X .LT. -1.D0 * BOXL) THEN
+            write(500,*) "OOB on X with ", RSOLV, "@", UNICORN, ":", COM(RSOLV)%X
+        END IF
+        if(COM(RSOLV)%Y .GT. BOXL .OR. COM(RSOLV)%Y .LT. -1.D0 * BOXL) THEN
+            write(500,*) "OOB on Y with ", RSOLV, "@", UNICORN, ":", COM(RSOLV)%Y
+        END IF
+        if(COM(RSOLV)%Z .GT. BOXL .OR. COM(RSOLV)%Z .LT. -1.D0 * BOXL) THEN
+            write(500,*) "OOB on Z with ", RSOLV, "@", UNICORN, ":", COM(RSOLV)%Z
+        END IF
 
 
         ! Bereken veranderde interacties
@@ -314,7 +323,7 @@ write(500, *) start
 
         ! Prints every NPRINT times
         if(mod(UNICORN, NPRINT) .EQ. 0) then
-            CALL DUMP(UNICORN)
+            !CALL DUMP(UNICORN)
             WRITE (501,902) UNICORN, TOTENG, TOTENG_OLD, KANS, RV, RSOLV, REAL(NSUC) / real(UNICORN), ratio, dposmax
         end if
 
@@ -326,7 +335,7 @@ write(500, *) start
             else
                 dposMax = dposMax * (1.D0 - pAdj)
             end if
-            if (dposMax .LT. 0.01) dposMax = 0.01
+            if (dposMax .LT. 0.00001) dposMax = 0.00001
             NACCEPT = 0
         end if
 

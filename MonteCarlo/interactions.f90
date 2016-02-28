@@ -32,31 +32,22 @@ MODULE interactions
     SUBROUTINE calcLJ(MOL1, MOL2, SYM1, SYM2, TABLE_SYM, TABLE_Q, TABLE_E, TABLE_S, EN, BOXL, BOXL2)
         ! INPUT
         TYPE (vector), DIMENSION(:), INTENT(IN) :: MOL1, MOL2 ! absolute coords!
-        CHARACTER*4, DIMENSION(:), INTENT(IN) :: SYM1, SYM2 ! Atoomtypes
-        CHARACTER*4, DIMENSION(:), INTENT(IN) :: TABLE_SYM ! Atoomtypes
+        CHARACTER*4, DIMENSION(:), INTENT(IN) :: SYM1, SYM2, TABLE_SYM ! Atoomtypes
         DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: TABLE_Q, TABLE_E, TABLE_S ! params
-        DOUBLE PRECISION :: CONV
-        DOUBLE PRECISION :: BOXL, BOXL2
+        DOUBLE PRECISION :: CONV, BOXL, BOXL2
 
         ! OUTPUT
         DOUBLE PRECISION:: EN
 
         ! TEMP
         TYPE (vector):: R
-        DOUBLE PRECISION:: RV ! temp params
-        DOUBLE PRECISION:: E ! temp params
-        DOUBLE PRECISION:: S ! temp params
-        DOUBLE PRECISION:: SUML ! sommen
-        DOUBLE PRECISION:: SUMR ! sommen
-        DOUBLE PRECISION:: TEMPL ! tijdelijke optelling
-        DOUBLE PRECISION:: TEMPR ! tijdelijke optelling
-        INTEGER:: I ! loop vars, totale grootte arrays
-        INTEGER:: J ! loop vars, totale grootte arrays
-        INTEGER:: N1 ! loop vars, totale grootte arrays
-        INTEGER:: N2 ! loop vars, totale grootte arrays
-        INTEGER:: A ! welke atoomsoort
-        INTEGER:: B ! welke atoomsoort
+        DOUBLE PRECISION:: RV, E, S ! temp params
+        DOUBLE PRECISION:: SUML, SUMR ! sommen
+        DOUBLE PRECISION:: TEMPL, TEMPR ! tijdelijke optelling
+        INTEGER:: I, J, N1, N2 ! loop vars, totale grootte arrays
+        INTEGER:: A, B ! welke atoomsoort
 
+        ! Omzetting naar kJ/mol
         CONV = 6.023 * (1.60217646)**2
         CONV = CONV / 4
         CONV = CONV / PI
@@ -103,8 +94,40 @@ MODULE interactions
 
 !====================================================================
 
-    SUBROUTINE calcGa(I)
-    INTEGER:: I
+    SUBROUTINE calcGa(i, j, mol1, mol2, sym1, sym2, en)
+        ! INPUT
+        TYPE (vector), DIMENSION(:), INTENT(IN) :: MOL1, MOL2 ! absolute coords!
+        CHARACTER*4, DIMENSION(:), INTENT(IN) :: SYM1, SYM2 ! Atoomtypes
+        INTEGER, INTENT(in) :: I, J
+
+        ! OUTPUT
+        DOUBLE PRECISION :: en
+
+        ! INTERNAL VARS
+        INTEGER :: K ! loop de loop
+        CHARACTER*32 :: gauss_file
+        CHARACTER*16 :: str_i, str_j
+        INTEGER :: N1, N2
+
+        905 FORMAT(A2, 3F16.8)
+
+        write(str_i, *) I
+        write(str_j, *) J
+
+        gauss_file = "input-" // str_i // "-" // str_j // ".com"
+        N1 = size(mol1)
+        N2 = size(mol2)
+
+        ! OPEN FILE
+        OPEN(unit=15, file=gauss_file)
+
+        ! Print Mol1
+        do K=21,N1
+            write (15,905) sym1(K), mol1(K)%X, mol1(K)%Y, mol1(K)%Z
+        end do
+
+        CLOSE(15)
+
     END SUBROUTINE calcGa
 
 END MODULE interactions
