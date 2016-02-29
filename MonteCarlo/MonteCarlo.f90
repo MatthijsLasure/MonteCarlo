@@ -52,7 +52,6 @@ PROGRAM MonteCarlo
     TYPE (vector), DIMENSION(:), ALLOCATABLE :: DMSO, COM, SOLUTE, HOEK
     ! Variabelen voor de vorige run van MC
     TYPE (vector), DIMENSION(:), ALLOCATABLE :: COM_OLD, SOLUTE_OLD, HOEK_OLD
-
     CHARACTER*4, DIMENSION(:), ALLOCATABLE :: DMSO_SYM, SOL_SYM
     INTEGER:: NDMSO, NCOM, NSOL, NPARAM ! Aantal units
     ! DMSO: relatieve coördinaten voor de atomen

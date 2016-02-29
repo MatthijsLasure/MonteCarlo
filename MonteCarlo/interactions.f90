@@ -140,7 +140,7 @@ MODULE interactions
         CLOSE(15)
 
         ! Start gaussian
-        call system ('g09 < '// gaus_file //' > '// gauss_log)
+        call system ('g09 < '// gauss_file //' > '// gauss_log)
         call system ('grep Done output.log > en.txt')
 
     END SUBROUTINE calcGa
