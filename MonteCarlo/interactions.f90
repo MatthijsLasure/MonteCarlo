@@ -105,7 +105,7 @@ MODULE interactions
 
         ! INTERNAL VARS
         INTEGER :: K ! loop de loop
-        CHARACTER*32 :: gauss_file
+        CHARACTER*32 :: gauss_file, gauss_log
         CHARACTER*16 :: str_i, str_j
         INTEGER :: N1, N2
 
@@ -115,6 +115,7 @@ MODULE interactions
         write(str_j, *) J
 
         gauss_file = "input-" // str_i // "-" // str_j // ".com"
+        gauss_log = "output-" // str_i // "-" // str_j // ".log"
         N1 = size(mol1)
         N2 = size(mol2)
 
@@ -124,6 +125,7 @@ MODULE interactions
         ! Print Mol1
         do K=21,N1
             write (15,905) sym1(K), mol1(K)%X, mol1(K)%Y, mol1(K)%Z
+            write (15,905) sym2(K), mol2(K)%X, mol2(K)%Y, mol2(K)%Z
         end do
 
         CLOSE(15)

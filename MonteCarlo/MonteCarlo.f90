@@ -201,27 +201,6 @@ LOGICAL:: DODEBUG = .FALSE.                                          !
     END DO
     CLOSE(10)
 
-IF (DODEBUG) THEN
-OPEN(UNIT=11, FILE="out/DUMP.txt")
-! DUMP
-!WRITE (11,*) NCOM*NDMSO+NSOL - 6*NCOM
-WRITE (11,*) NCOM+NSOL
-WRITE (11,*) "Timestep: ", 0
-DO J=1, NSOL
-    WRITE(11,*) sol_sym(J), solute(J)%x, solute(J)%y, solute(J)%z
-END DO
-DO J=1,NCOM
-    WRITE (11,*) "S", CoM(J)%x, CoM(J)%y, CoM(J)%z
-    IF(.FALSE.) THEN
-        ABSPOS = RotMatrix(CoM(J), DMSO, hoek(J))
-        DO K=1, NDMSO
-            IF (DMSO_sym(K) .NE. "H") THEN
-            WRITE(11,*) DMSO_Sym(K), absPos(K)%x, absPos(K)%y, absPos(K)%z
-            END IF
-        END DO
-    END IF
-END DO
-END IF
 
 !====================================================================
 !====================================================================
@@ -230,9 +209,10 @@ END IF
 
 OPEN(UNIT=20, FILE="DUMP.txt")
 CALL DUMP(0)
+CLOSE(20)
 
-901 FORMAT(A12, 1X, A20, 1X, A20, 1X, A6, 1X, A6, 1X, A3, 1X, A6, 1X, A6, 1X, A3)
-902 FORMAT(I12.12, 1X, ES20.10, 1X, ES20.10, 1X, F6.4, 1X, F6.4, 1X, I3.3, 1X, F6.4, 1X, F6.4, 1X, F3.2)
+901 FORMAT(A12, 1X, A20, 1X, A20, 1X, A6, 1X, A6, 1X, A3, 1X, A6, 1X, A6, 1X, A6)
+902 FORMAT(I12.12, 1X, ES20.10, 1X, ES20.10, 1X, F6.4, 1X, F6.4, 1X, I3.3, 1X, F6.4, 1X, F6.4, 1X, F6.5)
 WRITE (501,901) "i", "TotEng", "TotEng_old", "kans", "rv", "rSolv", "pSuc", "ratio","dposmax"
 WRITE (501,902) 0, TOTENG, 0.D0, 0.D0, 0.D0, 0, REAL(0) / real(1), 0.D0, dposmax
 
@@ -350,7 +330,9 @@ do I=1,nCoM
 end do
 close(10)
 
+OPEN(UNIT=20, FILE="DUMP.txt", ACCESS="APPEND")
 CALL DUMP(UNICORN+1)
+CLOSE(20)
 
 !====================================================================
 !====================================================================
