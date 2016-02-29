@@ -122,6 +122,15 @@ MODULE interactions
         ! OPEN FILE
         OPEN(unit=15, file=gauss_file)
 
+        write (10,*) '%nproc=8                                '
+        write (10,*) '%mem=8Gb                                '
+        write (10,*) '%chk=inputess.chk                       '
+        write (10,*) '#  PM6                                  '
+        write (10,*) '                                        '
+        write (10,*) 'interacties                             '
+        write (10,*) '                                        '
+        write (10,*) '0 1                                     '
+
         ! Print Mol1
         do K=21,N1
             write (15,905) sym1(K), mol1(K)%X, mol1(K)%Y, mol1(K)%Z
@@ -129,6 +138,10 @@ MODULE interactions
         end do
 
         CLOSE(15)
+
+        ! Start gaussian
+        call system ('g09 < '// gaus_file //' > '// gauss_log)
+        call system ('grep Done output.log > en.txt')
 
     END SUBROUTINE calcGa
 
