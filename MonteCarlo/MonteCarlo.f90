@@ -71,7 +71,7 @@ LOGICAL:: DODEBUG = .FALSE.                                          !
 !====================================================================
 
     ! output calc
-    DOUBLE PRECISION:: EN
+    DOUBLE PRECISION:: EN ! Energie van een run
     DOUBLE PRECISION, DIMENSION(:,:), ALLOCATABLE :: SOLVENTSOLVENT, SSOLD
     DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: ENERGY, EOLD
     DOUBLE PRECISION:: TOTENG = 0.D0
@@ -368,14 +368,25 @@ SUBROUTINE calculateLJ(I)
     INTEGER:: I
     INTEGER:: J
 
+    TYPE (vector) :: R
+
     ! Solvent solvent
     ! Notice: geen i loop: alleen molecule i is veranderd en moet opnieuw berekend worden
     SOLVENTSOLVENT(I,I) = 0.D0
     MOL1 = RotMatrix(CoM(I), DMSO, hoek(I))
     DO J=I+1,NCOM
-        MOL2 = RotMatrix(CoM(J), DMSO, hoek(J))
-        CALL calcLJ(MOL1, MOL2, DMSO_SYM, DMSO_SYM, SYM, Q, EPSILON, SIGMA, EN, BOXL, BOXL2)
+        ! Check lengte, met MIC!
+        R = CoM(J) - CoM(I)
+        R%X = R%X - BOXL2 * ANINT(R%X / BOXL)
+        R%Y = R%Y - BOXL2 * ANINT(R%Y / BOXL)
+        R%Z = R%Z - BOXL2 * ANINT(R%Z / BOXL)
 
+        IF (length(R) .GT. 7) THEN
+            EN = 0.D0
+        ELSE
+            MOL2 = RotMatrix(CoM(J), DMSO, hoek(J))
+            CALL calcLJ(MOL1, MOL2, DMSO_SYM, DMSO_SYM, SYM, Q, EPSILON, SIGMA, EN, BOXL, BOXL2)
+        END IF
         SOLVENTSOLVENT(I,J) = EN
         SOLVENTSOLVENT(J,I) = EN
     END DO
@@ -385,6 +396,67 @@ SUBROUTINE calculateLJ(I)
     ENERGY(I) = EN
 
 END SUBROUTINE calculateLJ
+
+SUBROUTINE calculateGA(I)
+
+    INTEGER:: I, J ! gevraagde moleculen
+    INTEGER :: K, L, M, KMIN, LMIN, MMIN ! Minimal Image Convention
+    DOUBLE PRECISION :: R, RMIN = 10000.D0
+    TYPE (vector) :: TEMPJ
+
+    ! Solvent solvent
+    ! Notice: geen i loop: alleen molecule i is veranderd en moet opnieuw berekend worden
+    SOLVENTSOLVENT(I,I) = 0.D0
+    MOL1 = RotMatrix(CoM(I), DMSO, hoek(I))
+    DO J=I+1,NCOM
+        ! MINIMIZE DISTANCE
+        K_LOOP: DO K=-1,1
+            DO L=-1,1
+                DO M=-1,1
+                    TEMPJ%X = CoM(J)%X + FLOAT(K) * BOXL2
+                    TEMPJ%Y = CoM(J)%Y + FLOAT(L) * BOXL2
+                    TEMPJ%Z = CoM(J)%Z + FLOAT(M) * BOXL2
+
+                    R = getDist(CoM(I), TEMPJ) ! Check
+                    if(R .LT. RMIN) THEN
+                        RMIN = R
+                        KMIN = K
+                        LMIN = L
+                        MMIN = M
+                    end if
+                END DO
+            END DO
+        END DO K_LOOP
+
+        TEMPJ%X = CoM(J)%X + FLOAT(KMIN) * BOXL2
+        TEMPJ%Y = CoM(J)%Y + FLOAT(LMIN) * BOXL2
+        TEMPJ%Z = CoM(J)%Z + FLOAT(MMIN) * BOXL2
+
+
+        IF (RMIN .GT. 7.D0) THEN
+            EN = 0.D0
+        ELSE
+            MOL2 = RotMatrix(TEMPJ, DMSO, hoek(J))
+            CALL system("rm gauss/*")
+            CALL calcGa(I, J, MOL1, MOL2, DMSO_SYM, DMSO_SYM, EN)
+
+            WRITE(501, *) "Ga - ", I, "-", J
+
+            EN = EN - E_DMSO - E_DMSO
+            EN = EN * HARTREE2KJMOL
+        END IF
+
+        SOLVENTSOLVENT(I,J) = EN
+        SOLVENTSOLVENT(J,I) = EN
+    END DO
+
+    ! Solvent-solute
+    CALL calcGa(I, 0, MOL1, SOLUTE, DMSO_SYM, SOL_SYM, EN)
+    EN = EN - E_SOL - E_DMSO
+    EN = EN * HARTREE2KJMOL
+    ENERGY(I) = EN
+
+END SUBROUTINE calculateGA
 
 FUNCTION calcEnergy(ENERGY, SOLVENTSOLVENT) RESULT(OUT)
     DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: ENERGY
