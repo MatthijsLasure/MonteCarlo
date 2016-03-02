@@ -104,8 +104,6 @@ LOGICAL:: DODEBUG = .FALSE.                                          !
 
     BOXL2 = BOXL * 2.D0
     DHOEKMAX = DHOEKMAX * PI
-    write(0,*) BOXL, BOXL2
-
 
     ! INPUT
     dmso_file = "DMSO.txt"
@@ -222,47 +220,15 @@ write(500, *) start
     ! Loop 1: LJ
     !===========
     loop_LJ: DO UNICORN=1,LJ_STEPS
-        ! Verhuis oude vars naar de _old vars
-        COM_OLD = COM
-        HOEK_OLD = HOEK
-        !solute_old = solute ! Wordt nog niet gevariëerd
-        TOTENG_OLD = TOTENG
-        EOLD = ENERGY
-        SSOLD = SOLVENTSOLVENT
 
-        ! Doe MC
-        RSOLV = INT(RAND() * NCOM) + 1 ! Willekeurige DMSO molecule
-        COM(RSOLV) = CoM(RSOLV) + randVec(DPOSMAX)
-        HOEK(RSOLV) = hoek(RSOLV) + randVec(DHOEKMAX)
-
-
-        ! Check of hoeken nog binnen [-Pi, +Pi] liggen
-        HOEK(RSOLV)%X = HOEK(RSOLV)%X - TAU * AINT(HOEK(RSOLV)%X / PI)
-        HOEK(RSOLV)%Y = HOEK(RSOLV)%Y - TAU * AINT(HOEK(RSOLV)%Y / PI)
-        HOEK(RSOLV)%Z = HOEK(RSOLV)%Z - TAU * AINT(HOEK(RSOLV)%Z / PI)
-
-        ! Periodic boundaries => Computer Simulation of Liquids, p30
-        COM(RSOLV)%X = COM(RSOLV)%X - BOXL2 * AINT(COM(RSOLV)%X / BOXL)
-        COM(RSOLV)%Y = COM(RSOLV)%Y - BOXL2 * AINT(COM(RSOLV)%Y / BOXL)
-        COM(RSOLV)%Z = COM(RSOLV)%Z - BOXL2 * AINT(COM(RSOLV)%Z / BOXL)
-
-        ! Checks for OOB
-        if(COM(RSOLV)%X .GT. BOXL .OR. COM(RSOLV)%X .LT. -1.D0 * BOXL) THEN
-            write(500,*) "OOB on X with ", RSOLV, "@", UNICORN, ":", COM(RSOLV)%X
-        END IF
-        if(COM(RSOLV)%Y .GT. BOXL .OR. COM(RSOLV)%Y .LT. -1.D0 * BOXL) THEN
-            write(500,*) "OOB on Y with ", RSOLV, "@", UNICORN, ":", COM(RSOLV)%Y
-        END IF
-        if(COM(RSOLV)%Z .GT. BOXL .OR. COM(RSOLV)%Z .LT. -1.D0 * BOXL) THEN
-            write(500,*) "OOB on Z with ", RSOLV, "@", UNICORN, ":", COM(RSOLV)%Z
-        END IF
-
+        CALL MCINIT(UNICORN) ! Verander 1 molecule + check voor OOB & PB
 
         ! Bereken veranderde interacties
         CALL calculateLJ(RSOLV)
         TOTENG = 0.D0
         TOTENG = calcEnergy(ENERGY, SOLVENTSOLVENT)
 
+        ! Check for invalid shit
         if(TOTENG > HUGE(TOTENG)) then
             write (0,*) "TOTENG IS INFINITY @", UNICORN, TOTENG
             TOTENG = HUGE(TOTENG)-1
@@ -273,50 +239,7 @@ write(500, *) start
         end if
 
         ! Doe Metropolis
-        DELTA = TOTENG - TOTENG_OLD
-        EXPONENT = -1.D0 * BETA * DELTA  * 1000.D0 / (8.314D0 * 300.D0)
-        if (EXPONENT .LT. -75.D0) then ! e^-75 < 3*10^-33: 0% kans anyway
-            KANS = 0.D0
-            RV = 1.D0 ! Skip rand() voor cpu tijd besparing
-        else
-            KANS = E ** EXPONENT
-            RV = RAND()
-        end if
-        IF (KANS .GT. 1.D0) KANS = 1.D0
-
-        ! Bepaal if succesvol -> volgende config
-        IF(RV .LE. KANS) THEN ! Succes!
-            NSUC = NSUC + 1
-            NACCEPT = NACCEPT + 1
-        ELSE ! Fail!
-            ! Verhuis oude vars terug naar de nieuwe
-            COM = COM_OLD
-            HOEK = HOEK_OLD
-            !solute = solute_old ! Wordt nog niet gevariëerd
-            TOTENG = TOTENG_OLD
-            ENERGY = EOLD ! Resetten!!
-            SOLVENTSOLVENT = SSOLD
-        END IF
-
-        RATIO = REAL(NACCEPT) / real(NADJ)
-
-        ! Prints every NPRINT times
-        if(mod(UNICORN, NPRINT) .EQ. 0) then
-            !CALL DUMP(UNICORN)
-            WRITE (501,902) UNICORN, TOTENG, TOTENG_OLD, KANS, RV, RSOLV, REAL(NSUC) / real(UNICORN), ratio, dposmax
-        end if
-
-        ! Pas de dposMax aan indien ratio =/= 50%
-        if (mod(UNICORN, NADJ) .EQ. 0) then
-
-            if (ratio .GT. 0.5) then
-                dposMax = dposMax * (1.D0 + pAdj)
-            else
-                dposMax = dposMax * (1.D0 - pAdj)
-            end if
-            if (dposMax .LT. 0.00001) dposMax = 0.00001
-            NACCEPT = 0
-        end if
+        CALL METROPOLIS(UNICORN)
 
     END DO loop_LJ
 
@@ -363,6 +286,105 @@ CONTAINS
 
 !====================================================================
 !====================================================================
+
+SUBROUTINE MCINIT(I)
+
+        INTEGER :: I
+
+        ! Verhuis oude vars naar de _old vars
+        COM_OLD = COM
+        HOEK_OLD = HOEK
+        !solute_old = solute ! Wordt nog niet gevariëerd
+        TOTENG_OLD = TOTENG
+        EOLD = ENERGY
+        SSOLD = SOLVENTSOLVENT
+
+        ! Doe MC
+        RSOLV = INT(RAND() * NCOM) + 1 ! Willekeurige DMSO molecule
+        COM(RSOLV) = CoM(RSOLV) + randVec(DPOSMAX)
+        HOEK(RSOLV) = hoek(RSOLV) + randVec(DHOEKMAX)
+
+
+        ! Check of hoeken nog binnen [-Pi, +Pi] liggen
+        HOEK(RSOLV)%X = HOEK(RSOLV)%X - TAU * AINT(HOEK(RSOLV)%X / PI)
+        HOEK(RSOLV)%Y = HOEK(RSOLV)%Y - TAU * AINT(HOEK(RSOLV)%Y / PI)
+        HOEK(RSOLV)%Z = HOEK(RSOLV)%Z - TAU * AINT(HOEK(RSOLV)%Z / PI)
+
+        ! Periodic boundaries => Computer Simulation of Liquids, p30
+        COM(RSOLV)%X = COM(RSOLV)%X - BOXL2 * AINT(COM(RSOLV)%X / BOXL)
+        COM(RSOLV)%Y = COM(RSOLV)%Y - BOXL2 * AINT(COM(RSOLV)%Y / BOXL)
+        COM(RSOLV)%Z = COM(RSOLV)%Z - BOXL2 * AINT(COM(RSOLV)%Z / BOXL)
+
+        ! Checks for OOB
+        if(COM(RSOLV)%X .GT. BOXL .OR. COM(RSOLV)%X .LT. -1.D0 * BOXL) THEN
+            write(500,*) "OOB on X with ", RSOLV, "@", I, ":", COM(RSOLV)%X
+        END IF
+        if(COM(RSOLV)%Y .GT. BOXL .OR. COM(RSOLV)%Y .LT. -1.D0 * BOXL) THEN
+            write(500,*) "OOB on Y with ", RSOLV, "@", I, ":", COM(RSOLV)%Y
+        END IF
+        if(COM(RSOLV)%Z .GT. BOXL .OR. COM(RSOLV)%Z .LT. -1.D0 * BOXL) THEN
+            write(500,*) "OOB on Z with ", RSOLV, "@", I, ":", COM(RSOLV)%Z
+        END IF
+
+END SUBROUTINE MCINIT
+
+!====================================================================
+!====================================================================
+
+SUBROUTINE METROPOLIS(I)
+
+        INTEGER :: I
+
+        902 FORMAT(I12.12, 1X, ES20.10, 1X, ES20.10, 1X, F6.4, 1X, F6.4, 1X, I3.3, 1X, F6.4, 1X, F6.4, 1X, F6.5)
+
+        DELTA = TOTENG - TOTENG_OLD
+        EXPONENT = -1.D0 * BETA * DELTA  * 1000.D0 / (8.314D0 * 300.D0)
+        if (EXPONENT .LT. -75.D0) then ! e^-75 < 3*10^-33: 0% kans anyway
+            KANS = 0.D0
+            RV = 1.D0 ! Skip rand() voor cpu tijd besparing
+        else
+            KANS = E ** EXPONENT
+            RV = RAND()
+            IF (KANS .GT. 1.D0) KANS = 1.D0
+        end if
+
+        ! Bepaal if succesvol -> volgende config
+        IF(RV .LE. KANS) THEN ! Succes!
+            NSUC = NSUC + 1
+            NACCEPT = NACCEPT + 1
+        ELSE ! Fail!
+            ! Verhuis oude vars terug naar de nieuwe
+            COM = COM_OLD
+            HOEK = HOEK_OLD
+            !solute = solute_old ! Wordt nog niet gevariëerd
+            TOTENG = TOTENG_OLD
+            ENERGY = EOLD ! Resetten!!
+            SOLVENTSOLVENT = SSOLD
+        END IF
+
+        RATIO = REAL(NACCEPT) / real(NADJ)
+
+        ! Prints every NPRINT times
+        if(mod(I, NPRINT) .EQ. 0) then
+            !CALL DUMP(I)
+            WRITE (501,902) I, TOTENG, TOTENG_OLD, KANS, RV, RSOLV, REAL(NSUC) / real(I), ratio, dposmax
+        end if
+
+        ! Pas de dposMax aan indien ratio =/= 50%
+        if (mod(I, NADJ) .EQ. 0) then
+            if (ratio .GT. 0.5) then
+                dposMax = dposMax * (1.D0 + pAdj)
+            else
+                dposMax = dposMax * (1.D0 - pAdj)
+            end if
+            if (dposMax .LT. 0.00001) dposMax = 0.00001
+            NACCEPT = 0
+        end if
+
+END SUBROUTINE METROPOLIS
+!====================================================================
+!====================================================================
+
 SUBROUTINE calculateLJ(I)
 
     INTEGER:: I
@@ -396,6 +418,12 @@ SUBROUTINE calculateLJ(I)
     ENERGY(I) = EN
 
 END SUBROUTINE calculateLJ
+
+!====================================================================
+!====================================================================
+
+!====================================================================
+!====================================================================
 
 SUBROUTINE calculateGA(I)
 
@@ -458,6 +486,9 @@ SUBROUTINE calculateGA(I)
 
 END SUBROUTINE calculateGA
 
+!====================================================================
+!====================================================================
+
 FUNCTION calcEnergy(ENERGY, SOLVENTSOLVENT) RESULT(OUT)
     DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: ENERGY
     DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN) :: SOLVENTSOLVENT
@@ -475,6 +506,9 @@ FUNCTION calcEnergy(ENERGY, SOLVENTSOLVENT) RESULT(OUT)
     END DO
 
 END FUNCTION calcEnergy
+
+!====================================================================
+!====================================================================
 
 subroutine dump(i)
         INTEGER :: i
@@ -499,4 +533,8 @@ subroutine dump(i)
 
 end subroutine dump
 
+!====================================================================
+!====================================================================
+
+! The end :)
 END PROGRAM MonteCarlo
