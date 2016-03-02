@@ -262,14 +262,18 @@ CALL system_clock(start)
 WRITE(500,*) START
 
     ! Loop 2: Gaussian
-    loop_Ga: DO I=1,GA_STEPS
+    loop_Ga: DO UNICORN=1,GA_STEPS
         ! Doe MC
+        CALL MCINIT(UNICORN)
 
         ! Bereken veranderde interacties
-        J = I
-        ! Doe Metropolis
+        CALL calculateGA(RSOLV)
+        TOTENG = 0.D0
+        TOTENG = calcEnergy(ENERGY, SOLVENTSOLVENT)
 
-        ! Bepaal if succesvol -> volgende config
+        ! Doe Metropolis
+        CALL METROPOLIS(UNICORN)
+
     END DO loop_Ga
 
     CALL system_clock(START)
@@ -278,7 +282,7 @@ WRITE(500,*) START
 !====================================================================
 !====================================================================
 
-close(20)
+!close(20)
 close(501)
 close(500)
 
@@ -367,6 +371,7 @@ SUBROUTINE METROPOLIS(I)
         ! Prints every NPRINT times
         if(mod(I, NPRINT) .EQ. 0) then
             !CALL DUMP(I)
+            write (500, *) "WHEEEEEE"
             WRITE (501,902) I, TOTENG, TOTENG_OLD, KANS, RV, RSOLV, REAL(NSUC) / real(I), ratio, dposmax
         end if
 
@@ -422,14 +427,11 @@ END SUBROUTINE calculateLJ
 !====================================================================
 !====================================================================
 
-!====================================================================
-!====================================================================
-
 SUBROUTINE calculateGA(I)
 
     INTEGER:: I, J ! gevraagde moleculen
-    INTEGER :: K, L, M, KMIN, LMIN, MMIN ! Minimal Image Convention
-    DOUBLE PRECISION :: R, RMIN = 10000.D0
+    INTEGER :: K, L, M, KMIN = 2, LMIN = 2, MMIN = 2 ! Minimal Image Convention
+    DOUBLE PRECISION :: R, RMIN
     TYPE (vector) :: TEMPJ
 
     ! Solvent solvent
@@ -438,6 +440,7 @@ SUBROUTINE calculateGA(I)
     MOL1 = RotMatrix(CoM(I), DMSO, hoek(I))
     DO J=I+1,NCOM
         ! MINIMIZE DISTANCE
+        RMIN = huge(en)
         K_LOOP: DO K=-1,1
             DO L=-1,1
                 DO M=-1,1
@@ -451,6 +454,7 @@ SUBROUTINE calculateGA(I)
                         KMIN = K
                         LMIN = L
                         MMIN = M
+                    else
                     end if
                 END DO
             END DO
@@ -460,15 +464,17 @@ SUBROUTINE calculateGA(I)
         TEMPJ%Y = CoM(J)%Y + FLOAT(LMIN) * BOXL2
         TEMPJ%Z = CoM(J)%Z + FLOAT(MMIN) * BOXL2
 
+        !write(500,*) I, J, TEMPJ%X, TEMPJ%Y, TEMPJ%Z, CoM(J)%X, CoM(J)%Y, CoM(J)%Z, KMIN, LMIN, MMIN
+
 
         IF (RMIN .GT. 7.D0) THEN
             EN = 0.D0
         ELSE
             MOL2 = RotMatrix(TEMPJ, DMSO, hoek(J))
-            CALL system("rm gauss/*")
+            !CALL system("rm gauss/*")
             CALL calcGa(I, J, MOL1, MOL2, DMSO_SYM, DMSO_SYM, EN)
 
-            WRITE(501, *) "Ga - ", I, "-", J
+            WRITE(500, *) "Ga - ", I, "-", J
 
             EN = EN - E_DMSO - E_DMSO
             EN = EN * HARTREE2KJMOL

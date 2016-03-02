@@ -104,12 +104,14 @@ MODULE interactions
         DOUBLE PRECISION :: en
 
         ! INTERNAL VARS
-        INTEGER :: K ! loop de loop
+        INTEGER :: K, L ! loop de loop
         CHARACTER*25 :: bullshit
         CHARACTER*100 :: gauss_file, gauss_log, FIFO
         CHARACTER*600 :: command1, command2, command0
         CHARACTER*16 :: str_i, str_j
         INTEGER :: N1, N2
+        INTEGER :: IOSTATUS ! Check for EOF
+        LOGICAL :: hasClipped = .false.
 
         905 FORMAT(A, 3F16.8)
         906 FORMAT(A, I3.3'-',I3.3,A)
@@ -125,6 +127,18 @@ MODULE interactions
 
         N1 = size(mol1)
         N2 = size(mol2)
+
+        ! Calculate distances
+        kloop: do K = 1,N1
+            do L = 1,N2
+                if(getDist(mol1(K),mol2(L)) .LT. 1.D0) THEN
+                    EN = huge(En)
+                    hasClipped = true
+                    return
+                END IF
+            end do
+        end Do kloop
+        if (hasClipped) return
 
         ! OPEN FILE
         OPEN(unit=15, file=gauss_file)
@@ -148,6 +162,7 @@ MODULE interactions
             write (15,905) sym2(K), mol2(K)%X, mol2(K)%Y, mol2(K)%Z
         end do
 
+        write (15,*) '                                        '
         CLOSE(15)
 
         ! Start gaussian
@@ -155,7 +170,7 @@ MODULE interactions
 
         call system (command1) ! Execute gaussian
         call system (command2) ! Execute grep
-        open (16, file=FIFO) ! Open de pipeline
+        open (16, file=FIFO, IOSTAT=IOSTATUS) ! Open de pipeline
         read (16, "(A22,E19.12E2)") bullshit, en ! lees resultaat in
         close(16)
 
