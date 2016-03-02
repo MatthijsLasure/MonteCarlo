@@ -105,43 +105,60 @@ MODULE interactions
 
         ! INTERNAL VARS
         INTEGER :: K ! loop de loop
-        CHARACTER*32 :: gauss_file, gauss_log
+        CHARACTER*25 :: bullshit
+        CHARACTER*100 :: gauss_file, gauss_log, FIFO
+        CHARACTER*600 :: command1, command2, command0
         CHARACTER*16 :: str_i, str_j
         INTEGER :: N1, N2
 
-        905 FORMAT(A2, 3F16.8)
+        905 FORMAT(A, 3F16.8)
+        906 FORMAT(A, I3.3'-',I3.3,A)
 
-        write(str_i, *) I
-        write(str_j, *) J
+        write(gauss_file, 906) "gauss/input-", I, J, ".com"
+        write(gauss_log, 906) "gauss/output-", I, J, ".log"
+        write(FIFO, 906) "gauss/FIFO-", I, J, ""
 
-        gauss_file = "input-" // str_i // "-" // str_j // ".com"
-        gauss_log = "output-" // str_i // "-" // str_j // ".log"
+        write(command0, "(A6, A, A)") "mknod ", FIFO, " p" ! Make Pipe
+        !write(command1, "(A6,A,A15, A, A2)") "g09 < ", gauss_file, " | grep Done > ", FIFO, " &" ! Start Gaussian in background mode
+        write(command1, "(A6,A,A15, A, A2)") "g09 < ", gauss_file, " > ", gauss_log ! TEMP DEBUG
+        write(command2, "(A10, A, A3,A,A2)") "grep Done ", gauss_log, " > ", FIFO, " &" ! Filter log > to pipe
+
         N1 = size(mol1)
         N2 = size(mol2)
 
         ! OPEN FILE
         OPEN(unit=15, file=gauss_file)
 
-        write (10,*) '%nproc=8                                '
-        write (10,*) '%mem=8Gb                                '
-        write (10,*) '%chk=inputess.chk                       '
-        write (10,*) '#  PM6                                  '
-        write (10,*) '                                        '
-        write (10,*) 'interacties                             '
-        write (10,*) '                                        '
-        write (10,*) '0 1                                     '
+        write (15,*) '%nproc=8                                '
+        write (15,*) '%mem=8Gb                                '
+        write (15,*) '%chk=inputess.chk                       '
+        write (15,*) '#  PM6                                  '
+        write (15,*) '                                        '
+        write (15,*) 'interacties                             '
+        write (15,*) '                                        '
+        write (15,*) '0 1                                     '
 
         ! Print Mol1
-        do K=21,N1
+        do K=1,N1
             write (15,905) sym1(K), mol1(K)%X, mol1(K)%Y, mol1(K)%Z
+        end do
+
+        ! Print mol2
+        do K=1,N2
             write (15,905) sym2(K), mol2(K)%X, mol2(K)%Y, mol2(K)%Z
         end do
 
         CLOSE(15)
 
         ! Start gaussian
-        call system ('g09 < '// gauss_file //' > '// gauss_log)
-        call system ('grep Done output.log > en.txt')
+        call system (command0) ! Make pipe
+
+        call system (command1) ! Execute gaussian
+        call system (command2) ! Execute grep
+        open (16, file=FIFO) ! Open de pipeline
+        read (16, "(A22,E19.12E2)") bullshit, en ! lees resultaat in
+        close(16)
+
 
     END SUBROUTINE calcGa
 
