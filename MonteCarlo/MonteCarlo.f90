@@ -267,7 +267,7 @@ WRITE(500,*) START
         CALL MCINIT(UNICORN)
 
         ! Bereken veranderde interacties
-        CALL calculateGA(RSOLV)
+        CALL calculateGA(RSOLV, UNICORN)
         TOTENG = 0.D0
         TOTENG = calcEnergy(ENERGY, SOLVENTSOLVENT)
 
@@ -429,9 +429,9 @@ END SUBROUTINE calculateLJ
 !====================================================================
 !====================================================================
 
-SUBROUTINE calculateGA(I)
+SUBROUTINE calculateGA(I, LOOPNR)
 
-    INTEGER:: I, J ! gevraagde moleculen
+    INTEGER:: I, J, LOOPNR ! gevraagde moleculen, welke loop
     INTEGER :: K, L, M, KMIN = 2, LMIN = 2, MMIN = 2 ! Minimal Image Convention
     DOUBLE PRECISION :: R, RMIN
     TYPE (vector) :: TEMPJ
@@ -440,7 +440,7 @@ SUBROUTINE calculateGA(I)
     ! Notice: geen i loop: alleen molecule i is veranderd en moet opnieuw berekend worden
     SOLVENTSOLVENT(I,I) = 0.D0
     MOL1 = RotMatrix(CoM(I), DMSO, hoek(I))
-    write(500,"(I2)") I
+
 
     ! Begin of parallel loop
     !================================================================
@@ -481,7 +481,7 @@ SUBROUTINE calculateGA(I)
         ELSE
             MOL2 = RotMatrix(TEMPJ, DMSO, hoek(J))
             !CALL system("rm gauss/*")
-            CALL calcGa(I, J, MOL1, MOL2, DMSO_SYM, DMSO_SYM, EN)
+            CALL calcGa(I, J, MOL1, MOL2, DMSO_SYM, DMSO_SYM, EN, LOOPNR)
 
             !WRITE(500, *) "Ga - ", I, "-", J
 
@@ -496,7 +496,7 @@ SUBROUTINE calculateGA(I)
     !$OMP END PARALLEL
 
     ! Solvent-solute
-    CALL calcGa(I, 0, MOL1, SOLUTE, DMSO_SYM, SOL_SYM, EN)
+    CALL calcGa(I, 0, MOL1, SOLUTE, DMSO_SYM, SOL_SYM, EN, LOOPNR)
     EN = EN - E_SOL - E_DMSO
     EN = EN * HARTREE2KJMOL
     ENERGY(I) = EN

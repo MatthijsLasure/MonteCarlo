@@ -94,11 +94,11 @@ MODULE interactions
 
 !====================================================================
 
-    SUBROUTINE calcGa(i, j, mol1, mol2, sym1, sym2, en)
+    SUBROUTINE calcGa(i, j, mol1, mol2, sym1, sym2, en, loopnr)
         ! INPUT
         TYPE (vector), DIMENSION(:), INTENT(IN) :: MOL1, MOL2 ! absolute coords!
         CHARACTER*4, DIMENSION(:), INTENT(IN) :: SYM1, SYM2 ! Atoomtypes
-        INTEGER, INTENT(in) :: I, J
+        INTEGER, INTENT(in) :: I, J, LOOPNR
 
         ! OUTPUT
         DOUBLE PRECISION :: en
@@ -114,14 +114,13 @@ MODULE interactions
         LOGICAL :: hasClipped = .false.
 
         905 FORMAT(A, 3F16.8)
-        906 FORMAT(A, I3.3'-',I3.3,A)
+        906 FORMAT(A, I10.10'-', I3.3'-',I3.3,A)
 
-        write(gauss_file, 906) "gauss/input-", I, J, ".com"
-        write(gauss_log, 906) "gauss/output-", I, J, ".log"
-        write(FIFO, 906) "gauss/FIFO-", I, J, ""
+        write(gauss_file, 906) "gauss/input-", LOOPNR, I, J, ".com"
+        write(gauss_log, 906) "gauss/output-", LOOPNR, I, J, ".log"
+        write(FIFO, 906) "gauss/FIFO-", LOOPNR, I, J, ""
 
-        !write(command0, "(A6, A, A)") "mknod ", FIFO, " p" ! Make Pipe
-        write(command0, "(A, A, A, A, A)") "[ -e", FIFO, "] || mknod ", FIFO, " p" ! Make Pipe als het nog niet bestaat
+        write(command0, "(A, A, A, A, A)") "[ -e ", FIFO, "] || mknod ", FIFO, " p" ! Make Pipe als het nog niet bestaat
         !write(command1, "(A6,A,A15, A, A2)") "g09 < ", gauss_file, " | grep Done > ", FIFO, " &" ! Start Gaussian in background mode
         write(command1, "(A6,A,A15, A, A2)") "g09 < ", gauss_file, " > ", gauss_log ! TEMP DEBUG
         write(command2, "(A10, A, A3,A,A2)") "grep Done ", gauss_log, " > ", FIFO, " &" ! Filter log > to pipe
@@ -166,19 +165,19 @@ MODULE interactions
         end do
 
         write (15,*) '                                        '
+        FLUSH(15)
         CLOSE(15)
 
         ! Start gaussian
         call system (command0) ! Make pipe
-
-        call system (command1) ! Execute gaussian
+        call system (command1, IOSTATUS) ! Execute gaussian
         call system (command2) ! Execute grep
         open (16, file=FIFO) ! Open de pipeline
-        read (16, "(A22,E19.12E2)", IOSTAT=IOSTATUS) bullshit, en ! lees resultaat in
+        read (16, "(A22,E19.12E2)") bullshit, en ! lees resultaat in
         close(16)
-        IF(IOSTATUS < 0) then
-            en = huge(en)
-            write(500,*) "Gaussian issue @", I, J
+        if (IOSTATUS .NE. 0) then
+            write (500,*) "Gaussian error", IOSTATUS, "@", LOOPNR
+            stop "STOP"
         end if
 
         END IF
