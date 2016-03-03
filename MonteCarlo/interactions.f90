@@ -120,7 +120,8 @@ MODULE interactions
         write(gauss_log, 906) "gauss/output-", I, J, ".log"
         write(FIFO, 906) "gauss/FIFO-", I, J, ""
 
-        write(command0, "(A6, A, A)") "mknod ", FIFO, " p" ! Make Pipe
+        !write(command0, "(A6, A, A)") "mknod ", FIFO, " p" ! Make Pipe
+        write(command0, "(A, A, A, A, A)") "[ -e", FIFO, "] || mknod ", FIFO, " p" ! Make Pipe als het nog niet bestaat
         !write(command1, "(A6,A,A15, A, A2)") "g09 < ", gauss_file, " | grep Done > ", FIFO, " &" ! Start Gaussian in background mode
         write(command1, "(A6,A,A15, A, A2)") "g09 < ", gauss_file, " > ", gauss_log ! TEMP DEBUG
         write(command2, "(A10, A, A3,A,A2)") "grep Done ", gauss_log, " > ", FIFO, " &" ! Filter log > to pipe
@@ -133,19 +134,21 @@ MODULE interactions
             do L = 1,N2
                 if(getDist(mol1(K),mol2(L)) .LT. 1.D0) THEN
                     EN = huge(En)
-                    hasClipped = true
-                    return
+
+                    hasClipped = .true.
+                    !return
                 END IF
             end do
         end Do kloop
-        if (hasClipped) return
-
+        if (hasClipped) THEN
+            write(500,*) "Molecules have clipped, discarding.", I, J
+        ELSE
         ! OPEN FILE
         OPEN(unit=15, file=gauss_file)
 
-        write (15,*) '%nproc=8                                '
+        write (15,*) '%nproc=1                                '
         write (15,*) '%mem=8Gb                                '
-        write (15,*) '%chk=inputess.chk                       '
+        !write (15,*) '%chk=inputess.chk                       '
         write (15,*) '#  PM6                                  '
         write (15,*) '                                        '
         write (15,*) 'interacties                             '
@@ -170,10 +173,15 @@ MODULE interactions
 
         call system (command1) ! Execute gaussian
         call system (command2) ! Execute grep
-        open (16, file=FIFO, IOSTAT=IOSTATUS) ! Open de pipeline
-        read (16, "(A22,E19.12E2)") bullshit, en ! lees resultaat in
+        open (16, file=FIFO) ! Open de pipeline
+        read (16, "(A22,E19.12E2)", IOSTAT=IOSTATUS) bullshit, en ! lees resultaat in
         close(16)
+        IF(IOSTATUS < 0) then
+            en = huge(en)
+            write(500,*) "Gaussian issue @", I, J
+        end if
 
+        END IF
 
     END SUBROUTINE calcGa
 

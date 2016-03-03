@@ -271,6 +271,8 @@ WRITE(500,*) START
         TOTENG = 0.D0
         TOTENG = calcEnergy(ENERGY, SOLVENTSOLVENT)
 
+        call dump(UNICORN)
+
         ! Doe Metropolis
         CALL METROPOLIS(UNICORN)
 
@@ -344,6 +346,7 @@ SUBROUTINE METROPOLIS(I)
         DELTA = TOTENG - TOTENG_OLD
         EXPONENT = -1.D0 * BETA * DELTA  * 1000.D0 / (8.314D0 * 300.D0)
         if (EXPONENT .LT. -75.D0) then ! e^-75 < 3*10^-33: 0% kans anyway
+        write(500,*) "Large Exponent!", I
             KANS = 0.D0
             RV = 1.D0 ! Skip rand() voor cpu tijd besparing
         else
@@ -371,7 +374,6 @@ SUBROUTINE METROPOLIS(I)
         ! Prints every NPRINT times
         if(mod(I, NPRINT) .EQ. 0) then
             !CALL DUMP(I)
-            write (500, *) "WHEEEEEE"
             WRITE (501,902) I, TOTENG, TOTENG_OLD, KANS, RV, RSOLV, REAL(NSUC) / real(I), ratio, dposmax
         end if
 
@@ -438,6 +440,13 @@ SUBROUTINE calculateGA(I)
     ! Notice: geen i loop: alleen molecule i is veranderd en moet opnieuw berekend worden
     SOLVENTSOLVENT(I,I) = 0.D0
     MOL1 = RotMatrix(CoM(I), DMSO, hoek(I))
+    write(500,"(I2)") I
+
+    ! Begin of parallel loop
+    !================================================================
+
+    !$OMP PARALLEL
+    !$OMP DO SCHEDULE(GUIDED)
     DO J=I+1,NCOM
         ! MINIMIZE DISTANCE
         RMIN = huge(en)
@@ -474,7 +483,7 @@ SUBROUTINE calculateGA(I)
             !CALL system("rm gauss/*")
             CALL calcGa(I, J, MOL1, MOL2, DMSO_SYM, DMSO_SYM, EN)
 
-            WRITE(500, *) "Ga - ", I, "-", J
+            !WRITE(500, *) "Ga - ", I, "-", J
 
             EN = EN - E_DMSO - E_DMSO
             EN = EN * HARTREE2KJMOL
@@ -483,6 +492,8 @@ SUBROUTINE calculateGA(I)
         SOLVENTSOLVENT(I,J) = EN
         SOLVENTSOLVENT(J,I) = EN
     END DO
+    !$OMP END DO
+    !$OMP END PARALLEL
 
     ! Solvent-solute
     CALL calcGa(I, 0, MOL1, SOLUTE, DMSO_SYM, SOL_SYM, EN)
