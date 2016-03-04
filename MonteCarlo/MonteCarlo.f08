@@ -34,11 +34,13 @@ PROGRAM MonteCarlo
     INTEGER:: LJ_STEPS, GA_STEPS ! Aantal stappen per loop
     INTEGER:: RSOLV ! Geselecteerde molecule voor MC
     INTEGER:: NSUC = 0 ! Aantal succesvolle MC
-    INTEGER :: NADJ, NPRINT, NACCEPT = 0 ! Aanpassen dposMax / printen om de n cycli
+    INTEGER :: LJ_NADJ, LJ_NPRINT, GA_NADJ, GA_NPRINT ! Aanpassen dposMax / printen om de n cycli
+    INTEGER :: NACCEPT = 0
     DOUBLE PRECISION:: RV, KANS,DELTA = 0, EXPONENT ! Random variabele en toebehoren voor Metropolis
     DOUBLE PRECISiON :: RATIO ! Percentage succes in NADJ trials
     DOUBLE PRECISION :: PADJ ! Hoeveel de dposmax aangepast mag worden
     DOUBLE PRECISION :: BETA ! p = EXP(-BETA * DELTA / (RT)
+    LOGICAL :: REJECTED
 
     ! FILES
     !======
@@ -101,7 +103,8 @@ LOGICAL:: DODEBUG = .FALSE.                                          !
     call get_command_argument(1, confile)
 
     ! Read from config.ini
-    CALL rConfig(confile, BOXL, LJ_STEPS, Ga_STEPS, iseed, DoDebug, nadj, nprint, dposmax, dhoekmax, padj, beta)
+    CALL rConfig(confile, BOXL, LJ_STEPS, Ga_STEPS, iseed, DoDebug, LJ_nadj, LJ_nprint, GA_nadj, &
+    GA_nprint, dposmax, dhoekmax, padj, beta)
 
     CALL system_clock (START)
     write(500,*) START
@@ -226,6 +229,14 @@ CALL system_clock(start)
     !===========
     loop_LJ: DO UNICORN=1,LJ_STEPS
 
+        ! Verhuis oude vars naar de _old vars
+        COM_OLD = COM
+        HOEK_OLD = HOEK
+        !solute_old = solute ! Wordt nog niet gevariëerd
+        TOTENG_OLD = TOTENG
+        EOLD = ENERGY
+        SSOLD = SOLVENTSOLVENT
+
         CALL MCINIT(UNICORN) ! Verander 1 molecule + check voor OOB & PB
 
         ! Bereken veranderde interacties
@@ -244,7 +255,17 @@ CALL system_clock(start)
         end if
 
         ! Doe Metropolis
-        CALL METROPOLIS(UNICORN)
+        CALL METROPOLIS(UNICORN, LJ_NADJ, LJ_NPRINT, REJECTED)
+
+        if(REJECTED) THEN
+            ! Verhuis oude vars terug naar de nieuwe
+            COM = COM_OLD
+            HOEK = HOEK_OLD
+            !solute = solute_old ! Wordt nog niet gevariëerd
+            TOTENG = TOTENG_OLD
+            ENERGY = EOLD ! Resetten!!
+            SOLVENTSOLVENT = SSOLD
+        END IF
 
     END DO loop_LJ
 
@@ -268,6 +289,15 @@ CALL system_clock(start)
 
     ! Loop 2: Gaussian
     loop_Ga: DO UNICORN=1,GA_STEPS
+
+        ! Verhuis oude vars naar de _old vars
+        COM_OLD = COM
+        HOEK_OLD = HOEK
+        !solute_old = solute ! Wordt nog niet gevariëerd
+        TOTENG_OLD = TOTENG
+        EOLD = ENERGY
+        SSOLD = SOLVENTSOLVENT
+
         ! Doe MC
         CALL MCINIT(UNICORN)
 
@@ -279,7 +309,17 @@ CALL system_clock(start)
         call dump(UNICORN)
 
         ! Doe Metropolis
-        CALL METROPOLIS(UNICORN)
+        CALL METROPOLIS(UNICORN, GA_NADJ, GA_NPRINT, REJECTED)
+
+        if(REJECTED) THEN
+            ! Verhuis oude vars terug naar de nieuwe
+            COM = COM_OLD
+            HOEK = HOEK_OLD
+            !solute = solute_old ! Wordt nog niet gevariëerd
+            TOTENG = TOTENG_OLD
+            ENERGY = EOLD ! Resetten!!
+            SOLVENTSOLVENT = SSOLD
+        END IF
 
     END DO loop_Ga
 
@@ -301,14 +341,6 @@ CONTAINS
 SUBROUTINE MCINIT(I)
 
         INTEGER :: I
-
-        ! Verhuis oude vars naar de _old vars
-        COM_OLD = COM
-        HOEK_OLD = HOEK
-        !solute_old = solute ! Wordt nog niet gevariëerd
-        TOTENG_OLD = TOTENG
-        EOLD = ENERGY
-        SSOLD = SOLVENTSOLVENT
 
         ! Doe MC
         RSOLV = INT(RAND() * NCOM) + 1 ! Willekeurige DMSO molecule
@@ -342,9 +374,11 @@ END SUBROUTINE MCINIT
 !====================================================================
 !====================================================================
 
-SUBROUTINE METROPOLIS(I)
+SUBROUTINE METROPOLIS(I, NADJ, NPRINT, REJECTED)
 
         INTEGER :: I
+        INTEGER :: NADJ, NPRINT
+        LOGICAL, INTENT(out) :: REJECTED
 
         902 FORMAT(I12.12, 1X, ES20.10, 1X, ES20.10, 1X, F6.4, 1X, F6.4, 1X, I3.3, 1X, F6.4, 1X, F6.4, 1X, F6.5)
 
@@ -364,14 +398,9 @@ SUBROUTINE METROPOLIS(I)
         IF(RV .LE. KANS) THEN ! Succes!
             NSUC = NSUC + 1
             NACCEPT = NACCEPT + 1
+            REJECTED = .FALSE.
         ELSE ! Fail!
-            ! Verhuis oude vars terug naar de nieuwe
-            COM = COM_OLD
-            HOEK = HOEK_OLD
-            !solute = solute_old ! Wordt nog niet gevariëerd
-            TOTENG = TOTENG_OLD
-            ENERGY = EOLD ! Resetten!!
-            SOLVENTSOLVENT = SSOLD
+            REJECTED = .TRUE.
         END IF
 
         RATIO = REAL(NACCEPT) / real(NADJ)
@@ -408,6 +437,7 @@ SUBROUTINE calculateLJ(I)
     ! Notice: geen i loop: alleen molecule i is veranderd en moet opnieuw berekend worden
     SOLVENTSOLVENT(I,I) = 0.D0
     MOL1 = RotMatrix(CoM(I), DMSO, hoek(I))
+
     DO J=I+1,NCOM
         ! Check lengte, met MIC!
         R = CoM(J) - CoM(I)

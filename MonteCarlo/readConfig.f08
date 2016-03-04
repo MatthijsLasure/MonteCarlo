@@ -3,7 +3,8 @@ module readConfig
 
     contains
 
-subroutine rConfig(confile, boxl, LJ_steps, Ga_steps, iseed, doDebug, nadj, nprint, dposmax, dhoekmax, padj, beta)
+subroutine rConfig(confile, boxl, LJ_steps, Ga_steps, iseed, doDebug, LJ_nadj, LJ_nprint, GA_nadj,&
+ GA_nprint, dposmax, dhoekmax, padj, beta)
 
     integer, parameter    :: strlen = 100
     character(len=strlen) :: fst, snd
@@ -14,7 +15,7 @@ subroutine rConfig(confile, boxl, LJ_steps, Ga_steps, iseed, doDebug, nadj, npri
 
     ! Shit to read
     double precision :: boxl, dposmax, dhoekmax, padj, beta
-    integer :: LJ_steps, Ga_steps, nadj, nprint
+    integer :: LJ_steps, Ga_steps, LJ_nadj, LJ_nprint, GA_nadj, GA_nprint
     integer :: iseed
     logical :: doDebug
 
@@ -67,10 +68,14 @@ subroutine rConfig(confile, boxl, LJ_steps, Ga_steps, iseed, doDebug, nadj, npri
           doDebug = .TRUE.
         elseif (fst=="seed") then
           read(snd,"(I10)") iseed
-        elseif (fst=="nadj") then
-          read(snd,"(I10)") nadj
-        elseif (fst=="nprint") then
-          read(snd,"(I10)") nprint
+        elseif (fst=="lj_nadj") then
+          read(snd,"(I10)") LJ_nadj
+        elseif (fst=="lj_nprint") then
+          read(snd,"(I10)") LJ_nprint
+        elseif (fst=="ga_nadj") then
+          read(snd,"(I10)") GA_nadj
+        elseif (fst=="ga_nprint") then
+          read(snd,"(I10)") GA_nprint
         elseif (fst=="dposmax") then
           read(snd,"(F10.10)") dposmax
         elseif (fst=="dhoekmax") then
