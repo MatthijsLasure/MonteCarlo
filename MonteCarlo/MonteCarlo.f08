@@ -98,7 +98,7 @@ LOGICAL:: DODEBUG = .FALSE.                                          !
 !====================================================================
 
     ! Read command line
-    call get_command_argument(0, confile)
+    call get_command_argument(1, confile)
 
     ! Read from config.ini
     CALL rConfig(confile, BOXL, LJ_STEPS, Ga_STEPS, iseed, DoDebug, nadj, nprint, dposmax, dhoekmax, padj, beta)
