@@ -94,59 +94,49 @@ MODULE interactions
 
 !====================================================================
 
-    SUBROUTINE calcGa(i, j, mol1, mol2, sym1, sym2, en, loopnr)
-        ! INPUT
-        TYPE (vector), DIMENSION(:), INTENT(IN) :: MOL1, MOL2 ! absolute coords!
-        CHARACTER*4, DIMENSION(:), INTENT(IN) :: SYM1, SYM2 ! Atoomtypes
-        INTEGER, INTENT(in) :: I, J, LOOPNR
+SUBROUTINE calcGa(i, j, mol1, mol2, sym1, sym2, hasClipped)
+    ! INPUT
+    TYPE (vector), DIMENSION(:), INTENT(IN) :: MOL1, MOL2 ! absolute coords!
+    CHARACTER*4, DIMENSION(:), INTENT(IN) :: SYM1, SYM2 ! Atoomtypes
+    INTEGER, INTENT(in) :: I, J
 
-        ! OUTPUT
-        DOUBLE PRECISION :: en
+    ! OUTPUT
+    LOGICAL, intent(out) :: hasClipped ! Says if this set may run
 
-        ! INTERNAL VARS
-        INTEGER :: K, L ! loop de loop
-        CHARACTER*25 :: bullshit
-        CHARACTER*100 :: gauss_file, gauss_log, FIFO
-        CHARACTER*600 :: command1, command2, command0
-        CHARACTER*16 :: str_i, str_j
-        INTEGER :: N1, N2
-        INTEGER :: IOSTATUS ! Check for EOF
-        LOGICAL :: hasClipped = .false.
+    ! INTERNAL VARS
+    INTEGER :: K, L ! loop de loop
+    CHARACTER*100 :: gauss_file
+    CHARACTER*16 :: str_i, str_j
+    INTEGER :: N1, N2
+    INTEGER :: IOSTATUS ! Check for EOF
 
-        905 FORMAT(A, 3F16.8)
-        906 FORMAT(A, I10.10'-', I3.3'-',I3.3,A)
 
-        write(gauss_file, 906) "gauss/input-", LOOPNR, I, J, ".com"
-        write(gauss_log, 906) "gauss/output-", LOOPNR, I, J, ".log"
-        write(FIFO, 906) "gauss/FIFO-", LOOPNR, I, J, ""
+    905 FORMAT(A, 3F16.8)
+    906 FORMAT(A, I3.3'-',I3.3,A)
 
-        write(command0, "(A, A, A, A, A)") "[ -e ", FIFO, "] || mknod ", FIFO, " p" ! Make Pipe als het nog niet bestaat
-        !write(command1, "(A6,A,A15, A, A2)") "g09 < ", gauss_file, " | grep Done > ", FIFO, " &" ! Start Gaussian in background mode
-        write(command1, "(A6,A,A15, A, A2)") "g09 < ", gauss_file, " > ", gauss_log ! TEMP DEBUG
-        write(command2, "(A10, A, A3,A,A2)") "grep Done ", gauss_log, " > ", FIFO, " &" ! Filter log > to pipe
+    write(gauss_file, 906) "gauss/input-", I, J, ".com"
 
-        N1 = size(mol1)
-        N2 = size(mol2)
+    hasClipped = .FALSE.
 
-        ! Calculate distances
-        kloop: do K = 1,N1
-            do L = 1,N2
-                if(getDist(mol1(K),mol2(L)) .LT. 1.D0) THEN
-                    EN = huge(En)
+    N1 = size(mol1)
+    N2 = size(mol2)
 
-                    hasClipped = .true.
-                    !return
-                END IF
-            end do
-        end Do kloop
-        if (hasClipped) THEN
-            write(500,*) "Molecules have clipped, discarding.", I, J
-        ELSE
+    ! Calculate distances
+    kloop: do K = 1,N1
+        do L = 1,N2
+            if(getDist(mol1(K),mol2(L)) .LT. 1.D0) THEN
+                hasClipped = .true.
+            END IF
+        end do
+    end Do kloop
+    if (hasClipped) THEN
+        write(500,*) "Molecules have clipped, discarding.", I, J
+    ELSE
         ! OPEN FILE
         OPEN(unit=15, file=gauss_file)
 
         write (15,*) '%nproc=1                                '
-        write (15,*) '%mem=8Gb                                '
+        write (15,*) '%mem=1Gb                                '
         !write (15,*) '%chk=inputess.chk                       '
         write (15,*) '#  PM6                                  '
         write (15,*) '                                        '
@@ -165,23 +155,53 @@ MODULE interactions
         end do
 
         write (15,*) '                                        '
-        FLUSH(15)
         CLOSE(15)
+    END IF
 
-        ! Start gaussian
-        call system (command0) ! Make pipe
+END SUBROUTINE calcGa
+
+SUBROUTINE execGa(I, J, en)
+
+    CHARACTER*100 :: gauss_file, gauss_log, FIFO
+    CHARACTER*600 :: command1, command2, command0
+    INTEGER, INTENT(in) :: I, J
+    DOUBLE PRECISION :: en
+    CHARACTER*25 :: bullshit
+
+    906 FORMAT(A, I3.3'-',I3.3,A)
+
+    ! Generate filenames
+    write(gauss_file, 906) "gauss/input-", I, J, ".com"
+    write(gauss_log, 906) "gauss/output-", I, J, ".log"
+    write(FIFO, 906) "gauss/FIFO-", I, J, ""
+
+    ! Generate commands
+    write(command0, "(A, A, A, A, A)") "[ -e ", FIFO, "] || mknod ", FIFO, " p" ! Make Pipe als het nog niet bestaat
+    !write(command1, "(A6,A,A15, A, A2)") "g09 < ", gauss_file, " | grep Done > ", FIFO, " &" ! Start Gaussian in background mode
+    write(command1, "(A6,A,A15, A, A2)") "g09 < ", gauss_file, " > ", gauss_log ! TEMP DEBUG
+    write(command2, "(A10, A, A3,A,A2)") "grep Done ", gauss_log, " > ", FIFO, " &" ! Filter log > to pipe
+
+    ! Start gaussian
+    call system (command0) ! Make pipe
+    call system (command1, IOSTATUS) ! Execute gaussian
+
+    if (IOSTATUS .NE. 0) then ! Check for failure
+        write (500,*) "Gaussian error, retrying", IOSTATUS, "@", I, J
         call system (command1, IOSTATUS) ! Execute gaussian
-        call system (command2) ! Execute grep
-        open (16, file=FIFO) ! Open de pipeline
-        read (16, "(A22,E19.12E2)") bullshit, en ! lees resultaat in
-        close(16)
-        if (IOSTATUS .NE. 0) then
-            write (500,*) "Gaussian error", IOSTATUS, "@", LOOPNR
-            stop "STOP"
+        if(IOSTATUS .NE. 0) THEN
+            write (500,*) "Gaussian error, aborting", IOSTATUS, "@", I, J
+            en = huge(en)
+            return
         end if
+    end if
 
-        END IF
+    call system (command2) ! Execute grep
+    open (16, file=FIFO) ! Open de pipeline
+    read (16, "(A22,E19.12E2)") bullshit, en ! lees resultaat in
+    close(16)
 
-    END SUBROUTINE calcGa
+
+END SUBROUTINE execGa
+
 
 END MODULE interactions
