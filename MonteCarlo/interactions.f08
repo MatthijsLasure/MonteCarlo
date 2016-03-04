@@ -68,7 +68,6 @@ MODULE interactions
                         B = findSym(sym2(J), TABLE_SYM)
                         E = sqrt(table_e(A) * table_e(B))
                         S = (table_s(A) + table_s(B))/2
-                        !R = getDist(mol1(I), mol2(J))
                         R = mol2(J) - mol1(I)
 
                         ! Minimal image convention
@@ -196,7 +195,8 @@ SUBROUTINE execGa(I, J, en)
     end if
 
     call system (command2) ! Execute grep
-    open (16, file=FIFO) ! Open de pipeline
+    open (16, file=FIFO, IOSTAT=IOSTATUS) ! Open de pipeline
+    if(IOSTATUS .NE. 0) write(500,*) "Woeps", IOSTATUS, FIFO
     read (16, "(A22,E19.12E2)") bullshit, en ! lees resultaat in
     close(16)
 

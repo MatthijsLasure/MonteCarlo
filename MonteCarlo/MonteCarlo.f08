@@ -21,6 +21,7 @@ PROGRAM MonteCarlo
     USE lib
     USE randgen
     USE readconfig
+    USE OMP_LIB
     !use iso_fortran_env
 
     IMPLICIT NONE
@@ -121,6 +122,8 @@ LOGICAL:: DODEBUG = .FALSE.                                          !
 
     ! OUTPUT
     solvsolv_file = "solventsolvent.txt"
+
+    call omp_set_num_threads(8)
 
 
     ! Laden van configuraties
@@ -385,7 +388,7 @@ SUBROUTINE METROPOLIS(I, NADJ, NPRINT, REJECTED)
         DELTA = TOTENG - TOTENG_OLD
         EXPONENT = -1.D0 * BETA * DELTA  * 1000.D0 / (8.314D0 * 300.D0)
         if (EXPONENT .LT. -75.D0) then ! e^-75 < 3*10^-33: 0% kans anyway
-        write(500,*) "Large Exponent!", I
+        !write(500,*) "Large Exponent!", I
             KANS = 0.D0
             RV = 1.D0 ! Skip rand() voor cpu tijd besparing
         else
@@ -522,7 +525,7 @@ SUBROUTINE calculateGA(I, LOOPNR)
     !================================================================
 
     !$OMP PARALLEL
-    !$OMP DO SCHEDULE(GUIDED) PRIVATE(En)
+    !$OMP DO SCHEDULE(GUIDED, 4) PRIVATE(En)
     EXEC: DO J=I+1,NCOM
         if (CLipped(J)) THEn ! it may not run
             En = HUGE(En) ! Set energy to infinity
