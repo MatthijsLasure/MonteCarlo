@@ -214,7 +214,7 @@ WRITE (501,901) "i", "TotEng", "TotEng_old", "kans", "rv", "rSolv", "pSuc", "rat
 WRITE (501,902) 0, TOTENG, 0.D0, 0.D0, 0.D0, 0, REAL(0) / real(1), 0.D0, dposmax
 
 CALL system_clock(start)
-write(500, *) start
+!write(500, *) start
 
 
     ! Loop 1: LJ
@@ -259,7 +259,7 @@ CLOSE(20)
 !====================================================================
 !====================================================================
 CALL system_clock(start)
-WRITE(500,*) START
+!WRITE(500,*) START
 
     ! Loop 2: Gaussian
     loop_Ga: DO UNICORN=1,GA_STEPS
@@ -279,7 +279,7 @@ WRITE(500,*) START
     END DO loop_Ga
 
     CALL system_clock(START)
-    write (500,*) START
+    !write (500,*) START
 
 !====================================================================
 !====================================================================
@@ -435,18 +435,13 @@ SUBROUTINE calculateGA(I, LOOPNR)
     INTEGER :: K, L, M, KMIN = 2, LMIN = 2, MMIN = 2 ! Minimal Image Convention
     DOUBLE PRECISION :: R, RMIN
     TYPE (vector) :: TEMPJ
+    LOGICAL, DIMENSION(NCOM+1) :: TooFar, Clipped
 
     ! Solvent solvent
     ! Notice: geen i loop: alleen molecule i is veranderd en moet opnieuw berekend worden
     SOLVENTSOLVENT(I,I) = 0.D0
     MOL1 = RotMatrix(CoM(I), DMSO, hoek(I))
 
-
-    ! Begin of parallel loop
-    !================================================================
-
-    !$OMP PARALLEL
-    !$OMP DO SCHEDULE(GUIDED)
     DO J=I+1,NCOM
         ! MINIMIZE DISTANCE
         RMIN = huge(en)
@@ -475,30 +470,51 @@ SUBROUTINE calculateGA(I, LOOPNR)
 
         !write(500,*) I, J, TEMPJ%X, TEMPJ%Y, TEMPJ%Z, CoM(J)%X, CoM(J)%Y, CoM(J)%Z, KMIN, LMIN, MMIN
 
-
         IF (RMIN .GT. 7.D0) THEN
             EN = 0.D0
+            TooFar(j) = .TRUE.
         ELSE
             MOL2 = RotMatrix(TEMPJ, DMSO, hoek(J))
-            !CALL system("rm gauss/*")
-            CALL calcGa(I, J, MOL1, MOL2, DMSO_SYM, DMSO_SYM, EN, LOOPNR)
+            CALL calcGa(I, J, MOL1, MOL2, DMSO_SYM, DMSO_SYM, Clipped(J))
+        END IF
 
-            !WRITE(500, *) "Ga - ", I, "-", J
+    END DO
 
+
+    ! EXECUTE
+
+    ! Begin of parallel loop
+    !================================================================
+
+    !$OMP PARALLEL
+    !$OMP DO SCHEDULE(GUIDED) PRIVATE(En)
+    EXEC: DO J=I+1,NCOM
+        if (CLipped(J)) THEn ! it may not run
+            En = HUGE(En) ! Set energy to infinity
+        elseif (TooFar(j)) then ! too far apart
+            En = 0.D0 ! Set energy to 0
+        else
+            call execGa(I, J, EN)
             EN = EN - E_DMSO - E_DMSO
             EN = EN * HARTREE2KJMOL
-        END IF
+        end if
 
         SOLVENTSOLVENT(I,J) = EN
         SOLVENTSOLVENT(J,I) = EN
-    END DO
+    END DO EXEC
     !$OMP END DO
     !$OMP END PARALLEL
 
     ! Solvent-solute
-    CALL calcGa(I, 0, MOL1, SOLUTE, DMSO_SYM, SOL_SYM, EN, LOOPNR)
-    EN = EN - E_SOL - E_DMSO
-    EN = EN * HARTREE2KJMOL
+    CALL calcGa(I, 0, MOL1, SOLUTE, DMSO_SYM, SOL_SYM, Clipped(J+1))
+    if (Clipped(J+1)) then
+        EN = huge(en)
+    else
+        call execGa(I, 0, EN)
+        EN = EN - E_SOL - E_DMSO
+        EN = EN * HARTREE2KJMOL
+    end if
+
     ENERGY(I) = EN
 
 END SUBROUTINE calculateGA
