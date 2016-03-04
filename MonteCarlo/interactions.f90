@@ -133,7 +133,6 @@ SUBROUTINE calcGa(i, j, mol1, mol2, sym1, sym2, hasClipped)
         write(500,*) "Molecules have clipped, discarding.", I, J
     ELSE
         ! OPEN FILE
-        write(500,*) "writing!", I, J
         OPEN(unit=15, file=gauss_file)
 
         write (15,*) '%nproc=1                                '

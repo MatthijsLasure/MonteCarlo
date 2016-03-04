@@ -42,6 +42,7 @@ PROGRAM MonteCarlo
 
     ! FILES
     !======
+    CHARACTER*100 :: confile ! Config
     character*100 :: dmso_file, box_file, sol_file, param_file ! input files
     CHARACTER*100 :: out_file, err_file, solvsolv_file ! output files
 
@@ -95,8 +96,12 @@ LOGICAL:: DODEBUG = .FALSE.                                          !
     ! Config
 !====================================================================
 !====================================================================
+
+    ! Read command line
+    call get_command_argument(0, confile)
+
     ! Read from config.ini
-    CALL rConfig(BOXL, LJ_STEPS, Ga_STEPS, iseed, DoDebug, nadj, nprint, dposmax, dhoekmax, padj, beta)
+    CALL rConfig(confile, BOXL, LJ_STEPS, Ga_STEPS, iseed, DoDebug, nadj, nprint, dposmax, dhoekmax, padj, beta)
 
     CALL system_clock (START)
     write(500,*) START

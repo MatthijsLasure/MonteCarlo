@@ -3,11 +3,12 @@ module readConfig
 
     contains
 
-subroutine rConfig(boxl, LJ_steps, Ga_steps, iseed, doDebug, nadj, nprint, dposmax, dhoekmax, padj, beta)
+subroutine rConfig(confile, boxl, LJ_steps, Ga_steps, iseed, doDebug, nadj, nprint, dposmax, dhoekmax, padj, beta)
 
     integer, parameter    :: strlen = 100
     character(len=strlen) :: fst, snd
     character(len=1000)   :: line
+    character*100         :: confile
     integer               :: stat,  j, j0, z
     integer, parameter    :: state_begin=1, state_in_fst=2, state_in_sep=3
 
@@ -18,7 +19,7 @@ subroutine rConfig(boxl, LJ_steps, Ga_steps, iseed, doDebug, nadj, nprint, dposm
     logical :: doDebug
 
 
-    open(unit=10, file="config.ini")
+    open(unit=10, file=confile)
 
     inread: do
         read(10, "(a)", iostat=stat) line
