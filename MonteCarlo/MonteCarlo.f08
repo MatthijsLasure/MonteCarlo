@@ -42,6 +42,7 @@ PROGRAM MonteCarlo
     DOUBLE PRECISION :: PADJ ! Hoeveel de dposmax aangepast mag worden
     DOUBLE PRECISION :: BETA ! p = EXP(-BETA * DELTA / (RT)
     LOGICAL :: REJECTED
+    INTEGER :: PROC ! Aantal processoren voor gaussian
 
     ! FILES
     !======
@@ -105,7 +106,7 @@ LOGICAL:: DODEBUG = .FALSE.                                          !
 
     ! Read from config.ini
     CALL rConfig(confile, BOXL, LJ_STEPS, Ga_STEPS, iseed, DoDebug, LJ_nadj, LJ_nprint, GA_nadj, &
-    GA_nprint, dposmax, dhoekmax, padj, beta)
+    GA_nprint, dposmax, dhoekmax, padj, beta, proc)
 
     CALL system_clock (START)
     write(500,*) START
@@ -123,7 +124,7 @@ LOGICAL:: DODEBUG = .FALSE.                                          !
     ! OUTPUT
     solvsolv_file = "solventsolvent.txt"
 
-    call omp_set_num_threads(8)
+    !call omp_set_num_threads(8)
 
 
     ! Laden van configuraties
@@ -291,7 +292,7 @@ CALL system_clock(start)
 !WRITE(500,*) START
 
     ! Loop 2: Gaussian
-    loop_Ga: DO UNICORN=1,GA_STEPS
+    loop_Ga: DO UNICORN=1+LJ_STEPS,GA_STEPS+LJ_STEPS
 
         ! Verhuis oude vars naar de _old vars
         COM_OLD = COM
@@ -474,13 +475,15 @@ SUBROUTINE calculateGA(I, LOOPNR)
     DOUBLE PRECISION :: R, RMIN
     TYPE (vector) :: TEMPJ
     LOGICAL, DIMENSION(NCOM+1) :: TooFar, Clipped
+    LOGICAL :: MayContinue = .TRUE.
 
     ! Solvent solvent
     ! Notice: geen i loop: alleen molecule i is veranderd en moet opnieuw berekend worden
     SOLVENTSOLVENT(I,I) = 0.D0
     MOL1 = RotMatrix(CoM(I), DMSO, hoek(I))
 
-    DO J=I+1,NCOM
+    J = I + 1
+    DO WHILE (J .LE. NCOM .AND. MayContinue)
         ! MINIMIZE DISTANCE
         RMIN = huge(en)
         K_LOOP: DO K=-1,1
@@ -508,14 +511,19 @@ SUBROUTINE calculateGA(I, LOOPNR)
 
         !write(500,*) I, J, TEMPJ%X, TEMPJ%Y, TEMPJ%Z, CoM(J)%X, CoM(J)%Y, CoM(J)%Z, KMIN, LMIN, MMIN
 
+        CLIPPED(j) = .FALSE.
+        TOOFAR(j) = .FALSE.
+
         IF (RMIN .GT. 7.D0) THEN
             EN = 0.D0
             TooFar(j) = .TRUE.
         ELSE
             MOL2 = RotMatrix(TEMPJ, DMSO, hoek(J))
-            CALL calcGa(I, J, MOL1, MOL2, DMSO_SYM, DMSO_SYM, Clipped(J))
+            CALL calcGa(I, J, MOL1, MOL2, DMSO_SYM, DMSO_SYM, CLIPPED(j), proc)
+            IF(CLIPPED(j)) MayContinue = .FALSE.
         END IF
 
+        J = J + 1
     END DO
 
 
@@ -524,36 +532,45 @@ SUBROUTINE calculateGA(I, LOOPNR)
     ! Begin of parallel loop
     !================================================================
 
-    !$OMP PARALLEL
-    !$OMP DO SCHEDULE(GUIDED, 4) PRIVATE(En)
-    EXEC: DO J=I+1,NCOM
-        if (CLipped(J)) THEn ! it may not run
-            En = HUGE(En) ! Set energy to infinity
-        elseif (TooFar(j)) then ! too far apart
-            En = 0.D0 ! Set energy to 0
+        IF (MayContinue) THEN
+
+        !$OMP PARALLEL
+        !$OMP DO SCHEDULE(GUIDED) PRIVATE(En)
+        EXEC: DO J=I+1,NCOM
+            if (CLipped(J)) THEN ! it may not run
+                En = HUGE(En) ! Set energy to infinity
+                write(500, *) "Clipped, infty", I, J, LOOPNR
+            elseif (TooFar(j)) then ! too far apart
+                En = 0.D0 ! Set energy to 0
+            else
+                call execGa(I, J, EN)
+                EN = EN - E_DMSO - E_DMSO
+                EN = EN * HARTREE2KJMOL
+            end if
+
+            SOLVENTSOLVENT(I,J) = EN
+            SOLVENTSOLVENT(J,I) = EN
+        END DO EXEC
+        !$OMP END DO
+        !$OMP END PARALLEL
+
+        ! Solvent-solute
+        CALL calcGa(I, 0, MOL1, SOLUTE, DMSO_SYM, SOL_SYM, Clipped(J+1), proc)
+        if (Clipped(J+1)) then
+            EN = huge(en)
+            write (500,*) "Clipped with solute, infty", I, 0, LOOPNR
         else
-            call execGa(I, J, EN)
-            EN = EN - E_DMSO - E_DMSO
+            call execGa(I, 0, EN)
+            EN = EN - E_SOL - E_DMSO
             EN = EN * HARTREE2KJMOL
         end if
 
-        SOLVENTSOLVENT(I,J) = EN
-        SOLVENTSOLVENT(J,I) = EN
-    END DO EXEC
-    !$OMP END DO
-    !$OMP END PARALLEL
-
-    ! Solvent-solute
-    CALL calcGa(I, 0, MOL1, SOLUTE, DMSO_SYM, SOL_SYM, Clipped(J+1))
-    if (Clipped(J+1)) then
-        EN = huge(en)
-    else
-        call execGa(I, 0, EN)
-        EN = EN - E_SOL - E_DMSO
-        EN = EN * HARTREE2KJMOL
-    end if
-
-    ENERGY(I) = EN
+        ENERGY(I) = EN
+    ELSE
+        ENERGY(I) = HUGE(EN)
+        SOLVENTSOLVENT(I,J) = HUGE(EN)
+        SOLVENTSOLVENT(J,I) = HUGE(EN)
+    END IF
 
 END SUBROUTINE calculateGA
 
@@ -591,8 +608,8 @@ subroutine dump(i)
             WRITE(20,*) sol_sym(J), solute(J)%x, solute(J)%y, solute(J)%z
         END DO
         DO J=1,NCOM
-        WRITE (20,*) "S", CoM(J)%x, CoM(J)%y, CoM(J)%z
-        IF(.FALSE.) THEN
+        !WRITE (20,*) "S", CoM(J)%x, CoM(J)%y, CoM(J)%z
+        IF(.TRUE.) THEN
             ABSPOS = RotMatrix(CoM(J), DMSO, hoek(J))
             DO K=1, NDMSO
                 IF (DMSO_sym(K) .NE. "H") THEN

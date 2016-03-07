@@ -4,7 +4,7 @@ module readConfig
     contains
 
 subroutine rConfig(confile, boxl, LJ_steps, Ga_steps, iseed, doDebug, LJ_nadj, LJ_nprint, GA_nadj,&
- GA_nprint, dposmax, dhoekmax, padj, beta)
+ GA_nprint, dposmax, dhoekmax, padj, beta, proc)
 
     integer, parameter    :: strlen = 100
     character(len=strlen) :: fst, snd
@@ -16,7 +16,7 @@ subroutine rConfig(confile, boxl, LJ_steps, Ga_steps, iseed, doDebug, LJ_nadj, L
     ! Shit to read
     double precision :: boxl, dposmax, dhoekmax, padj, beta
     integer :: LJ_steps, Ga_steps, LJ_nadj, LJ_nprint, GA_nadj, GA_nprint
-    integer :: iseed
+    integer :: iseed, proc
     logical :: doDebug
 
 
@@ -72,6 +72,8 @@ subroutine rConfig(confile, boxl, LJ_steps, Ga_steps, iseed, doDebug, LJ_nadj, L
           read(snd,"(I10)") LJ_nadj
         elseif (fst=="lj_nprint") then
           read(snd,"(I10)") LJ_nprint
+      elseif (fst=="proc") then
+          read(snd,"(I10)") proc
         elseif (fst=="ga_nadj") then
           read(snd,"(I10)") GA_nadj
         elseif (fst=="ga_nprint") then

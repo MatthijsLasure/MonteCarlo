@@ -4,3 +4,5 @@
 /.settings/
 /Release/
 *.txt
+/.ptp-sync/
+/Remote/

@@ -93,11 +93,12 @@ MODULE interactions
 
 !====================================================================
 
-SUBROUTINE calcGa(i, j, mol1, mol2, sym1, sym2, hasClipped)
+SUBROUTINE calcGa(i, j, mol1, mol2, sym1, sym2, hasClipped, proc)
     ! INPUT
     TYPE (vector), DIMENSION(:), INTENT(IN) :: MOL1, MOL2 ! absolute coords!
     CHARACTER*4, DIMENSION(:), INTENT(IN) :: SYM1, SYM2 ! Atoomtypes
     INTEGER, INTENT(in) :: I, J
+    INTEGER, INTENT(in) :: proc ! aantal processoren voor gaussian
 
     ! OUTPUT
     LOGICAL, intent(out) :: hasClipped ! Says if this set may run
@@ -125,16 +126,17 @@ SUBROUTINE calcGa(i, j, mol1, mol2, sym1, sym2, hasClipped)
         do L = 1,N2
             if(getDist(mol1(K),mol2(L)) .LT. 1.D0) THEN
                 hasClipped = .true.
+                write(500,*) "Molecules have clipped, discarding.", I, J
             END IF
         end do
     end Do kloop
-    if (hasClipped) THEN
-        write(500,*) "Molecules have clipped, discarding.", I, J
-    ELSE
+
+
+    if (.NOT. hasClipped) THEN
         ! OPEN FILE
         OPEN(unit=15, file=gauss_file)
 
-        write (15,*) '%nproc=1                                '
+        write (15,"(A, I2.2, A)") '%nproc=', proc, '                                '
         write (15,*) '%mem=1Gb                                '
         !write (15,*) '%chk=inputess.chk                       '
         write (15,*) '#  PM6                                  '
@@ -195,10 +197,11 @@ SUBROUTINE execGa(I, J, en)
     end if
 
     call system (command2) ! Execute grep
-    open (16, file=FIFO, IOSTAT=IOSTATUS) ! Open de pipeline
-    if(IOSTATUS .NE. 0) write(500,*) "Woeps", IOSTATUS, FIFO
-    read (16, "(A22,E19.12E2)") bullshit, en ! lees resultaat in
+    open (16, file=FIFO, IOSTAT=IOSTATUS, ERR=100) ! Open de pipeline
+    100 if(IOSTATUS .NE. 0) write(500,*) "Woeps", IOSTATUS, FIFO
+    read (16, "(A22,E19.12E2)", IOSTAT=IOSTATUS) bullshit, en ! lees resultaat in
     close(16)
+    if(IOSTATUS .NE. 0) write(500,*) "Woeps FIFO", IOSTATUS, FIFO
 
 
 END SUBROUTINE execGa
