@@ -30,35 +30,37 @@ PROGRAM MonteCarlo
     ! Variabelen
     !===========
 
-    DOUBLE PRECISION:: BOXL, BOXL2 ! box grootte, halve box
-    INTEGER:: I, J, UNICORN, ISEED
-    INTEGER:: LJ_STEPS, GA_STEPS ! Aantal stappen per loop
-    INTEGER:: RSOLV ! Geselecteerde molecule voor MC
-    INTEGER:: NSUC = 0 ! Aantal succesvolle MC
-    INTEGER :: LJ_NADJ, LJ_NPRINT, GA_NADJ, GA_NPRINT ! Aanpassen dposMax / printen om de n cycli
-    INTEGER :: NACCEPT = 0
-    DOUBLE PRECISION:: RV, KANS,DELTA = 0, EXPONENT ! Random variabele en toebehoren voor Metropolis
-    DOUBLE PRECISiON :: RATIO ! Percentage succes in NADJ trials
-    DOUBLE PRECISION :: PADJ ! Hoeveel de dposmax aangepast mag worden
-    DOUBLE PRECISION :: BETA ! p = EXP(-BETA * DELTA / (RT)
-    LOGICAL :: REJECTED
-    INTEGER :: PROC ! Aantal processoren voor gaussian
+    DOUBLE PRECISION    :: BOXL, BOXL2 ! box grootte, halve box
+    INTEGER             :: I, J, UNICORN, ISEED
+    INTEGER             :: LJ_STEPS, GA_STEPS ! Aantal stappen per loop
+    INTEGER             :: RSOLV ! Geselecteerde molecule voor MC
+    INTEGER             :: NSUC = 0 ! Aantal succesvolle MC
+    INTEGER             :: LJ_NADJ, LJ_NPRINT, GA_NADJ, GA_NPRINT ! Aanpassen dposMax / printen om de n cycli
+    INTEGER             :: NACCEPT = 0
+    DOUBLE PRECISION    :: RV, KANS,DELTA = 0, EXPONENT ! Random variabele en toebehoren voor Metropolis
+    DOUBLE PRECISION    :: RATIO ! Percentage succes in NADJ trials
+    DOUBLE PRECISION    :: PADJ ! Hoeveel de dposmax aangepast mag worden
+    DOUBLE PRECISION    :: BETA ! p = EXP(-BETA * DELTA / (RT)
+    LOGICAL             :: REJECTED
+    INTEGER             :: PROC ! Aantal processoren voor gaussian
+    DOUBLE PRECISION    :: BOXSCALE = 0.9D0 ! Schalen van de box
 
     ! FILES
     !======
-    CHARACTER*100 :: confile ! Config
-    character*100 :: dmso_file, box_file, sol_file, param_file ! input files
-    CHARACTER*100 :: out_file, err_file, solvsolv_file ! output files
+    CHARACTER*500, DIMENSION(9) :: files
+    CHARACTER*500               :: confile ! Config
+    CHARACTER*100               :: dmso_file, box_file, sol_file, param_file ! input files
+    CHARACTER*100               :: out_file, err_file, dump_file, solvsolv_file, result_file ! output files
 
     ! Energiën van de moleculen, bekomen via extern programma
-    DOUBLE PRECISION:: E_DMSO, E_SOL
+    DOUBLE PRECISION    :: E_DMSO, E_SOL
 
     ! Vectoren voor moleculen & atoomtypes
-    TYPE (vector), DIMENSION(:), ALLOCATABLE :: DMSO, COM, SOLUTE, HOEK
+    TYPE (vector), DIMENSION(:), ALLOCATABLE    :: DMSO, COM, SOLUTE, HOEK
     ! Variabelen voor de vorige run van MC
-    TYPE (vector), DIMENSION(:), ALLOCATABLE :: COM_OLD, SOLUTE_OLD, HOEK_OLD
-    CHARACTER*4, DIMENSION(:), ALLOCATABLE :: DMSO_SYM, SOL_SYM
-    INTEGER:: NDMSO, NCOM, NSOL, NPARAM ! Aantal units
+    TYPE (vector), DIMENSION(:), ALLOCATABLE    :: COM_OLD, SOLUTE_OLD, HOEK_OLD
+    CHARACTER*4, DIMENSION(:), ALLOCATABLE      :: DMSO_SYM, SOL_SYM
+    INTEGER                                     :: NDMSO, NCOM, NSOL, NPARAM ! Aantal units
     ! DMSO: relatieve coördinaten voor de atomen
     ! CoM: Centre of Mass: locaties van de DMSO moleculen
     ! solute: conformatie van de solute
@@ -76,56 +78,55 @@ LOGICAL:: DODEBUG = .FALSE.                                          !
 !====================================================================
 
     ! output calc
-    DOUBLE PRECISION:: EN ! Energie van een run
-    DOUBLE PRECISION, DIMENSION(:,:), ALLOCATABLE :: SOLVENTSOLVENT, SSOLD
-    DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: ENERGY, EOLD
-    DOUBLE PRECISION:: TOTENG = 0.D0
-    DOUBLE PRECISION:: TOTENG_OLD = 0.D0
+    DOUBLE PRECISION                                :: EN ! Energie van een run
+    DOUBLE PRECISION, DIMENSION(:,:), ALLOCATABLE   :: SOLVENTSOLVENT, SSOLD
+    DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE     :: ENERGY, EOLD
+    DOUBLE PRECISION                                :: TOTENG = 0.D0
+    DOUBLE PRECISION                                :: TOTENG_OLD = 0.D0
 
     ! Arrays voor parameters van DMSO (Q, epsilon, sigma, mass)
-    DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: Q, EPSILON, SIGMA, MASS
-    CHARACTER*4, DIMENSION(:), ALLOCATABLE :: SYM
+    DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE     :: Q, EPSILON, SIGMA, MASS
+    CHARACTER*4, DIMENSION(:), ALLOCATABLE          :: SYM
 
     ! Maximale verarndering bij MC
-    DOUBLE PRECISION:: DPOSMAX, DHOEKMAX
-    DPOSMAX = 0.35D0
-    DHOEKMAX = 1 ! In aantal * Pi
+    DOUBLE PRECISION    :: DPOSMAX, DHOEKMAX
 
-    ! START ERR/OUT
-    out_file = "out.txt"
-    err_file = "err.txt"
-    OPEN(UNIT=501, FILE=out_file)
-    OPEN(UNIT=500, FILE=err_file)
+
 
     ! Config
 !====================================================================
 !====================================================================
 
     ! Read command line
-    call get_command_argument(1, confile)
+    CALL get_command_argument(1, confile)
 
     ! Read from config.ini
     CALL rConfig(confile, BOXL, LJ_STEPS, Ga_STEPS, iseed, DoDebug, LJ_nadj, LJ_nprint, GA_nadj, &
-    GA_nprint, dposmax, dhoekmax, padj, beta, proc)
-
-    CALL system_clock (START)
-    write(500,*) START
-    CALL SRAND(REAL(iseed)) ! Prime randgen
+    GA_nprint, dposmax, dhoekmax, padj, beta, proc, files)
 
     BOXL2 = BOXL * 2.D0
     DHOEKMAX = DHOEKMAX * PI
 
     ! INPUT
-    dmso_file = "DMSO.txt"
-    box_file = "box.txt"
-    sol_file = "solute.txt"
-    param_file = "param.txt"
+    box_file = files(1)
+    dmso_file = files(2)
+    sol_file = files(3)
+    param_file = files(4)
 
     ! OUTPUT
-    solvsolv_file = "solventsolvent.txt"
+    out_file = files(5)
+    err_file = files(6)
+    dump_file = files(7)
+    solvsolv_file = files(8)
+    result_file = files(9)
 
-    !call omp_set_num_threads(8)
+    ! START ERR/OUT
+    OPEN(UNIT=501, FILE=out_file)
+    OPEN(UNIT=500, FILE=err_file)
 
+    CALL system_clock (START)
+    WRITE(500,*) START
+    CALL SRAND(REAL(iseed)) ! Prime randgen
 
     ! Laden van configuraties
 !====================================================================
@@ -216,7 +217,7 @@ LOGICAL:: DODEBUG = .FALSE.                                          !
 
 
 
-OPEN(UNIT=20, FILE="DUMP.txt")
+OPEN(UNIT=20, FILE=dump_file)
 CALL DUMP(0)
 CLOSE(20)
 
@@ -233,14 +234,6 @@ CALL system_clock(start)
     !===========
     loop_LJ: DO UNICORN=1,LJ_STEPS
 
-        ! Verhuis oude vars naar de _old vars
-        COM_OLD = COM
-        HOEK_OLD = HOEK
-        !solute_old = solute ! Wordt nog niet gevariëerd
-        TOTENG_OLD = TOTENG
-        EOLD = ENERGY
-        SSOLD = SOLVENTSOLVENT
-
         CALL MCINIT(UNICORN) ! Verander 1 molecule + check voor OOB & PB
 
         ! Bereken veranderde interacties
@@ -249,19 +242,19 @@ CALL system_clock(start)
         TOTENG = calcEnergy(ENERGY, SOLVENTSOLVENT)
 
         ! Check for invalid shit
-        if(TOTENG > HUGE(TOTENG)) then
-            write (0,*) "TOTENG IS INFINITY @", UNICORN, TOTENG
+        IF(TOTENG > HUGE(TOTENG)) THEN
+            WRITE (0,*) "TOTENG IS INFINITY @", UNICORN, TOTENG
             TOTENG = HUGE(TOTENG)-1
-        end if
-        if(TOTENG .NE. TOTENG) then
-            write (0,*) "TOTENG IS NaN @", UNICORN, TOTENG
+        END IF
+        IF(TOTENG .NE. TOTENG) THEN
+            WRITE (0,*) "TOTENG IS NaN @", UNICORN, TOTENG
             TOTENG = HUGE(TOTENG)-1
-        end if
+        END IF
 
         ! Doe Metropolis
         CALL METROPOLIS(UNICORN, LJ_NADJ, LJ_NPRINT, REJECTED)
 
-        if(REJECTED) THEN
+        IF(REJECTED) THEN
             ! Verhuis oude vars terug naar de nieuwe
             COM = COM_OLD
             HOEK = HOEK_OLD
@@ -274,13 +267,13 @@ CALL system_clock(start)
     END DO loop_LJ
 
 ! Write box
-open(unit=10, file="backup.txt")
-write(10,*) boxl
-write(10,*) nCoM
-do I=1,nCoM
-    write(10,*) CoM(I)%x, CoM(I)%y, CoM(I)%z, hoek(I)%x, hoek(I)%y, hoek(I)%z
-end do
-close(10)
+OPEN(UNIT=10, FILE="backup.txt")
+WRITE(10,*) boxl
+WRITE(10,*) nCoM
+DO I=1,nCoM
+    WRITE(10,*) CoM(I)%x, CoM(I)%y, CoM(I)%z, hoek(I)%x, hoek(I)%y, hoek(I)%z
+END DO
+CLOSE(10)
 
 OPEN(UNIT=20, FILE="DUMP.txt", ACCESS="APPEND")
 CALL DUMP(UNICORN+1)
@@ -294,14 +287,6 @@ CALL system_clock(start)
     ! Loop 2: Gaussian
     loop_Ga: DO UNICORN=1+LJ_STEPS,GA_STEPS+LJ_STEPS
 
-        ! Verhuis oude vars naar de _old vars
-        COM_OLD = COM
-        HOEK_OLD = HOEK
-        !solute_old = solute ! Wordt nog niet gevariëerd
-        TOTENG_OLD = TOTENG
-        EOLD = ENERGY
-        SSOLD = SOLVENTSOLVENT
-
         ! Doe MC
         CALL MCINIT(UNICORN)
 
@@ -310,12 +295,12 @@ CALL system_clock(start)
         TOTENG = 0.D0
         TOTENG = calcEnergy(ENERGY, SOLVENTSOLVENT)
 
-        call dump(UNICORN)
+        CALL dump(UNICORN)
 
         ! Doe Metropolis
         CALL METROPOLIS(UNICORN, GA_NADJ, GA_NPRINT, REJECTED)
 
-        if(REJECTED) THEN
+        IF(REJECTED) THEN
             ! Verhuis oude vars terug naar de nieuwe
             COM = COM_OLD
             HOEK = HOEK_OLD
@@ -332,10 +317,23 @@ CALL system_clock(start)
 
 !====================================================================
 !====================================================================
+! Wegschrijven resultaten
+
+    ! box.txt: plaatsen van de moleculen (CoM, hoek)
+    OPEN (UNIT=10, FILE=result_file)
+    WRITE (10, *) BOXL ! Box grootte
+    WRITE (10, *) nCoM ! Lees aantal moleculen
+    DO I= 1, NCOM
+        WRITE(10,*) CoM(I)%X, CoM(I)%Y, CoM(I)%Z, hoek(I)%X, hoek(I)%Y, hoek(I)%Z
+    END DO
+    CLOSE(10)
+
+!====================================================================
+!====================================================================
 
 !close(20)
-close(501)
-close(500)
+CLOSE(501)
+CLOSE(500)
 
 CONTAINS
 
@@ -345,6 +343,14 @@ CONTAINS
 SUBROUTINE MCINIT(I)
 
         INTEGER :: I
+
+        ! Verhuis oude vars naar de _old vars
+        COM_OLD = COM
+        HOEK_OLD = HOEK
+        !solute_old = solute ! Wordt nog niet gevariëerd
+        TOTENG_OLD = TOTENG
+        EOLD = ENERGY
+        SSOLD = SOLVENTSOLVENT
 
         ! Doe MC
         RSOLV = INT(RAND() * NCOM) + 1 ! Willekeurige DMSO molecule
@@ -363,14 +369,14 @@ SUBROUTINE MCINIT(I)
         COM(RSOLV)%Z = COM(RSOLV)%Z - BOXL2 * AINT(COM(RSOLV)%Z / BOXL)
 
         ! Checks for OOB
-        if(COM(RSOLV)%X .GT. BOXL .OR. COM(RSOLV)%X .LT. -1.D0 * BOXL) THEN
-            write(500,*) "OOB on X with ", RSOLV, "@", I, ":", COM(RSOLV)%X
+        IF(COM(RSOLV)%X .GT. BOXL .OR. COM(RSOLV)%X .LT. -1.D0 * BOXL) THEN
+            WRITE(500,*) "OOB on X with ", RSOLV, "@", I, ":", COM(RSOLV)%X
         END IF
-        if(COM(RSOLV)%Y .GT. BOXL .OR. COM(RSOLV)%Y .LT. -1.D0 * BOXL) THEN
-            write(500,*) "OOB on Y with ", RSOLV, "@", I, ":", COM(RSOLV)%Y
+        IF(COM(RSOLV)%Y .GT. BOXL .OR. COM(RSOLV)%Y .LT. -1.D0 * BOXL) THEN
+            WRITE(500,*) "OOB on Y with ", RSOLV, "@", I, ":", COM(RSOLV)%Y
         END IF
-        if(COM(RSOLV)%Z .GT. BOXL .OR. COM(RSOLV)%Z .LT. -1.D0 * BOXL) THEN
-            write(500,*) "OOB on Z with ", RSOLV, "@", I, ":", COM(RSOLV)%Z
+        IF(COM(RSOLV)%Z .GT. BOXL .OR. COM(RSOLV)%Z .LT. -1.D0 * BOXL) THEN
+            WRITE(500,*) "OOB on Z with ", RSOLV, "@", I, ":", COM(RSOLV)%Z
         END IF
 
 END SUBROUTINE MCINIT
@@ -382,21 +388,21 @@ SUBROUTINE METROPOLIS(I, NADJ, NPRINT, REJECTED)
 
         INTEGER :: I
         INTEGER :: NADJ, NPRINT
-        LOGICAL, INTENT(out) :: REJECTED
+        LOGICAL, INTENT(OUT) :: REJECTED
 
         902 FORMAT(I12.12, 1X, ES20.10, 1X, ES20.10, 1X, F6.4, 1X, F6.4, 1X, I3.3, 1X, F6.4, 1X, F6.4, 1X, F6.5)
 
         DELTA = TOTENG - TOTENG_OLD
         EXPONENT = -1.D0 * BETA * DELTA  * 1000.D0 / (8.314D0 * 300.D0)
-        if (EXPONENT .LT. -75.D0) then ! e^-75 < 3*10^-33: 0% kans anyway
+        IF (EXPONENT .LT. -75.D0) THEN ! e^-75 < 3*10^-33: 0% kans anyway
         !write(500,*) "Large Exponent!", I
             KANS = 0.D0
             RV = 1.D0 ! Skip rand() voor cpu tijd besparing
-        else
+        ELSE
             KANS = E ** EXPONENT
             RV = RAND()
             IF (KANS .GT. 1.D0) KANS = 1.D0
-        end if
+        END IF
 
         ! Bepaal if succesvol -> volgende config
         IF(RV .LE. KANS) THEN ! Succes!
@@ -410,21 +416,21 @@ SUBROUTINE METROPOLIS(I, NADJ, NPRINT, REJECTED)
         RATIO = REAL(NACCEPT) / real(NADJ)
 
         ! Prints every NPRINT times
-        if(mod(I, NPRINT) .EQ. 0) then
+        IF(mod(I, NPRINT) .EQ. 0) THEN
             !CALL DUMP(I)
             WRITE (501,902) I, TOTENG, TOTENG_OLD, KANS, RV, RSOLV, REAL(NSUC) / real(I), ratio, dposmax
-        end if
+        END IF
 
         ! Pas de dposMax aan indien ratio =/= 50%
-        if (mod(I, NADJ) .EQ. 0) then
-            if (ratio .GT. 0.5) then
+        IF (mod(I, NADJ) .EQ. 0) THEN
+            IF (ratio .GT. 0.5) THEN
                 dposMax = dposMax * (1.D0 + pAdj)
-            else
+            ELSE
                 dposMax = dposMax * (1.D0 - pAdj)
-            end if
-            if (dposMax .LT. 0.00001) dposMax = 0.00001
+            END IF
+            IF (dposMax .LT. 0.00001) dposMax = 0.00001
             NACCEPT = 0
-        end if
+        END IF
 
 END SUBROUTINE METROPOLIS
 !====================================================================
@@ -494,13 +500,13 @@ SUBROUTINE calculateGA(I, LOOPNR)
                     TEMPJ%Z = CoM(J)%Z + FLOAT(M) * BOXL2
 
                     R = getDist(CoM(I), TEMPJ) ! Check
-                    if(R .LT. RMIN) THEN
+                    IF(R .LT. RMIN) THEN
                         RMIN = R
                         KMIN = K
                         LMIN = L
                         MMIN = M
-                    else
-                    end if
+                    ELSE
+                    END IF
                 END DO
             END DO
         END DO K_LOOP
@@ -537,16 +543,16 @@ SUBROUTINE calculateGA(I, LOOPNR)
         !$OMP PARALLEL
         !$OMP DO SCHEDULE(GUIDED) PRIVATE(En)
         EXEC: DO J=I+1,NCOM
-            if (CLipped(J)) THEN ! it may not run
+            IF (CLipped(J)) THEN ! it may not run
                 En = HUGE(En) ! Set energy to infinity
-                write(500, *) "Clipped, infty", I, J, LOOPNR
-            elseif (TooFar(j)) then ! too far apart
+                WRITE(500, *) "Clipped, infty", I, J, LOOPNR
+            ELSEIF (TooFar(j)) THEN ! too far apart
                 En = 0.D0 ! Set energy to 0
-            else
-                call execGa(I, J, EN)
+            ELSE
+                CALL execGa(I, J, EN)
                 EN = EN - E_DMSO - E_DMSO
                 EN = EN * HARTREE2KJMOL
-            end if
+            END IF
 
             SOLVENTSOLVENT(I,J) = EN
             SOLVENTSOLVENT(J,I) = EN
@@ -556,14 +562,14 @@ SUBROUTINE calculateGA(I, LOOPNR)
 
         ! Solvent-solute
         CALL calcGa(I, 0, MOL1, SOLUTE, DMSO_SYM, SOL_SYM, Clipped(J+1), proc)
-        if (Clipped(J+1)) then
+        IF (Clipped(J+1)) THEN
             EN = huge(en)
-            write (500,*) "Clipped with solute, infty", I, 0, LOOPNR
-        else
-            call execGa(I, 0, EN)
+            WRITE (500,*) "Clipped with solute, infty", I, 0, LOOPNR
+        ELSE
+            CALL execGa(I, 0, EN)
             EN = EN - E_SOL - E_DMSO
             EN = EN * HARTREE2KJMOL
-        end if
+        END IF
 
         ENERGY(I) = EN
     ELSE
@@ -598,7 +604,7 @@ END FUNCTION calcEnergy
 !====================================================================
 !====================================================================
 
-subroutine dump(i)
+SUBROUTINE dump(i)
         INTEGER :: i
 
         !WRITE (20,*) NCOM*NDMSO+NSOL - 6*NCOM
@@ -619,7 +625,7 @@ subroutine dump(i)
             END IF
         END DO
 
-end subroutine dump
+END SUBROUTINE dump
 
 !====================================================================
 !====================================================================

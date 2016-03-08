@@ -31,21 +31,21 @@ MODULE interactions
     ! => getConv (on line <49>)
     SUBROUTINE calcLJ(MOL1, MOL2, SYM1, SYM2, TABLE_SYM, TABLE_Q, TABLE_E, TABLE_S, EN, BOXL, BOXL2)
         ! INPUT
-        TYPE (vector), DIMENSION(:), INTENT(IN) :: MOL1, MOL2 ! absolute coords!
-        CHARACTER*4, DIMENSION(:), INTENT(IN) :: SYM1, SYM2, TABLE_SYM ! Atoomtypes
-        DOUBLE PRECISION, DIMENSION(:), INTENT(IN) :: TABLE_Q, TABLE_E, TABLE_S ! params
-        DOUBLE PRECISION :: CONV, BOXL, BOXL2
+        TYPE (vector), DIMENSION(:), INTENT(IN)     :: MOL1, MOL2 ! absolute coords!
+        CHARACTER*4, DIMENSION(:), INTENT(IN)       :: SYM1, SYM2, TABLE_SYM ! Atoomtypes
+        DOUBLE PRECISION, DIMENSION(:), INTENT(IN)  :: TABLE_Q, TABLE_E, TABLE_S ! params
+        DOUBLE PRECISION                            :: CONV, BOXL, BOXL2
 
         ! OUTPUT
-        DOUBLE PRECISION:: EN
+        DOUBLE PRECISION    :: EN
 
         ! TEMP
-        TYPE (vector):: R
-        DOUBLE PRECISION:: RV, E, S ! temp params
-        DOUBLE PRECISION:: SUML, SUMR ! sommen
-        DOUBLE PRECISION:: TEMPL, TEMPR ! tijdelijke optelling
-        INTEGER:: I, J, N1, N2 ! loop vars, totale grootte arrays
-        INTEGER:: A, B ! welke atoomsoort
+        TYPE (vector)       :: R
+        DOUBLE PRECISION    :: RV, E, S ! temp params
+        DOUBLE PRECISION    :: SUML, SUMR ! sommen
+        DOUBLE PRECISION    :: TEMPL, TEMPR ! tijdelijke optelling
+        INTEGER             :: I, J, N1, N2 ! loop vars, totale grootte arrays
+        INTEGER             :: A, B ! welke atoomsoort
 
         ! Omzetting naar kJ/mol
         CONV = 6.023 * (1.60217646)**2
