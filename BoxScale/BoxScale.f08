@@ -27,7 +27,6 @@ program BoxScale
         write (11, *) CoM1 * factor, CoM2 * factor, CoM3 * factor
     END Do
 
-
     close(10)
     close(11)
 end program BoxScale
