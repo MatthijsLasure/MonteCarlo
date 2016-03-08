@@ -19,10 +19,12 @@ program BoxScale
     read (10, *) BOXL
     read (10, *) nCoM
 
+    write (11, *) BOXL * factor
+    write (11, *) nCoM
 
     DO I=1,nCoM
         read (10, *) CoM1, CoM2, CoM3
-        write (10, *) CoM1 * factor, CoM2 * factor, CoM3 * factor
+        write (11, *) CoM1 * factor, CoM2 * factor, CoM3 * factor
     END Do
 
 
