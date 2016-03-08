@@ -4,7 +4,7 @@ program BoxScale
     CHARACTER*500 :: input, output, charfactor
     DOUBLE PRECISION :: factor
 
-    DOUBLE PRECISION :: CoM1, CoM2, CoM3
+    DOUBLE PRECISION :: CoM1, CoM2, CoM3, h1, h2, h3
     INTEGER :: nCoM, I
     DOUBLE PRECISION :: BOXL
 
@@ -23,8 +23,8 @@ program BoxScale
     write (11, *) nCoM
 
     DO I=1,nCoM
-        read (10, *) CoM1, CoM2, CoM3
-        write (11, *) CoM1 * factor, CoM2 * factor, CoM3 * factor
+        read (10, *) CoM1, CoM2, CoM3, h1, h2, h3
+        write (11, *) CoM1 * factor, CoM2 * factor, CoM3 * factor, h1, h2, h3
     END Do
 
     close(10)
