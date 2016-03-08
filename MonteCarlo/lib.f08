@@ -91,13 +91,14 @@ MODULE lib
         INTEGER:: N
         CHARACTER*4, DIMENSION(:) :: SYM
 
+        POS = 0
+
         N = size(SYM)
         DO I=1,N
             IF( sym(I) .EQ. TYPE) THEN
                 POS = I
                 RETURN
             END IF
-            POS = 0
         END DO
     END FUNCTION findSym
 

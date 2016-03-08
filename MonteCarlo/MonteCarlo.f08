@@ -313,6 +313,12 @@ CALL system_clock(start)
 CLOSE(501)
 CLOSE(500)
 
+write (0,*) "We're done here. Signing off!"
+write (*,*) "We're done here. Signing off!"
+
+!STOP
+!END
+
 CONTAINS
 
 !====================================================================
