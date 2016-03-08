@@ -9,11 +9,6 @@
 ! Dan verfijnen met Gaussian (eg 250 stappen)
 !====================================================================
 
-! Calls in program MONTECARLO: 
-! => system_clock (on line <82>)
-! ==> SRAND (on line <83>)
-! ===> calculateLJ (on line <156>)
-! ====> calculateLJ (on line <251>)
 PROGRAM MonteCarlo
 
     USE vector_class
@@ -104,7 +99,8 @@ LOGICAL:: DODEBUG = .FALSE.                                          !
     CALL rConfig(confile, BOXL, LJ_STEPS, Ga_STEPS, iseed, DoDebug, LJ_nadj, LJ_nprint, GA_nadj, &
     GA_nprint, dposmax, dhoekmax, padj, beta, proc, files)
 
-    BOXL2 = BOXL * 2.D0
+    ! BOXL = OBSOLETE: wordt ingelezen uit box.txt
+
     DHOEKMAX = DHOEKMAX * PI
 
     ! INPUT
@@ -156,7 +152,7 @@ LOGICAL:: DODEBUG = .FALSE.                                          !
 
     ! box.txt: plaatsen van de moleculen (CoM, hoek)
     OPEN (UNIT=10, FILE=box_file)
-    READ (10, *) !BOXL ! Box grootte
+    READ (10, *) BOXL ! Box grootte
     READ (10, *) nCoM ! Lees aantal moleculen
     ALLOCATE(CoM(NCOM))
     ALLOCATE(hoek(NCOM))
@@ -166,6 +162,8 @@ LOGICAL:: DODEBUG = .FALSE.                                          !
         READ(10,*) CoM(I)%X, CoM(I)%Y, CoM(I)%Z, hoek(I)%X, hoek(I)%Y, hoek(I)%Z
     END DO
     CLOSE(10)
+
+    BOXL2 = BOXL * 2.D0
 
     ! param.txt: parameters voor LJ etc
     OPEN (UNIT=10, FILE=param_file)
@@ -254,16 +252,6 @@ CALL system_clock(start)
         ! Doe Metropolis
         CALL METROPOLIS(UNICORN, LJ_NADJ, LJ_NPRINT, REJECTED)
 
-        IF(REJECTED) THEN
-            ! Verhuis oude vars terug naar de nieuwe
-            COM = COM_OLD
-            HOEK = HOEK_OLD
-            !solute = solute_old ! Wordt nog niet gevariëerd
-            TOTENG = TOTENG_OLD
-            ENERGY = EOLD ! Resetten!!
-            SOLVENTSOLVENT = SSOLD
-        END IF
-
     END DO loop_LJ
 
 ! Write box
@@ -299,16 +287,6 @@ CALL system_clock(start)
 
         ! Doe Metropolis
         CALL METROPOLIS(UNICORN, GA_NADJ, GA_NPRINT, REJECTED)
-
-        IF(REJECTED) THEN
-            ! Verhuis oude vars terug naar de nieuwe
-            COM = COM_OLD
-            HOEK = HOEK_OLD
-            !solute = solute_old ! Wordt nog niet gevariëerd
-            TOTENG = TOTENG_OLD
-            ENERGY = EOLD ! Resetten!!
-            SOLVENTSOLVENT = SSOLD
-        END IF
 
     END DO loop_Ga
 
@@ -430,6 +408,16 @@ SUBROUTINE METROPOLIS(I, NADJ, NPRINT, REJECTED)
             END IF
             IF (dposMax .LT. 0.00001) dposMax = 0.00001
             NACCEPT = 0
+        END IF
+
+        IF(REJECTED) THEN
+            ! Verhuis oude vars terug naar de nieuwe
+            COM = COM_OLD
+            HOEK = HOEK_OLD
+            !solute = solute_old ! Wordt nog niet gevariëerd
+            TOTENG = TOTENG_OLD
+            ENERGY = EOLD ! Resetten!!
+            SOLVENTSOLVENT = SSOLD
         END IF
 
 END SUBROUTINE METROPOLIS
