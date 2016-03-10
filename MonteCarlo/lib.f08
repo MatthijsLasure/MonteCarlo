@@ -84,7 +84,7 @@ MODULE lib
 
     ! findSym
     !========
-    FUNCTION findSym(TYPE, SYM) RESULT(pos)
+    FUNCTION findSym(TYPE, SYM) RESULT(POS)
         CHARACTER*4:: TYPE
         INTEGER:: POS
         INTEGER:: I
@@ -100,6 +100,10 @@ MODULE lib
                 RETURN
             END IF
         END DO
+        IF (POS .EQ. 0) THEN
+            POS = 1
+            write (500, *) "Error in findSym: did not find", TYPE
+        END IF
     END FUNCTION findSym
 
     ! RandVec: maakt vector met willekeurige getallen tussen -max en +max

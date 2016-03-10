@@ -24,7 +24,7 @@ PROGRAM MonteCarlo
 
     ! Variabelen
     !===========
-
+    INTEGER             :: RUN_ID = 0 ! Welke run
     DOUBLE PRECISION    :: BOXL, BOXL2 ! box grootte, halve box
     INTEGER             :: I, J, UNICORN, ISEED
     INTEGER             :: LJ_STEPS, GA_STEPS ! Aantal stappen per loop
@@ -43,7 +43,7 @@ PROGRAM MonteCarlo
     ! FILES
     !======
     CHARACTER*500, DIMENSION(9) :: files
-    CHARACTER*500               :: confile ! Config
+    CHARACTER*500               :: confile, LJ_STEPS_TEMP, GA_STEPS_TEMP, ID_TEMP ! Config
     CHARACTER*100               :: dmso_file, box_file, sol_file, param_file ! input files
     CHARACTER*100               :: out_file, err_file, dump_file, solvsolv_file, result_file ! output files
 
@@ -101,20 +101,46 @@ LOGICAL:: DODEBUG = .FALSE.                                          !
 
     ! BOXL = OBSOLETE: wordt ingelezen uit box.txt
 
+    ! Override stuff with command line
+    IF (COMMAND_ARGUMENT_COUNT() .GT. 1) THEN
+        CALL GET_COMMAND_ARGUMENT(2, LJ_STEPS_TEMP)
+        CALL GET_COMMAND_ARGUMENT(3, GA_STEPS_TEMP)
+        CALL GET_COMMAND_ARGUMENT(4, ID_TEMP)
+        read (LJ_STEPS_TEMP, *) LJ_STEPS
+        read (GA_STEPS_TEMP, *) GA_STEPS
+        read (ID_TEMP, *) RUN_ID
+
+        ! Files
+
+        ! INPUT
+        box_file= trim(files(1)) // "." // trim(ID_TEMP) // ".in"
+        !write(box_file, 910) files(1), ".", RUN_ID, ".in"
+
+        ! OUTPUT
+        out_file = trim(files(5)) // "." // trim(ID_TEMP) // ".txt"
+        err_file = trim(files(6)) // "." // trim(ID_TEMP) // ".txt"
+        dump_file = trim(files(7)) // "." // trim(ID_TEMP) // ".txt"
+        solvsolv_file = trim(files(8)) // "." // trim(ID_TEMP) // ".txt"
+        result_file = trim(files(9)) // "." // trim(ID_TEMP) // ".out"
+
+    ELSE ! No command line given
+        ! INPUT
+        box_file = files(1)
+
+        ! OUTPUT
+        out_file = files(5)
+        err_file = files(6)
+        dump_file = files(7)
+        solvsolv_file = files(8)
+        result_file = files(9)
+    END IF
+
     DHOEKMAX = DHOEKMAX * PI
 
-    ! INPUT
-    box_file = files(1)
+    ! Standaard shit, altijd hetzelfde
     dmso_file = files(2)
     sol_file = files(3)
     param_file = files(4)
-
-    ! OUTPUT
-    out_file = files(5)
-    err_file = files(6)
-    dump_file = files(7)
-    solvsolv_file = files(8)
-    result_file = files(9)
 
     ! START ERR/OUT
     OPEN(UNIT=501, FILE=out_file)
@@ -203,7 +229,7 @@ LOGICAL:: DODEBUG = .FALSE.                                          !
 
     ! Dump energiën
     !tot = 0.0D
-    OPEN(UNIT=10, FILE="solventsolvent.txt")
+    OPEN(UNIT=10, FILE=solvsolv_file)
     DO I=1,NCOM
         WRITE(10,*) solventsolvent(I,:)
     END DO
@@ -263,7 +289,7 @@ DO I=1,nCoM
 END DO
 CLOSE(10)
 
-OPEN(UNIT=20, FILE="DUMP.txt", ACCESS="APPEND")
+OPEN(UNIT=20, FILE=dump_file, ACCESS="APPEND")
 CALL DUMP(UNICORN+1)
 CLOSE(20)
 
@@ -283,7 +309,9 @@ CALL system_clock(start)
         TOTENG = 0.D0
         TOTENG = calcEnergy(ENERGY, SOLVENTSOLVENT)
 
+        OPEN(UNIT=20, FILE=dump_file, ACCESS="APPEND")
         CALL dump(UNICORN)
+        CLOSE(20)
 
         ! Doe Metropolis
         CALL METROPOLIS(UNICORN, GA_NADJ, GA_NPRINT, REJECTED)
@@ -313,7 +341,6 @@ CALL system_clock(start)
 CLOSE(501)
 CLOSE(500)
 
-write (0,*) "We're done here. Signing off!"
 write (*,*) "We're done here. Signing off!"
 
 !STOP
