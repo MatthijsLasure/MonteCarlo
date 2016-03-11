@@ -34,7 +34,7 @@
 					<folderInfo id="photran.managedbuild.toolchain.gnu.fortran.exe.debug.188380160.512946960" name="/" resourcePath="">
 						<toolChain id="photran.managedbuild.toolchain.gnu.fortran.exe.debug.607071302" name="GCC Fortran" superClass="photran.managedbuild.toolchain.gnu.fortran.exe.debug">
 							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF;org.eclipse.cdt.core.GNU_ELF;org.eclipse.cdt.core.PE;org.eclipse.cdt.core.Cygwin_PE;org.eclipse.cdt.core.XCOFF32;org.eclipse.cdt.core.SOM;org.eclipse.cdt.core.MachO;org.eclipse.cdt.core.MachO64" id="photran.managedbuild.target.gnu.platform.exe.debug.356326566" name="Debug Platform" osList="solaris,linux,hpux,aix,qnx" superClass="photran.managedbuild.target.gnu.platform.exe.debug"/>
-							<builder id="org.eclipse.ptp.rdt.sync.cdt.core.SyncBuilder" managedBuildOn="false" name="Sync Builder" superClass="org.eclipse.ptp.rdt.sync.cdt.core.SyncBuilder"/>
+							<builder id="org.eclipse.ptp.rdt.sync.cdt.core.SyncBuilder" keepEnvironmentInBuildfile="false" managedBuildOn="false" name="Sync Builder" superClass="org.eclipse.ptp.rdt.sync.cdt.core.SyncBuilder"/>
 							<tool id="photran.managedbuild.tool.gnu.c.compiler.exe.debug.1739988524" name="GCC C Compiler" superClass="photran.managedbuild.tool.gnu.c.compiler.exe.debug">
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.2124023800" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
 							</tool>
