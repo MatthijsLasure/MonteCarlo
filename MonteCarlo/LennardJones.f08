@@ -174,10 +174,12 @@ SUBROUTINE ASSOSIATE_DMSO(SYM, TABLE_SYM, TABLE_Q, TABLE_E, TABLE_S, TABLE)
     N = SIZE(SYM)
 
     DO I=1,N
-        A = findSym(SYM(I), TABLE_SYM)
-        TABLE(I,1) = TABLE_Q(A)
-        TABLE(I,2) = TABLE_E(A)
-        TABLE(I,3) = TABLE_S(A)
+        IF (SYM(I) .NE. "H") THEN
+            A = findSym(SYM(I), TABLE_SYM)
+            TABLE(I,1) = TABLE_Q(A)
+            TABLE(I,2) = TABLE_E(A)
+            TABLE(I,3) = TABLE_S(A)
+        END IF
     END DO
 
 END SUBROUTINE ASSOSIATE_DMSO

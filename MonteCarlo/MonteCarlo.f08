@@ -96,9 +96,10 @@ LOGICAL:: DODEBUG = .FALSE.                                          !
     ! Config
 !====================================================================
 !====================================================================
-
-    WRITE (*,*) "Welcome to the MC simulation of DMSO"
-    WRITE (*,*) "Author: Matthijs Lasure, Matthijs.Lasure@student.uantwerpen.be"
+    WRITE (*,*) "******************************************************************"
+    WRITE (*,*) "* Welcome to the MC simulation of DMSO                           *"
+    WRITE (*,*) "* Author: Matthijs Lasure, Matthijs.Lasure@student.uantwerpen.be *"
+    WRITE (*,*) "******************************************************************"
     WRITE (*,*) "Variable init Done!"
     WRITE (*,*) "Fase 0 started!"
     WRITE (*,*) "Reading config..."
@@ -114,7 +115,6 @@ LOGICAL:: DODEBUG = .FALSE.                                          !
 
     ! Override stuff with command line
     IF (COMMAND_ARGUMENT_COUNT() .GT. 1) THEN ! Seriële modus
-        WRITE (*,*) "Serial Modus detected!"
 
         CALL GET_COMMAND_ARGUMENT(2, LJ_STEPS_TEMP)
         CALL GET_COMMAND_ARGUMENT(3, GA_STEPS_TEMP)
@@ -122,6 +122,13 @@ LOGICAL:: DODEBUG = .FALSE.                                          !
         read (LJ_STEPS_TEMP, *) LJ_STEPS
         read (GA_STEPS_TEMP, *) GA_STEPS
         read (ID_TEMP, *) RUN_ID
+
+        WRITE (*,*) "------------------------"
+        WRITE (*,*) "Serial Modus detected!"
+        WRITE (*,*) "ID: ", trim(ID_TEMP)
+        WRITE (*,*) "LJ: ", trim(LJ_STEPS_TEMP)
+        WRITE (*,*) "GA: ", trim(GA_STEPS_TEMP)
+        WRITE (*,*) "------------------------"
 
         ! Files
 
@@ -249,6 +256,9 @@ LOGICAL:: DODEBUG = .FALSE.                                          !
     !====================================
     WRITE (*,*) "Calculating partial charges on solute..."
     CALL DO_SOLUTE(SOL_SYM, SOLUTE,SOL_Q)
+
+    FLUSH(5)
+    FLUSH(6)
 
     write(*,*) "Working on assosiation tables..."
     CALL ASSOSIATE_DMSO(DMSO_SYM, SYM, Q, EPSILON, SIGMA, TABLE_DMSO)

@@ -168,8 +168,8 @@ SUBROUTINE DO_SOLUTE(SOL_SYM, SOL, SOL_Q)
 
     COMMAND1 = "[ -e FIFO_solute ] || mknod FIFO_solute p"
     COMMAND2 = "g09 < solute_charge.com > solute_charge.txt"
-    COMMAND3 = "grep -B"//trim(NCHAR2)//" 'Electrostatic Properties (Atomic Units)' &
-    solute_output.txt | head -"//trim(NCHAR)//" > FIFO_solute &"
+    COMMAND3 = "grep -B"//trim(NCHAR2)//" 'Electrostatic Properties (Atomic Units)' "//&
+    "solute_charge.txt | head -"//trim(NCHAR)//" > FIFO_solute"
 
     CALL SYSTEM(COMMAND1)
     OPEN(17, file="FIFO_solute")
