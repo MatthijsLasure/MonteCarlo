@@ -10,7 +10,7 @@ subroutine rConfig(confile, boxl, LJ_steps, Ga_steps, iseed, doDebug, LJ_nadj, L
     character(len=strlen)       :: fst, snd
     character(len=1000)         :: line
     character*500               :: confile ! Config file
-    character*500, dimension(9) :: files ! Alle input/output files
+    character*500, dimension(:) :: files ! Alle input/output files
     integer                     :: stat,  j, j0, z
     integer, parameter          :: state_begin=1, state_in_fst=2, state_in_sep=3
 
@@ -117,6 +117,8 @@ subroutine rConfig(confile, boxl, LJ_steps, Ga_steps, iseed, doDebug, LJ_nadj, L
                 read(snd, "(A)") files(8)
             case ("result")
                 read(snd, "(A)") files(9)
+            case ("parsol")
+                read(snd, "(A)") files(10)
 
             ! You done f*cked up son
             case DEFAULT

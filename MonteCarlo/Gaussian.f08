@@ -6,10 +6,12 @@
 ! Doel:
 ! Bereken energie via LJ of QC
 !====================================================================
-MODULE interactions
+MODULE gaussian
 
     USE vector_class
     USE lib
+
+    CONTAINS
 
 !====================================================================
 
@@ -127,4 +129,4 @@ SUBROUTINE execGa(I, J, en)
 END SUBROUTINE execGa
 
 
-END MODULE interactions
+END MODULE gaussian

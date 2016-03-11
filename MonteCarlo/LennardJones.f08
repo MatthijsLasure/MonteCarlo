@@ -1,9 +1,9 @@
 module LennardJones
-    implicit none
 
     USE vector_class
     USE lib
-    !implicit none
+
+    implicit none
 
     CONTAINS
 
@@ -84,5 +84,12 @@ module LennardJones
         EN = SUML + SUMR
 
     END SUBROUTINE calcLJ
+
+!====================================================================
+!====================================================================
+
+SUBROUTINE CalcLJ_SV()
+
+END SUBROUTINE CalcLJ_SV
 
 end module LennardJones

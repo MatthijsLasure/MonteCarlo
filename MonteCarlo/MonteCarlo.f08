@@ -12,7 +12,8 @@
 PROGRAM MonteCarlo
 
     USE vector_class
-    USE interactions
+    USE LennardJones
+    USE Gaussian
     USE lib
     USE randgen
     USE readconfig
@@ -42,10 +43,10 @@ PROGRAM MonteCarlo
 
     ! FILES
     !======
-    CHARACTER*500, DIMENSION(9) :: files
-    CHARACTER*500               :: confile, LJ_STEPS_TEMP, GA_STEPS_TEMP, ID_TEMP ! Config
-    CHARACTER*100               :: dmso_file, box_file, sol_file, param_file ! input files
-    CHARACTER*100               :: out_file, err_file, dump_file, solvsolv_file, result_file ! output files
+    CHARACTER*500, DIMENSION(10)    :: files
+    CHARACTER*500                   :: confile, LJ_STEPS_TEMP, GA_STEPS_TEMP, ID_TEMP ! Config
+    CHARACTER*100                   :: dmso_file, box_file, sol_file, param_file, parsol_file ! input files
+    CHARACTER*100                   :: out_file, err_file, dump_file, solvsolv_file, result_file ! output files
 
     ! Energiën van de moleculen, bekomen via extern programma
     DOUBLE PRECISION    :: E_DMSO, E_SOL
@@ -55,7 +56,7 @@ PROGRAM MonteCarlo
     ! Variabelen voor de vorige run van MC
     TYPE (vector), DIMENSION(:), ALLOCATABLE    :: COM_OLD, SOLUTE_OLD, HOEK_OLD
     CHARACTER*4, DIMENSION(:), ALLOCATABLE      :: DMSO_SYM, SOL_SYM
-    INTEGER                                     :: NDMSO, NCOM, NSOL, NPARAM ! Aantal units
+    INTEGER                                     :: NDMSO, NCOM, NSOL, NPARAM, NPARSOL ! Aantal units
     ! DMSO: relatieve coördinaten voor de atomen
     ! CoM: Centre of Mass: locaties van de DMSO moleculen
     ! solute: conformatie van de solute
@@ -82,6 +83,9 @@ LOGICAL:: DODEBUG = .FALSE.                                          !
     ! Arrays voor parameters van DMSO (Q, epsilon, sigma, mass)
     DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE     :: Q, EPSILON, SIGMA, MASS
     CHARACTER*4, DIMENSION(:), ALLOCATABLE          :: SYM
+    ! Arrays voor paremeters van solute (epsilon, sigma)
+    DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE     :: SOL_Q, SOL_EPSILON, SOL_SIGMA
+    CHARACTER*4, DIMENSION(:), ALLOCATABLE          :: SOLPAR_SYM
 
     ! Maximale verarndering bij MC
     DOUBLE PRECISION    :: DPOSMAX, DHOEKMAX
@@ -141,6 +145,7 @@ LOGICAL:: DODEBUG = .FALSE.                                          !
     dmso_file = files(2)
     sol_file = files(3)
     param_file = files(4)
+    parsol_file = files(10)
 
     ! START ERR/OUT
     OPEN(UNIT=501, FILE=out_file)
@@ -202,6 +207,19 @@ LOGICAL:: DODEBUG = .FALSE.                                          !
     ALLOCATE(mass(NPARAM))
     DO I= 1,NPARAM
         READ (10,*) sym(I), Q(I), epsilon(I), sigma(I), mass(I)
+    END DO
+    CLOSE(10)
+
+    ! par_solute.txt: parameters voor LJ van het solute
+    OPEN (UNIT=10, FILE=parsol_file)
+    READ (10, *) NPARSOL
+    READ (10, *) ! Comment line
+    ALLOCATE(SOL_Q(NPARSOL))
+    ALLOCATE(SOL_SYM(NPARSOL))
+    ALLOCATE(SOL_EPSILON(NPARSOL))
+    ALLOCATE(SOL_SIGMA(NPARSOL))
+    DO I= 1,NPARSOL
+        READ (10,*) SOLPAR_SYM(I), SOL_EPSILON(I), SOL_SIGMA(I)
     END DO
     CLOSE(10)
 
