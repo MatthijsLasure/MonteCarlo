@@ -123,12 +123,12 @@ LOGICAL:: DODEBUG = .FALSE.                                          !
         read (GA_STEPS_TEMP, *) GA_STEPS
         read (ID_TEMP, *) RUN_ID
 
-        WRITE (*,*) "------------------------"
-        WRITE (*,*) "Serial Modus detected!"
+        WRITE (*,*) "-----------------------"
+        WRITE (*,*) "Serial Modus requested!"
         WRITE (*,*) "ID: ", trim(ID_TEMP)
         WRITE (*,*) "LJ: ", trim(LJ_STEPS_TEMP)
         WRITE (*,*) "GA: ", trim(GA_STEPS_TEMP)
-        WRITE (*,*) "------------------------"
+        WRITE (*,*) "-----------------------"
 
         ! Files
 
