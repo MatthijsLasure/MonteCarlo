@@ -83,6 +83,9 @@ SUBROUTINE calcGa(i, j, mol1, mol2, sym1, sym2, hasClipped, proc)
 
 END SUBROUTINE calcGa
 
+!====================================================================
+!====================================================================
+
 SUBROUTINE execGa(I, J, en)
 
     CHARACTER*100 :: gauss_file, gauss_log, FIFO
@@ -125,8 +128,60 @@ SUBROUTINE execGa(I, J, en)
     close(16)
     if(IOSTATUS .NE. 0) write(500,*) "Woeps FIFO", IOSTATUS, FIFO
 
-
 END SUBROUTINE execGa
 
+!====================================================================
+!====================================================================
+
+SUBROUTINE DO_SOLUTE(SOL_SYM, SOL, SOL_Q)
+
+    CHARACTER*4, DIMENSION(:)       :: SOL_SYM
+    TYPE (VECTOR), DIMENSION(:)     :: SOL
+    DOUBLE PRECISION, DIMENSION(:)  :: SOL_Q
+
+    INTEGER :: I, N
+    CHARACTER*20 :: NCHAR, NCHAR2
+    CHARACTER*1000                  :: COMMAND1, COMMAND2, COMMAND3
+
+    N = SIZE(SOL)
+
+    OPEN(17, file="solute_charge.com")
+    ! Preamble
+    WRITE (17, *) '%nproc=8                                        '
+    WRITE (17, *) '%mem=12GB                                       '
+    WRITE (17, *) '%CHK=solute_charge.chk                          '
+    WRITE (17, *) '#P B3LYP/6-31G* POP=(CHELPG,DIPOLE)             '
+    WRITE (17, *) '                                                '
+    WRITE (17, *) 'SOLUTE CHARGE CALCULATION                       '
+    WRITE (17, *) '                                                '
+    WRITE (17, *) '0 1                                             '
+
+    DO I=1,N
+        WRITE (17, *) SOL_SYM(I), SOL(I)%X, SOL(I)%Y, SOL(I)%Z
+    END DO
+
+    WRITE (17, *) '                                                '
+    CLOSE(17)
+
+    WRITE(NCHAR, "(I0)") N
+    WRITE(NCHAR2, "(I0)") N+2
+
+    COMMAND1 = "[ -e FIFO_solute ] || mknod FIFO_solute p"
+    COMMAND2 = "g09 < solute_charge.com > solute_charge.txt"
+    COMMAND3 = "grep -B"//trim(NCHAR2)//" 'Electrostatic Properties (Atomic Units)' &
+    solute_output.txt | head -"//trim(NCHAR)//" > FIFO_solute &"
+
+    CALL SYSTEM(COMMAND1)
+    OPEN(17, file="FIFO_solute")
+    CALL SYSTEM(COMMAND2)
+    CALL SYSTEM(COMMAND3)
+    DO I=1,N
+        READ (17, "(A12, F9.7)") NCHAR, SOL_Q(I)
+    END DO
+    CLOSE(17)
+
+END SUBROUTINE DO_SOLUTE
+
+!====================================================================
 
 END MODULE gaussian

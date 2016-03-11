@@ -49,7 +49,7 @@ PROGRAM MonteCarlo
     CHARACTER*100                   :: out_file, err_file, dump_file, solvsolv_file, result_file ! output files
 
     ! Energiën van de moleculen, bekomen via extern programma
-    DOUBLE PRECISION    :: E_DMSO, E_SOL
+    DOUBLE PRECISION                :: E_DMSO, E_SOL
 
     ! Vectoren voor moleculen & atoomtypes
     TYPE (vector), DIMENSION(:), ALLOCATABLE    :: DMSO, COM, SOLUTE, HOEK
@@ -86,6 +86,7 @@ LOGICAL:: DODEBUG = .FALSE.                                          !
     ! Arrays voor paremeters van solute (epsilon, sigma)
     DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE     :: SOL_Q, SOL_EPSILON, SOL_SIGMA
     CHARACTER*4, DIMENSION(:), ALLOCATABLE          :: SOLPAR_SYM
+    DOUBLE PRECISION, DIMENSION(:,:), ALLOCATABLE   :: TABLE_DMSO, TABLE_SOL
 
     ! Maximale verarndering bij MC
     DOUBLE PRECISION    :: DPOSMAX, DHOEKMAX
@@ -95,6 +96,12 @@ LOGICAL:: DODEBUG = .FALSE.                                          !
     ! Config
 !====================================================================
 !====================================================================
+
+    WRITE (*,*) "Welcome to the MC simulation of DMSO"
+    WRITE (*,*) "Author: Matthijs Lasure, Matthijs.Lasure@student.uantwerpen.be"
+    WRITE (*,*) "Variable init Done!"
+    WRITE (*,*) "Fase 0 started!"
+    WRITE (*,*) "Reading config..."
 
     ! Read command line
     CALL get_command_argument(1, confile)
@@ -106,7 +113,9 @@ LOGICAL:: DODEBUG = .FALSE.                                          !
     ! BOXL = OBSOLETE: wordt ingelezen uit box.txt
 
     ! Override stuff with command line
-    IF (COMMAND_ARGUMENT_COUNT() .GT. 1) THEN
+    IF (COMMAND_ARGUMENT_COUNT() .GT. 1) THEN ! Seriële modus
+        WRITE (*,*) "Serial Modus detected!"
+
         CALL GET_COMMAND_ARGUMENT(2, LJ_STEPS_TEMP)
         CALL GET_COMMAND_ARGUMENT(3, GA_STEPS_TEMP)
         CALL GET_COMMAND_ARGUMENT(4, ID_TEMP)
@@ -148,8 +157,12 @@ LOGICAL:: DODEBUG = .FALSE.                                          !
     parsol_file = files(10)
 
     ! START ERR/OUT
+    WRITE (*,*) "Outputstream started in ", out_file
+    WRITE (*,*) "Errorstream started in ", err_file
     OPEN(UNIT=501, FILE=out_file)
     OPEN(UNIT=500, FILE=err_file)
+
+    WRITE (*,*) "Config loaded! Writing time..."
 
     CALL system_clock (START)
     WRITE(500,*) START
@@ -159,11 +172,14 @@ LOGICAL:: DODEBUG = .FALSE.                                          !
 !====================================================================
 !====================================================================
 
+    WRITE (*,*) "Loading data..."
+
     ! DMSO.txt: conformatie DMSO
     OPEN (UNIT=10, FILE=dmso_file)
     READ (10, *) nDMSO ! Lees aantal atomen
     ALLOCATE(DMSO(NDMSO)) ! Ken correcte groottes toe aan de arrays
     ALLOCATE(DMSO_sym(NDMSO))
+    ALLOCATE(TABLE_DMSO(NDMSO, 3))
     DO I=1, NDMSO
         READ (10,*) DMSO_sym(I), DMSO(I)%X, DMSO(I)%Y, DMSO(I)%Z
     END DO
@@ -175,6 +191,7 @@ LOGICAL:: DODEBUG = .FALSE.                                          !
     READ (10, *) nSol ! Lees aantal atomen
     ALLOCATE(solute(NSOL)) ! Maak de arrays groot genoeg
     ALLOCATE(sol_sym(NSOL))
+    ALLOCATE(TABLE_SOL(NSOL, 3))
     DO I=1, NSOL ! Lees de coördinaten uit
         READ (10,*) sol_sym(I), solute(I)%X, solute(I)%Y, solute(I)%Z
     END DO
@@ -215,7 +232,7 @@ LOGICAL:: DODEBUG = .FALSE.                                          !
     READ (10, *) NPARSOL
     READ (10, *) ! Comment line
     ALLOCATE(SOL_Q(NPARSOL))
-    ALLOCATE(SOL_SYM(NPARSOL))
+    ALLOCATE(SOLPAR_SYM(NPARSOL))
     ALLOCATE(SOL_EPSILON(NPARSOL))
     ALLOCATE(SOL_SIGMA(NPARSOL))
     DO I= 1,NPARSOL
@@ -223,11 +240,24 @@ LOGICAL:: DODEBUG = .FALSE.                                          !
     END DO
     CLOSE(10)
 
+    WRITE (*,*) "Done loading data!"
+
 !====================================================================
 !====================================================================
 
+    ! Initiële berekening ladingen solute
+    !====================================
+    WRITE (*,*) "Calculating partial charges on solute..."
+    CALL DO_SOLUTE(SOL_SYM, SOLUTE,SOL_Q)
+
+    write(*,*) "Working on assosiation tables..."
+    CALL ASSOSIATE_DMSO(DMSO_SYM, SYM, Q, EPSILON, SIGMA, TABLE_DMSO)
+    CALL ASSOSIATE_SOLUTE(SOL_SYM, SOLPAR_SYM, SOL_Q, SOL_EPSILON, SOL_SIGMA, TABLE_SOL)
+
     ! Initiële berekening interacties
     !================================
+
+    WRITE (*,*) "Initial energy calculations of the system"
 
     ! Arrays
     ALLOCATE(mol1(NDMSO))
@@ -258,7 +288,7 @@ LOGICAL:: DODEBUG = .FALSE.                                          !
 !====================================================================
 
 
-
+WRITE (*,*) "Dump file opened on ", dump_file
 OPEN(UNIT=20, FILE=dump_file)
 CALL DUMP(0)
 CLOSE(20)
@@ -271,6 +301,12 @@ WRITE (501,902) 0, TOTENG, 0.D0, 0.D0, 0.D0, 0, REAL(0) / real(1), 0.D0, dposmax
 CALL system_clock(start)
 !write(500, *) start
 
+!====================================================================
+!====================================================================
+
+    WRITE (*,*) "Fase 0 done!"
+    WRITE (*,*) "Fase 1 started!"
+    WRITE (*,*) "Entering Lennard-Jones loop..."
 
     ! Loop 1: LJ
     !===========
@@ -298,6 +334,9 @@ CALL system_clock(start)
 
     END DO loop_LJ
 
+    WRITE (*,*) "Exiting Lennard-Jones loop..."
+    WRITE (*,*) "Writing data..."
+
 ! Write box
 OPEN(UNIT=10, FILE="backup.txt")
 WRITE(10,*) boxl
@@ -311,10 +350,16 @@ OPEN(UNIT=20, FILE=dump_file, ACCESS="APPEND")
 CALL DUMP(UNICORN+1)
 CLOSE(20)
 
+    WRITE (*,*) "Fase 1 done!"
+    WRITE (*,*) "Fase 2 started!"
+
 !====================================================================
 !====================================================================
+
 CALL system_clock(start)
 !WRITE(500,*) START
+
+    WRITE (*,*) "Entering Gaussian loop..."
 
     ! Loop 2: Gaussian
     loop_Ga: DO UNICORN=1+LJ_STEPS,GA_STEPS+LJ_STEPS
@@ -343,6 +388,13 @@ CALL system_clock(start)
 !====================================================================
 ! Wegschrijven resultaten
 
+    WRITE (*,*) "Exiting Gaussian loop..."
+
+    WRITE (*,*) "Fase 2 done!"
+    WRITE (*,*) "Fase POST started!"
+
+    WRITE (*,*) "Writing data..."
+
     ! box.txt: plaatsen van de moleculen (CoM, hoek)
     OPEN (UNIT=10, FILE=result_file)
     WRITE (10, *) BOXL ! Box grootte
@@ -355,14 +407,11 @@ CALL system_clock(start)
 !====================================================================
 !====================================================================
 
-!close(20)
 CLOSE(501)
 CLOSE(500)
 
-write (*,*) "We're done here. Signing off!"
-
-!STOP
-!END
+WRITE (*,*) "Fase POST done!"
+WRITE (*,*) "We're done here. Signing off!"
 
 CONTAINS
 
@@ -498,14 +547,14 @@ SUBROUTINE calculateLJ(I)
             EN = 0.D0
         ELSE
             MOL2 = RotMatrix(CoM(J), DMSO, hoek(J))
-            CALL calcLJ(MOL1, MOL2, DMSO_SYM, DMSO_SYM, SYM, Q, EPSILON, SIGMA, EN, BOXL, BOXL2)
+            CALL calcLJ(MOL1, MOL2, DMSO_SYM, TABLE_DMSO, EN, BOXL, BOXL2)
         END IF
         SOLVENTSOLVENT(I,J) = EN
         SOLVENTSOLVENT(J,I) = EN
     END DO
 
     ! Solvent-solute
-    CALL calcLJ(MOL1, SOLUTE, DMSO_SYM, SOL_SYM, SYM, Q, EPSILON, SIGMA, EN, BOXL, BOXL2)
+    CALL CalcLJ_SV(MOL1, SOLUTE, DMSO_SYM, TABLE_DMSO, TABLE_SOL, EN, BOXL, BOXL2)
     ENERGY(I) = EN
 
 END SUBROUTINE calculateLJ
