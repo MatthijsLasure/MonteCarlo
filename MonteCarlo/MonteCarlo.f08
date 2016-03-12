@@ -40,6 +40,7 @@ PROGRAM MonteCarlo
     LOGICAL             :: REJECTED
     INTEGER             :: PROC ! Aantal processoren voor gaussian
     DOUBLE PRECISION    :: BOXSCALE = 0.9D0 ! Schalen van de box
+    character(len=30)   :: date
 
     ! FILES
     !======
@@ -91,6 +92,8 @@ LOGICAL:: DODEBUG = .FALSE.                                          !
     ! Maximale verarndering bij MC
     DOUBLE PRECISION    :: DPOSMAX, DHOEKMAX
 
+    CALL FDATE(DATE)
+
 
 
     ! Config
@@ -100,6 +103,7 @@ LOGICAL:: DODEBUG = .FALSE.                                          !
     WRITE (*,*) "* Welcome to the MC simulation of DMSO                           *"
     WRITE (*,*) "* Author: Matthijs Lasure, Matthijs.Lasure@student.uantwerpen.be *"
     WRITE (*,*) "******************************************************************"
+    WRITE (*,*) "Program initiated @ ", DATE
     WRITE (*,*) "Variable init Done!"
     WRITE (*,*) "Fase 0 started!"
     WRITE (*,*) "Reading config..."
@@ -112,6 +116,7 @@ LOGICAL:: DODEBUG = .FALSE.                                          !
     GA_nprint, dposmax, dhoekmax, padj, beta, proc, files)
 
     ! BOXL = OBSOLETE: wordt ingelezen uit box.txt
+    WRITE (*,*) BOXL, dposmax, beta
 
     ! Override stuff with command line
     IF (COMMAND_ARGUMENT_COUNT() .GT. 1) THEN ! Seriële modus
@@ -197,6 +202,7 @@ LOGICAL:: DODEBUG = .FALSE.                                          !
     OPEN (UNIT=10, FILE=sol_file)
     READ (10, *) nSol ! Lees aantal atomen
     ALLOCATE(solute(NSOL)) ! Maak de arrays groot genoeg
+    ALLOCATE(SOLUTE_OLD(NSOL))
     ALLOCATE(sol_sym(NSOL))
     ALLOCATE(TABLE_SOL(NSOL, 3))
     DO I=1, NSOL ! Lees de coördinaten uit
@@ -256,6 +262,7 @@ LOGICAL:: DODEBUG = .FALSE.                                          !
     !====================================
     WRITE (*,*) "Calculating partial charges on solute..."
     CALL DO_SOLUTE(SOL_SYM, SOLUTE,SOL_Q)
+    WRITE(500,*) "Done DOSOLUTE"
 
     FLUSH(5)
     FLUSH(6)
@@ -417,11 +424,45 @@ CALL system_clock(start)
 !====================================================================
 !====================================================================
 
+WRITE (*,*) "Deallocating..."
+DEALLOCATE(DMSO)
+DEALLOCATE(DMSO_SYM)
+DEALLOCATE(TABLE_DMSO)
+DEALLOCATE(TABLE_SOL)
+DEALLOCATE(SOLUTE)
+DEALLOCATE(SOL_SYM)
+DEALLOCATE(CoM)
+DEALLOCATE(hoek)
+DEALLOCATE(COM_OLD)
+DEALLOCATE(HOEK_OLD)
+DEALLOCATE(SYM)
+DEALLOCATE(Q)
+DEALLOCATE(EPSILON)
+DEALLOCATE(SIGMA)
+DEALLOCATE(MASS)
+DEALLOCATE(SOL_Q)
+DEALLOCATE(SOLPAR_SYM)
+DEALLOCATE(SOL_EPSILON)
+DEALLOCATE(SOL_SIGMA)
+DEALLOCATE(MOL1)
+DEALLOCATE(MOL2)
+DEALLOCATE(SOLVENTSOLVENT)
+DEALLOCATE(SSOLD)
+DEALLOCATE(ENERGY)
+DEALLOCATE(EOLD)
+
+
+!====================================================================
+!====================================================================
+
 CLOSE(501)
 CLOSE(500)
 
+CALL FDATE(DATE)
+
 WRITE (*,*) "Fase POST done!"
 WRITE (*,*) "We're done here. Signing off!"
+WRITE (*,*) "Program finished @ ", DATE
 
 CONTAINS
 
@@ -442,6 +483,7 @@ SUBROUTINE MCINIT(I)
 
         ! Doe MC
         RSOLV = INT(RAND() * NCOM) + 1 ! Willekeurige DMSO molecule
+        IF( RSOLV .EQ. 31) RSOLV = 30
         COM(RSOLV) = CoM(RSOLV) + randVec(DPOSMAX)
         HOEK(RSOLV) = hoek(RSOLV) + randVec(DHOEKMAX)
 
@@ -636,7 +678,7 @@ SUBROUTINE calculateGA(I, LOOPNR)
     ! Begin of parallel loop
     !================================================================
 
-        IF (MayContinue) THEN
+    IF (MayContinue) THEN
 
         !$OMP PARALLEL
         !$OMP DO SCHEDULE(GUIDED) PRIVATE(En)
@@ -659,7 +701,7 @@ SUBROUTINE calculateGA(I, LOOPNR)
         !$OMP END PARALLEL
 
         ! Solvent-solute
-        CALL calcGa(I, 0, MOL1, SOLUTE, DMSO_SYM, SOL_SYM, Clipped(J+1), proc)
+        CALL calcGa(I, 0, MOL1, SOLUTE, DMSO_SYM, SOL_SYM, Clipped(NCOM+1), proc)
         IF (Clipped(J+1)) THEN
             EN = huge(en)
             WRITE (500,*) "Clipped with solute, infty", I, 0, LOOPNR

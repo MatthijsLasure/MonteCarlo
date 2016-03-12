@@ -18,7 +18,7 @@
 					<folderInfo id="photran.managedbuild.config.gnu.fortran.exe.debug.1445976773." name="/" resourcePath="">
 						<toolChain id="photran.managedbuild.toolchain.gnu.fortran.exe.debug.2145786172" name="GCC Fortran" superClass="photran.managedbuild.toolchain.gnu.fortran.exe.debug">
 							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="photran.managedbuild.target.gnu.platform.exe.debug.1209088353" name="Debug Platform" osList="solaris,linux,hpux,aix,qnx" superClass="photran.managedbuild.target.gnu.platform.exe.debug"/>
-							<builder buildPath="${workspace_loc:/MonteCarlo}/Debug" id="org.eclipse.ptp.rdt.sync.cdt.core.SyncBuilder" name="Sync Builder" superClass="org.eclipse.ptp.rdt.sync.cdt.core.SyncBuilder"/>
+							<builder buildPath="${workspace_loc:/MonteCarlo}/Debug" id="org.eclipse.ptp.rdt.sync.cdt.core.SyncBuilder" keepEnvironmentInBuildfile="false" name="Sync Builder" superClass="org.eclipse.ptp.rdt.sync.cdt.core.SyncBuilder"/>
 							<tool id="photran.managedbuild.tool.gnu.c.compiler.exe.debug.1182086918" name="GCC C Compiler" superClass="photran.managedbuild.tool.gnu.c.compiler.exe.debug">
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.1188269071" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
 							</tool>
@@ -87,4 +87,12 @@
 		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
 	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
+	<storageModule moduleId="refreshScope" versionNumber="2">
+		<configuration configurationName="Debug">
+			<resource resourceType="PROJECT" workspacePath="/MonteCarlo"/>
+		</configuration>
+		<configuration configurationName="Release">
+			<resource resourceType="PROJECT" workspacePath="/MonteCarlo"/>
+		</configuration>
+	</storageModule>
 </cproject>
