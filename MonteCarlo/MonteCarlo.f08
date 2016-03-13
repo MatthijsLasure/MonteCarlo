@@ -90,7 +90,7 @@ LOGICAL:: DODEBUG = .FALSE.                                          !
     DOUBLE PRECISION, DIMENSION(:,:), ALLOCATABLE   :: TABLE_DMSO, TABLE_SOL
 
     ! Maximale verarndering bij MC
-    DOUBLE PRECISION    :: DPOSMAX, DHOEKMAX
+    DOUBLE PRECISION    :: DPOSMAX, DHOEKMAX, DPOSMIN
 
     CALL FDATE(DATE)
 
@@ -113,7 +113,7 @@ LOGICAL:: DODEBUG = .FALSE.                                          !
 
     ! Read from config.ini
     CALL rConfig(confile, BOXL, LJ_STEPS, Ga_STEPS, iseed, DoDebug, LJ_nadj, LJ_nprint, GA_nadj, &
-    GA_nprint, dposmax, dhoekmax, padj, beta, proc, files)
+    GA_nprint, dposmax, dposmin, dhoekmax, padj, beta, proc, files)
 
     ! BOXL = OBSOLETE: wordt ingelezen uit box.txt
     WRITE (*,*) BOXL, dposmax, beta
@@ -313,7 +313,7 @@ CLOSE(20)
 901 FORMAT(A12, 1X, A20, 1X, A20, 1X, A6, 1X, A6, 1X, A3, 1X, A6, 1X, A6, 1X, A6)
 902 FORMAT(I12.12, 1X, ES20.10, 1X, ES20.10, 1X, F6.4, 1X, F6.4, 1X, I3.3, 1X, F6.4, 1X, F6.4, 1X, F6.5)
 WRITE (501,901) "i", "TotEng", "TotEng_old", "kans", "rv", "rSolv", "pSuc", "ratio","dposmax"
-WRITE (501,902) 0, TOTENG, 0.D0, 0.D0, 0.D0, 0, REAL(0) / real(1), 0.D0, dposmax
+WRITE (501,902) 0, TOTENG, TOTENG, 0.D0, 0.D0, 0, REAL(0) / real(1), 0.D0, dposmax
 
 CALL system_clock(start)
 !write(500, *) start
@@ -418,6 +418,18 @@ CALL system_clock(start)
     WRITE (10, *) nCoM ! Lees aantal moleculen
     DO I= 1, NCOM
         WRITE(10,*) CoM(I)%X, CoM(I)%Y, CoM(I)%Z, hoek(I)%X, hoek(I)%Y, hoek(I)%Z
+    END DO
+    CLOSE(10)
+    OPEN (UNIT=10, FILE=solvsolv_file)
+    DO I=1,NCOM
+        WRITE(10,*) solventsolvent(I,:)
+    END DO
+    CLOSE(10)
+
+    OPEN (UNIT=10, FILE="after")
+    DO I=1,NCOM
+        CALL calculateLJ(I)
+        WRITE(10,*) solventsolvent(I,:)
     END DO
     CLOSE(10)
 
@@ -558,7 +570,7 @@ SUBROUTINE METROPOLIS(I, NADJ, NPRINT, REJECTED)
             ELSE
                 dposMax = dposMax * (1.D0 - pAdj)
             END IF
-            IF (dposMax .LT. 0.00001) dposMax = 0.00001
+            IF (dposMax .LT. dposMin) dposMax = DPOSMIN
             NACCEPT = 0
         END IF
 
@@ -702,7 +714,7 @@ SUBROUTINE calculateGA(I, LOOPNR)
 
         ! Solvent-solute
         CALL calcGa(I, 0, MOL1, SOLUTE, DMSO_SYM, SOL_SYM, Clipped(NCOM+1), proc)
-        IF (Clipped(J+1)) THEN
+        IF (Clipped(NCOM+1)) THEN
             EN = huge(en)
             WRITE (500,*) "Clipped with solute, infty", I, 0, LOOPNR
         ELSE
@@ -714,8 +726,8 @@ SUBROUTINE calculateGA(I, LOOPNR)
         ENERGY(I) = EN
     ELSE
         ENERGY(I) = HUGE(EN)
-        SOLVENTSOLVENT(I,J) = HUGE(EN)
-        SOLVENTSOLVENT(J,I) = HUGE(EN)
+        SOLVENTSOLVENT(I,1) = HUGE(EN)
+        SOLVENTSOLVENT(1,I) = HUGE(EN)
     END IF
 
 END SUBROUTINE calculateGA
