@@ -600,7 +600,7 @@ SUBROUTINE calculateLJ(I)
     SOLVENTSOLVENT(I,I) = 0.D0
     MOL1 = RotMatrix(CoM(I), DMSO, hoek(I))
 
-    DO J=I+1,NCOM
+    DO J=1,NCOM
         ! Check lengte, met MIC!
         R = CoM(J) - CoM(I)
         R%X = R%X - BOXL2 * ANINT(R%X / BOXL)
@@ -640,7 +640,7 @@ SUBROUTINE calculateGA(I, LOOPNR)
     SOLVENTSOLVENT(I,I) = 0.D0
     MOL1 = RotMatrix(CoM(I), DMSO, hoek(I))
 
-    J = I + 1
+    J = 1
     DO WHILE (J .LE. NCOM .AND. MayContinue)
         ! MINIMIZE DISTANCE
         RMIN = huge(en)
