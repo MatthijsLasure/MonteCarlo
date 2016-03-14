@@ -4,7 +4,7 @@ module readConfig
     contains
 
 subroutine rConfig(confile, boxl, LJ_steps, Ga_steps, iseed, doDebug, LJ_nadj, LJ_nprint, GA_nadj,&
- GA_nprint, dposmax, dposmin, dhoekmax, padj, beta, proc, files)
+ GA_nprint, dposmax, dposmin, dhoekmax, dhoekmin, padj, proc, files)
 
     integer, parameter          :: strlen = 100
     character(len=strlen)       :: fst, snd
@@ -15,7 +15,7 @@ subroutine rConfig(confile, boxl, LJ_steps, Ga_steps, iseed, doDebug, LJ_nadj, L
     integer, parameter          :: state_begin=1, state_in_fst=2, state_in_sep=3
 
     ! Shit to read
-    double precision :: boxl, dposmax, dposmin, dhoekmax, padj, beta
+    double precision :: boxl, dposmax, dposmin, dhoekmax, dhoekmin, padj
     integer :: LJ_steps, Ga_steps, LJ_nadj, LJ_nprint, GA_nadj, GA_nprint
     integer :: iseed, proc
     logical :: doDebug
@@ -90,12 +90,11 @@ subroutine rConfig(confile, boxl, LJ_steps, Ga_steps, iseed, doDebug, LJ_nadj, L
                 read(snd,"(F10.10)") dposmin
             case ("dhoekmax")
                 read(snd,"(F10.10)") dhoekmax
+            case ("dhoekmin")
+                read(snd,"(F10.10)") dhoekmin
             ! Aanpassingsfactor voor dposmax
             case ("padj")
                 read(snd,"(F10.10)") padj
-            ! Coëfficient in metropolis
-            case ("beta")
-                read(snd,"(F20.10)") beta
             ! Aantal processoren, te gebruiken door Gaussian
             case ("proc")
                 read(snd,"(I10)") proc

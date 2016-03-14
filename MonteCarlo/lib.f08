@@ -106,16 +106,29 @@ MODULE lib
         END IF
     END FUNCTION findSym
 
-    ! RandVec: maakt vector met willekeurige getallen tussen -max en +max
-    !====================================================================
+    ! RandVec: random vector with max total length of MAX
+    !====================================================
     FUNCTION randVec(MAX) RESULT(rv)
+        DOUBLE PRECISION, INTENT(IN) :: MAX
+        TYPE (vector):: RV
+
+        RV%x = (RAND() - 0.5D0) * 2
+        RV%y = (RAND() - 0.5D0) * 2
+        RV%z = (RAND() - 0.5D0) * 2
+        RV = RV / sqrt(3.D0)
+        RV = RV * MAX
+    END FUNCTION randVec
+
+    ! RandVecHoek: maakt vector met willekeurige getallen tussen -max en +max
+    !========================================================================
+    FUNCTION randVecHoek(MAX) RESULT(rv)
         DOUBLE PRECISION, INTENT(IN) :: MAX
         TYPE (vector):: RV
 
         RV%x = (RAND() - 0.5D0) * 2 * MAX
         RV%y = (RAND() - 0.5D0) * 2 * MAX
         RV%z = (RAND() - 0.5D0) * 2 * MAX
-    END FUNCTION randVec
+    END FUNCTION randVecHoek
 
 
 END MODULE lib

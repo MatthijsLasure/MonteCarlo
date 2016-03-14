@@ -36,7 +36,6 @@ PROGRAM MonteCarlo
     DOUBLE PRECISION    :: RV, KANS,DELTA = 0, EXPONENT ! Random variabele en toebehoren voor Metropolis
     DOUBLE PRECISION    :: RATIO ! Percentage succes in NADJ trials
     DOUBLE PRECISION    :: PADJ ! Hoeveel de dposmax aangepast mag worden
-    DOUBLE PRECISION    :: BETA ! p = EXP(-BETA * DELTA / (RT)
     LOGICAL             :: REJECTED
     INTEGER             :: PROC ! Aantal processoren voor gaussian
     DOUBLE PRECISION    :: BOXSCALE = 0.9D0 ! Schalen van de box
@@ -90,7 +89,7 @@ LOGICAL:: DODEBUG = .FALSE.                                          !
     DOUBLE PRECISION, DIMENSION(:,:), ALLOCATABLE   :: TABLE_DMSO, TABLE_SOL
 
     ! Maximale verarndering bij MC
-    DOUBLE PRECISION    :: DPOSMAX, DHOEKMAX, DPOSMIN
+    DOUBLE PRECISION    :: DPOSMAX, DHOEKMAX, DPOSMIN, dhoekmin
 
     CALL FDATE(DATE)
 
@@ -113,10 +112,11 @@ LOGICAL:: DODEBUG = .FALSE.                                          !
 
     ! Read from config.ini
     CALL rConfig(confile, BOXL, LJ_STEPS, Ga_STEPS, iseed, DoDebug, LJ_nadj, LJ_nprint, GA_nadj, &
-    GA_nprint, dposmax, dposmin, dhoekmax, padj, beta, proc, files)
+    GA_nprint, dposmax, dposmin, dhoekmax, dhoekmin, padj, proc, files)
 
     ! BOXL = OBSOLETE: wordt ingelezen uit box.txt
-    WRITE (*,*) BOXL, dposmax, beta
+    WRITE (*,*) "BOXL DPOSMAX DPOSMIN DHOEKMAX DHOEKMIN"
+    WRITE (*,*) BOXL, dposmax, dposmin, dhoekmax, dhoekmin
 
     ! Override stuff with command line
     IF (COMMAND_ARGUMENT_COUNT() .GT. 1) THEN ! Seriële modus
@@ -161,6 +161,7 @@ LOGICAL:: DODEBUG = .FALSE.                                          !
     END IF
 
     DHOEKMAX = DHOEKMAX * PI
+    DHOEKMIN = DHOEKMIN * PI
 
     ! Standaard shit, altijd hetzelfde
     dmso_file = files(2)
@@ -324,6 +325,7 @@ CALL system_clock(start)
     WRITE (*,*) "Fase 0 done!"
     WRITE (*,*) "Fase 1 started!"
     WRITE (*,*) "Entering Lennard-Jones loop..."
+    OPEN(UNIT=20, FILE=dump_file, ACCESS="APPEND")
 
     ! Loop 1: LJ
     !===========
@@ -333,8 +335,13 @@ CALL system_clock(start)
 
         ! Bereken veranderde interacties
         CALL calculateLJ(RSOLV)
+
         TOTENG = 0.D0
         TOTENG = calcEnergy(ENERGY, SOLVENTSOLVENT)
+
+        IF (MOD(UNICORN, 10000) .EQ. 0) THEN
+            CALL DUMP(UNICORN)
+        END IF
 
         ! Check for invalid shit
         IF(TOTENG > HUGE(TOTENG)) THEN
@@ -351,6 +358,7 @@ CALL system_clock(start)
 
     END DO loop_LJ
 
+    CLOSE(20)
     WRITE (*,*) "Exiting Lennard-Jones loop..."
     WRITE (*,*) "Writing data..."
 
@@ -420,7 +428,7 @@ CALL system_clock(start)
         WRITE(10,*) CoM(I)%X, CoM(I)%Y, CoM(I)%Z, hoek(I)%X, hoek(I)%Y, hoek(I)%Z
     END DO
     CLOSE(10)
-    OPEN (UNIT=10, FILE=solvsolv_file)
+    OPEN (UNIT=10, FILE="partial")
     DO I=1,NCOM
         WRITE(10,*) solventsolvent(I,:)
     END DO
@@ -535,7 +543,7 @@ SUBROUTINE METROPOLIS(I, NADJ, NPRINT, REJECTED)
         902 FORMAT(I12.12, 1X, ES20.10, 1X, ES20.10, 1X, F6.4, 1X, F6.4, 1X, I3.3, 1X, F6.4, 1X, F6.4, 1X, F6.5)
 
         DELTA = TOTENG - TOTENG_OLD
-        EXPONENT = -1.D0 * BETA * DELTA  * 1000.D0 / (8.314D0 * 300.D0)
+        EXPONENT = -1.D0 * DELTA  * 1000.D0 / (8.314D0 * 300.D0)
         IF (EXPONENT .LT. -75.D0) THEN ! e^-75 < 3*10^-33: 0% kans anyway
         !write(500,*) "Large Exponent!", I
             KANS = 0.D0
@@ -567,10 +575,15 @@ SUBROUTINE METROPOLIS(I, NADJ, NPRINT, REJECTED)
         IF (mod(I, NADJ) .EQ. 0) THEN
             IF (ratio .GT. 0.5) THEN
                 dposMax = dposMax * (1.D0 + pAdj)
+                dhoekMax = dhoekMax * (1.D0 + pAdj)
             ELSE
                 dposMax = dposMax * (1.D0 - pAdj)
+                dhoekMax = dhoekMax * (1.D0 - pAdj)
             END IF
-            IF (dposMax .LT. dposMin) dposMax = DPOSMIN
+            DPOSMAX = DMAX1(DPOSMAX, DPOSMIN)
+            DHOEKMAX = DMAX1(DHOEKMAX, DHOEKMIN)
+            !IF (dposMax .LT. dposMin) dposMax = DPOSMIN
+            !IF (dhoekMax .LT. dhoekMin) dhoekMax = dhoekMin
             NACCEPT = 0
         END IF
 
