@@ -772,22 +772,10 @@ END FUNCTION calcEnergy
 SUBROUTINE dump(i)
         INTEGER :: i
 
-        !WRITE (20,*) NCOM*NDMSO+NSOL - 6*NCOM
-        WRITE (20,*) NCOM+NSOL
+        WRITE (20,*) NCOM * NDMSO + NSOL
         WRITE (20,*) "Timestep: ", I
-        DO J=1, NSOL
-            WRITE(20,*) sol_sym(J), solute(J)%x, solute(J)%y, solute(J)%z
-        END DO
         DO J=1,NCOM
-        !WRITE (20,*) "S", CoM(J)%x, CoM(J)%y, CoM(J)%z
-        IF(.TRUE.) THEN
-            ABSPOS = RotMatrix(CoM(J), DMSO, hoek(J))
-            DO K=1, NDMSO
-                IF (DMSO_sym(K) .NE. "H") THEN
-                WRITE(20,*) DMSO_Sym(K), absPos(K)%x, absPos(K)%y, absPos(K)%z
-                END IF
-            END DO
-            END IF
+            WRITE(20, *) CoM(J)%X, CoM(J)%Y, CoM(J)%Z, hoek(J)%X, hoek(J)%Y, hoek(J)%Z
         END DO
 
 END SUBROUTINE dump
