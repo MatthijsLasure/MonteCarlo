@@ -642,7 +642,7 @@ SUBROUTINE calculateGA(I, LOOPNR)
 
     INTEGER:: I, J, LOOPNR ! gevraagde moleculen, welke loop
     INTEGER :: K, L, M, KMIN = 2, LMIN = 2, MMIN = 2 ! Minimal Image Convention
-    DOUBLE PRECISION :: R, RMIN
+    DOUBLE PRECISION :: R, RMIN, En = 0
     TYPE (vector) :: TEMPJ
     LOGICAL, DIMENSION(NCOM+1) :: TooFar, Clipped
     LOGICAL :: MayContinue = .TRUE.
@@ -654,46 +654,48 @@ SUBROUTINE calculateGA(I, LOOPNR)
 
     J = 1
     DO WHILE (J .LE. NCOM .AND. MayContinue)
-        ! MINIMIZE DISTANCE
-        RMIN = huge(en)
-        K_LOOP: DO K=-1,1
-            DO L=-1,1
-                DO M=-1,1
-                    TEMPJ%X = CoM(J)%X + FLOAT(K) * BOXL2
-                    TEMPJ%Y = CoM(J)%Y + FLOAT(L) * BOXL2
-                    TEMPJ%Z = CoM(J)%Z + FLOAT(M) * BOXL2
+        IF (J .NE. I) THEN
+            ! MINIMIZE DISTANCE
+            RMIN = huge(en)
+            K_LOOP: DO K=-1,1
+                DO L=-1,1
+                    DO M=-1,1
+                        TEMPJ%X = CoM(J)%X + FLOAT(K) * BOXL2
+                        TEMPJ%Y = CoM(J)%Y + FLOAT(L) * BOXL2
+                        TEMPJ%Z = CoM(J)%Z + FLOAT(M) * BOXL2
 
-                    R = getDist(CoM(I), TEMPJ) ! Check
-                    IF(R .LT. RMIN) THEN
-                        RMIN = R
-                        KMIN = K
-                        LMIN = L
-                        MMIN = M
-                    ELSE
-                    END IF
+                        R = getDist(CoM(I), TEMPJ) ! Check
+                        IF(R .LT. RMIN) THEN
+                            RMIN = R
+                            KMIN = K
+                            LMIN = L
+                            MMIN = M
+                        ELSE
+                        END IF
+                    END DO
                 END DO
-            END DO
-        END DO K_LOOP
+            END DO K_LOOP
 
-        TEMPJ%X = CoM(J)%X + FLOAT(KMIN) * BOXL2
-        TEMPJ%Y = CoM(J)%Y + FLOAT(LMIN) * BOXL2
-        TEMPJ%Z = CoM(J)%Z + FLOAT(MMIN) * BOXL2
+            TEMPJ%X = CoM(J)%X + FLOAT(KMIN) * BOXL2
+            TEMPJ%Y = CoM(J)%Y + FLOAT(LMIN) * BOXL2
+            TEMPJ%Z = CoM(J)%Z + FLOAT(MMIN) * BOXL2
 
-        !write(500,*) I, J, TEMPJ%X, TEMPJ%Y, TEMPJ%Z, CoM(J)%X, CoM(J)%Y, CoM(J)%Z, KMIN, LMIN, MMIN
+            !write(500,*) I, J, TEMPJ%X, TEMPJ%Y, TEMPJ%Z, CoM(J)%X, CoM(J)%Y, CoM(J)%Z, KMIN, LMIN, MMIN
 
-        CLIPPED(j) = .FALSE.
-        TOOFAR(j) = .FALSE.
+            CLIPPED(j) = .FALSE.
+            TOOFAR(j) = .FALSE.
 
-        IF (RMIN .GT. 7.D0) THEN
-            EN = 0.D0
-            TooFar(j) = .TRUE.
-        ELSE
-            MOL2 = RotMatrix(TEMPJ, DMSO, hoek(J))
-            CALL calcGa(I, J, MOL1, MOL2, DMSO_SYM, DMSO_SYM, CLIPPED(j), proc)
-            IF(CLIPPED(j)) MayContinue = .FALSE.
+            IF (RMIN .GT. 7.D0) THEN
+                EN = 0.D0
+                TooFar(j) = .TRUE.
+            ELSE
+                MOL2 = RotMatrix(TEMPJ, DMSO, hoek(J))
+                CALL calcGa(I, J, MOL1, MOL2, DMSO_SYM, DMSO_SYM, CLIPPED(j), proc)
+                IF(CLIPPED(j)) MayContinue = .FALSE.
+            END IF
+
+            J = J + 1
         END IF
-
-        J = J + 1
     END DO
 
 
@@ -707,8 +709,9 @@ SUBROUTINE calculateGA(I, LOOPNR)
         !$OMP PARALLEL
         !$OMP DO SCHEDULE(STATIC) PRIVATE(En)
         EXEC: DO J=I+1,NCOM
+            En = 0.D0
             IF (CLipped(J)) THEN ! it may not run
-                En = HUGE(En) ! Set energy to infinity
+                En = HUGE(R) ! Set energy to infinity
                 WRITE(500, *) "Clipped, infty", I, J, LOOPNR
             ELSEIF (TooFar(j)) THEN ! too far apart
                 En = 0.D0 ! Set energy to 0
@@ -738,6 +741,7 @@ SUBROUTINE calculateGA(I, LOOPNR)
         ENERGY(I) = EN
     ELSE
         ENERGY(I) = HUGE(EN)
+        WRITE (500,*) "MayContinue is false!", LOOPNR
         SOLVENTSOLVENT(I,1) = HUGE(EN)
         SOLVENTSOLVENT(1,I) = HUGE(EN)
     END IF
