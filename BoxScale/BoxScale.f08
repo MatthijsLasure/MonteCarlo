@@ -8,6 +8,10 @@ program BoxScale
     INTEGER :: nCoM, I
     DOUBLE PRECISION :: BOXL
 
+    WRITE (*,*) "************"
+    WRITE (*,*) "* BoxScale *"
+    WRITE (*,*) "************"
+
     CALL GET_COMMAND_ARGUMENT(1, CHARFACTOR)
     CALL GET_COMMAND_ARGUMENT(2, INPUT)
     CALL GET_COMMAND_ARGUMENT(3, OUTPUT)
@@ -29,4 +33,6 @@ program BoxScale
 
     close(10)
     close(11)
+
+    WRITE (*,*) "BoxScale has finished!"
 end program BoxScale

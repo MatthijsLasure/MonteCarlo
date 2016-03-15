@@ -15,6 +15,10 @@ program convert
     INTEGER          :: what, I, J, IOSTATUS, A, B, NHYDROGEN
     LOGICAL          :: doH = .FALSE.
 
+    WRITE (*,*) "***************"
+    WRITE (*,*) "* ConvertDump *"
+    WRITE (*,*) "***************"
+
     IF( COMMAND_ARGUMENT_COUNT() .LT. 5) THEN
         WRITE (0,*) "Incorrect arguments!"
         WRITE (*,*) "ConvertDump what in out solute DMSO"
@@ -70,6 +74,8 @@ program convert
 
     OPEN(10, FILE=trim(in_file))
     OPEN(11, FILE=trim(out_file))
+
+    WRITE (*,*) "Processing dump. This may take a while..."
 
 IF (what .LE. 1) THEN ! Just dump XYZ
 
@@ -134,4 +140,7 @@ END IF
 
 CLOSE(10)
 CLOSE(11)
+
+WRITE (*,*) "ConvertDump is ready!"
+
 end program convert
