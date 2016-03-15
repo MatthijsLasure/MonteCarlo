@@ -707,7 +707,7 @@ SUBROUTINE calculateGA(I, LOOPNR)
     IF (MayContinue) THEN
 
         !$OMP PARALLEL
-        !$OMP DO SCHEDULE(STATIC) PRIVATE(En)
+        !$OMP DO SCHEDULE(AUTO) PRIVATE(En)
         EXEC: DO J=I+1,NCOM
             En = 0.D0
             IF (CLipped(J)) THEN ! it may not run
