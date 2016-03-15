@@ -263,7 +263,6 @@ LOGICAL:: DODEBUG = .FALSE.                                          !
     !====================================
     WRITE (*,*) "Calculating partial charges on solute..."
     CALL DO_SOLUTE(SOL_SYM, SOLUTE,SOL_Q)
-    WRITE(500,*) "Done DOSOLUTE"
 
     FLUSH(5)
     FLUSH(6)

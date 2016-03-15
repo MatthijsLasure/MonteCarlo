@@ -46,9 +46,9 @@ SUBROUTINE calcGa(i, j, mol1, mol2, sym1, sym2, hasClipped, proc)
     ! Calculate distances
     kloop: do K = 1,N1
         do L = 1,N2
-            if(getDist(mol1(K),mol2(L)) .LT. 1.D0) THEN
+            if(getDist(mol1(K),mol2(L)) .LT. 1.0D0) THEN
                 hasClipped = .true.
-                write(500,*) "Molecules have clipped, discarding.", I, J
+                write(500,*) "Molecules have clipped, discarding.", I, J, getDist(mol1(K),mol2(L))
             END IF
         end do
     end Do kloop

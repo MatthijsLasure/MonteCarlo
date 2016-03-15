@@ -138,6 +138,14 @@ MODULE vector_class
         R = length(B-A)
     END FUNCTION getDist
 
+    ! bereken afstand tussen 2 vectoren
+    FUNCTION getDistSq(A, B) RESULT(r)
+        TYPE (vector), INTENT(IN) :: A
+        TYPE (vector), INTENT(IN) :: B
+        DOUBLE PRECISION:: R
+        R = length_sq(B-A)
+    END FUNCTION getDist
+
     ! Geef een aray voor matrix multiplication
     FUNCTION getArray(V) RESULT(a)
         TYPE (vector), INTENT(IN) :: V
