@@ -705,7 +705,7 @@ SUBROUTINE calculateGA(I, LOOPNR)
     IF (MayContinue) THEN
 
         !$OMP PARALLEL
-        !$OMP DO SCHEDULE(GUIDED) PRIVATE(En)
+        !$OMP DO SCHEDULE(STATIC) PRIVATE(En)
         EXEC: DO J=I+1,NCOM
             IF (CLipped(J)) THEN ! it may not run
                 En = HUGE(En) ! Set energy to infinity

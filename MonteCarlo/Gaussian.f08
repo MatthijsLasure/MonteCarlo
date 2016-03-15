@@ -46,7 +46,7 @@ SUBROUTINE calcGa(i, j, mol1, mol2, sym1, sym2, hasClipped, proc)
     ! Calculate distances
     kloop: do K = 1,N1
         do L = 1,N2
-            if(getDist(mol1(K),mol2(L)) .LT. 1.0D0) THEN
+            if(getDistSq(mol1(K),mol2(L)) .LT. 1.0D0) THEN
                 hasClipped = .true.
                 write(500,*) "Molecules have clipped, discarding.", I, J, getDist(mol1(K),mol2(L))
             END IF
@@ -56,7 +56,7 @@ SUBROUTINE calcGa(i, j, mol1, mol2, sym1, sym2, hasClipped, proc)
 
     if (.NOT. hasClipped) THEN
         ! OPEN FILE
-        OPEN(unit=15, file=gauss_file)
+        OPEN(unit=15, file=trim(gauss_file))
 
         write (15,"(A, I2.2, A)") '%nproc=', proc, '                                '
         write (15,*) '%mem=1Gb                                '
@@ -102,14 +102,14 @@ SUBROUTINE execGa(I, J, en)
     write(FIFO, 906) "gauss/FIFO-", I, J, ""
 
     ! Generate commands
-    write(command0, "(A, A, A, A, A)") "[ -e ", FIFO, "] || mknod ", FIFO, " p" ! Make Pipe als het nog niet bestaat
+    write(command0, "(A, A, A, A, A)") "[ -e ", trim(FIFO), "] || mknod ", trim(FIFO), " p" ! Make Pipe als het nog niet bestaat
     !write(command1, "(A6,A,A15, A, A2)") "g09 < ", gauss_file, " | grep Done > ", FIFO, " &" ! Start Gaussian in background mode
-    write(command1, "(A6,A,A15, A, A2)") "g09 < ", gauss_file, " > ", gauss_log ! TEMP DEBUG
-    write(command2, "(A10, A, A3,A,A2)") "grep Done ", gauss_log, " > ", FIFO, " &" ! Filter log > to pipe
+    write(command1, "(A6,A,A15, A, A2)") "g09 < ", trim(gauss_file), " > ", trim(gauss_log) ! TEMP DEBUG
+    write(command2, "(A10, A, A3,A,A2)") "grep Done ", trim(gauss_log), " > ", trim(FIFO), " &" ! Filter log > to pipe
 
     ! Start gaussian
-    call system (command0) ! Make pipe
-    call system (command1, IOSTATUS) ! Execute gaussian
+    call system (trim(command0)) ! Make pipe
+    call system (trim(command1), IOSTATUS) ! Execute gaussian
 
     if (IOSTATUS .NE. 0) then ! Check for failure
         write (500,*) "Gaussian error, retrying", IOSTATUS, "@", I, J
@@ -121,8 +121,8 @@ SUBROUTINE execGa(I, J, en)
         end if
     end if
 
-    call system (command2) ! Execute grep
-    open (16, file=FIFO, IOSTAT=IOSTATUS, ERR=100) ! Open de pipeline
+    call system (trim(command2)) ! Execute grep
+    open (16, file=trim(FIFO), IOSTAT=IOSTATUS, ERR=100) ! Open de pipeline
     100 if(IOSTATUS .NE. 0) write(500,*) "Woeps", IOSTATUS, FIFO
     read (16, "(A22,E19.12E2)", IOSTAT=IOSTATUS) bullshit, en ! lees resultaat in
     close(16)

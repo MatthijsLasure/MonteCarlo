@@ -144,7 +144,7 @@ MODULE vector_class
         TYPE (vector), INTENT(IN) :: B
         DOUBLE PRECISION:: R
         R = length_sq(B-A)
-    END FUNCTION getDist
+    END FUNCTION getDistSq
 
     ! Geef een aray voor matrix multiplication
     FUNCTION getArray(V) RESULT(a)
