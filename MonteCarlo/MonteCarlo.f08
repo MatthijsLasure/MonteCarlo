@@ -32,6 +32,7 @@ PROGRAM MonteCarlo
     INTEGER             :: RSOLV ! Geselecteerde molecule voor MC
     INTEGER             :: NSUC = 0 ! Aantal succesvolle MC
     INTEGER             :: LJ_NADJ, LJ_NPRINT, GA_NADJ, GA_NPRINT ! Aanpassen dposMax / printen om de n cycli
+    INTEGER             :: LJ_dump, GA_dump
     INTEGER             :: NACCEPT = 0
     DOUBLE PRECISION    :: RV, KANS,DELTA = 0, EXPONENT ! Random variabele en toebehoren voor Metropolis
     DOUBLE PRECISION    :: RATIO ! Percentage succes in NADJ trials
@@ -112,9 +113,11 @@ LOGICAL:: DODEBUG = .FALSE.                                          !
 
     ! Read from config.ini
     CALL rConfig(confile, BOXL, LJ_STEPS, Ga_STEPS, iseed, DoDebug, LJ_nadj, LJ_nprint, GA_nadj, &
-    GA_nprint, dposmax, dposmin, dhoekmax, dhoekmin, padj, proc, files)
+    GA_nprint, LJ_dump, GA_dump, dposmax, dposmin, dhoekmax, dhoekmin, padj, proc, files)
 
-    ! BOXL = OBSOLETE: wordt ingelezen uit box.txt
+    IF (LJ_dump .EQ. 0) LJ_dump = huge(LJ_dump)
+    IF (GA_dump .EQ. 0) GA_dump = huge(GA_dump)
+
     WRITE (*,*) "BOXL DPOSMAX DPOSMIN DHOEKMAX DHOEKMIN"
     WRITE (*,*) BOXL, dposmax, dposmin, dhoekmax, dhoekmin
 
@@ -264,9 +267,6 @@ LOGICAL:: DODEBUG = .FALSE.                                          !
     WRITE (*,*) "Calculating partial charges on solute..."
     CALL DO_SOLUTE(SOL_SYM, SOLUTE,SOL_Q)
 
-    FLUSH(5)
-    FLUSH(6)
-
     write(*,*) "Working on assosiation tables..."
     CALL ASSOSIATE_DMSO(DMSO_SYM, SYM, Q, EPSILON, SIGMA, TABLE_DMSO)
     CALL ASSOSIATE_SOLUTE(SOL_SYM, SOLPAR_SYM, SOL_Q, SOL_EPSILON, SOL_SIGMA, TABLE_SOL)
@@ -338,7 +338,7 @@ CALL system_clock(start)
         TOTENG = 0.D0
         TOTENG = calcEnergy(ENERGY, SOLVENTSOLVENT)
 
-        IF (MOD(UNICORN, 10000) .EQ. 0) THEN
+        IF (MOD(UNICORN, LJ_dump) .EQ. 0) THEN
             CALL DUMP(UNICORN)
         END IF
 
@@ -357,7 +357,7 @@ CALL system_clock(start)
 
     END DO loop_LJ
 
-    CLOSE(20)
+    !CLOSE(20)
     WRITE (*,*) "Exiting Lennard-Jones loop..."
     WRITE (*,*) "Writing data..."
 
@@ -370,12 +370,8 @@ DO I=1,nCoM
 END DO
 CLOSE(10)
 
-OPEN(UNIT=20, FILE=dump_file, ACCESS="APPEND")
-CALL DUMP(UNICORN+1)
-CLOSE(20)
-
-    WRITE (*,*) "Fase 1 done!"
-    WRITE (*,*) "Fase 2 started!"
+WRITE (*,*) "Fase 1 done!"
+WRITE (*,*) "Fase 2 started!"
 
 !====================================================================
 !====================================================================
@@ -396,14 +392,18 @@ CALL system_clock(start)
         TOTENG = 0.D0
         TOTENG = calcEnergy(ENERGY, SOLVENTSOLVENT)
 
-        OPEN(UNIT=20, FILE=dump_file, ACCESS="APPEND")
-        CALL dump(UNICORN)
-        CLOSE(20)
+        !OPEN(UNIT=20, FILE=dump_file, ACCESS="APPEND")
+        IF (MOD(UNICORN, LJ_dump) .EQ. 0) THEN
+            CALL DUMP(UNICORN)
+        END IF
+        !CLOSE(20)
 
         ! Doe Metropolis
         CALL METROPOLIS(UNICORN, GA_NADJ, GA_NPRINT, REJECTED)
 
     END DO loop_Ga
+
+    CLOSE(20)
 
     CALL system_clock(START)
     !write (500,*) START
@@ -413,6 +413,10 @@ CALL system_clock(start)
 ! Wegschrijven resultaten
 
     WRITE (*,*) "Exiting Gaussian loop..."
+
+    OPEN(UNIT=20, FILE=dump_file, ACCESS="APPEND")
+    CALL DUMP(UNICORN+1)
+    CLOSE(20)
 
     WRITE (*,*) "Fase 2 done!"
     WRITE (*,*) "Fase POST started!"
@@ -425,18 +429,6 @@ CALL system_clock(start)
     WRITE (10, *) nCoM ! Lees aantal moleculen
     DO I= 1, NCOM
         WRITE(10,*) CoM(I)%X, CoM(I)%Y, CoM(I)%Z, hoek(I)%X, hoek(I)%Y, hoek(I)%Z
-    END DO
-    CLOSE(10)
-    OPEN (UNIT=10, FILE="partial")
-    DO I=1,NCOM
-        WRITE(10,*) solventsolvent(I,:)
-    END DO
-    CLOSE(10)
-
-    OPEN (UNIT=10, FILE="after")
-    DO I=1,NCOM
-        CALL calculateLJ(I)
-        WRITE(10,*) solventsolvent(I,:)
     END DO
     CLOSE(10)
 
@@ -651,9 +643,13 @@ SUBROUTINE calculateGA(I, LOOPNR)
     ! Notice: geen i loop: alleen molecule i is veranderd en moet opnieuw berekend worden
     SOLVENTSOLVENT(I,I) = 0.D0
     MOL1 = RotMatrix(CoM(I), DMSO, hoek(I))
+    MayContinue = .TRUE.
 
     J = 1
     DO WHILE (J .LE. NCOM .AND. MayContinue)
+        CLIPPED(j) = .FALSE.
+        TOOFAR(j) = .FALSE.
+
         IF (J .NE. I) THEN
             ! MINIMIZE DISTANCE
             RMIN = huge(en)
@@ -682,9 +678,6 @@ SUBROUTINE calculateGA(I, LOOPNR)
 
             !write(500,*) I, J, TEMPJ%X, TEMPJ%Y, TEMPJ%Z, CoM(J)%X, CoM(J)%Y, CoM(J)%Z, KMIN, LMIN, MMIN
 
-            CLIPPED(j) = .FALSE.
-            TOOFAR(j) = .FALSE.
-
             IF (RMIN .GT. 7.D0) THEN
                 EN = 0.D0
                 TooFar(j) = .TRUE.
@@ -694,8 +687,9 @@ SUBROUTINE calculateGA(I, LOOPNR)
                 IF(CLIPPED(j)) MayContinue = .FALSE.
             END IF
 
-            J = J + 1
         END IF
+
+        J = J + 1
     END DO
 
 
@@ -707,22 +701,24 @@ SUBROUTINE calculateGA(I, LOOPNR)
     IF (MayContinue) THEN
 
         !$OMP PARALLEL
-        !$OMP DO SCHEDULE(AUTO) PRIVATE(En)
-        EXEC: DO J=I+1,NCOM
-            En = 0.D0
-            IF (CLipped(J)) THEN ! it may not run
-                En = HUGE(R) ! Set energy to infinity
-                WRITE(500, *) "Clipped, infty", I, J, LOOPNR
-            ELSEIF (TooFar(j)) THEN ! too far apart
-                En = 0.D0 ! Set energy to 0
-            ELSE
-                CALL execGa(I, J, EN)
-                EN = EN - E_DMSO - E_DMSO
-                EN = EN * HARTREE2KJMOL
-            END IF
+        !$OMP DO SCHEDULE(DYNAMIC) PRIVATE(En)
+        EXEC: DO J=1,NCOM
+            IF (J .NE. I) THEN
+                En = 0.D0
+                IF (CLipped(J)) THEN ! it may not run
+                    En = HUGE(R) ! Set energy to infinity
+                    WRITE(500, *) "Clipped, infty", I, J, LOOPNR
+                ELSEIF (TooFar(j)) THEN ! too far apart
+                    En = 0.D0 ! Set energy to 0
+                ELSE
+                    CALL execGa(I, J, EN)
+                    EN = EN - E_DMSO - E_DMSO
+                    EN = EN * HARTREE2KJMOL
+                END IF
 
-            SOLVENTSOLVENT(I,J) = EN
-            SOLVENTSOLVENT(J,I) = EN
+                SOLVENTSOLVENT(I,J) = EN
+                SOLVENTSOLVENT(J,I) = EN
+            END IF
         END DO EXEC
         !$OMP END DO
         !$OMP END PARALLEL

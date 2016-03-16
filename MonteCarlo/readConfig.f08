@@ -4,7 +4,7 @@ module readConfig
     contains
 
 subroutine rConfig(confile, boxl, LJ_steps, Ga_steps, iseed, doDebug, LJ_nadj, LJ_nprint, GA_nadj,&
- GA_nprint, dposmax, dposmin, dhoekmax, dhoekmin, padj, proc, files)
+ GA_nprint, LJ_dump, GA_dump, dposmax, dposmin, dhoekmax, dhoekmin, padj, proc, files)
 
     integer, parameter          :: strlen = 100
     character(len=strlen)       :: fst, snd
@@ -17,7 +17,7 @@ subroutine rConfig(confile, boxl, LJ_steps, Ga_steps, iseed, doDebug, LJ_nadj, L
     ! Shit to read
     double precision :: boxl, dposmax, dposmin, dhoekmax, dhoekmin, padj
     integer :: LJ_steps, Ga_steps, LJ_nadj, LJ_nprint, GA_nadj, GA_nprint
-    integer :: iseed, proc
+    integer :: iseed, proc, LJ_dump, GA_dump
     logical :: doDebug
 
 
@@ -83,6 +83,10 @@ subroutine rConfig(confile, boxl, LJ_steps, Ga_steps, iseed, doDebug, LJ_nadj, L
                 read(snd,"(I10)") GA_nadj
             case ("ga_nprint")
                 read(snd,"(I10)") GA_nprint
+            case ("lj_dump")
+                read(snd,"(I10)") lj_dump
+            case ("ga_dump")
+                read(snd,"(I10)") ga_dump
             ! Maximale verplaatsing bij MC
             case ("dposmax")
                 read(snd,"(F10.10)") dposmax
