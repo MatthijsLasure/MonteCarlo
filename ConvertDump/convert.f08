@@ -64,9 +64,10 @@ program convert
 !====================================================================
 
     READ(what_char, *) what
+    NHYDROGEN = 0
     IF (what .EQ. 1) THEN
         doH = .TRUE.
-        NHYDROGEN = 0
+    ELSE
         DO I=1, NDMSO
             IF (DMSO_SYM(I) .EQ. "H") NHYDROGEN = NHYDROGEN + 1
         END DO
@@ -83,11 +84,7 @@ IF (what .LE. 1) THEN ! Just dump XYZ
         READ (10, *, IOSTAT=IOSTATUS) N
         IF (IOSTATUS < 0) exit
         READ (10, "(A10,I20.20)") TEMP, TIMESTEP
-        IF (doH) THEN
-            N = NCOM * NDMSO + NSOL
-        ELSE
-            N = NCOM * (NDMSO - NHYDROGEN) + NSOL
-        END IF
+        N = NCOM * (NDMSO - NHYDROGEN) + NSOL
         WRITE (11,*) N
         WRITE (11, *) "Timestep:", TIMESTEP
         SOL_loop: DO I=1,NSOL
