@@ -496,7 +496,7 @@ SUBROUTINE MCINIT(I)
         RSOLV = INT(RAND() * NCOM) + 1 ! Willekeurige DMSO molecule
         IF( RSOLV .EQ. 31) RSOLV = 30
         COM(RSOLV) = CoM(RSOLV) + randVec(DPOSMAX)
-        HOEK(RSOLV) = hoek(RSOLV) + randVec(DHOEKMAX)
+        HOEK(RSOLV) = hoek(RSOLV) + randVecHoek(DHOEKMAX)
 
 
         ! Check of hoeken nog binnen [-Pi, +Pi] liggen
@@ -611,7 +611,7 @@ SUBROUTINE calculateLJ(I)
         R%Y = R%Y - BOXL2 * ANINT(R%Y / BOXL)
         R%Z = R%Z - BOXL2 * ANINT(R%Z / BOXL)
 
-        IF (length(R) .GT. 7) THEN
+        IF (length(R) .GT. 7.D0) THEN
             EN = 0.D0
         ELSE
             MOL2 = RotMatrix(CoM(J), DMSO, hoek(J))
