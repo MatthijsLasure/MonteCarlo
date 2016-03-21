@@ -82,7 +82,7 @@ LOGICAL:: DODEBUG = .FALSE.                                          !
     DOUBLE PRECISION                                :: TOTENG_OLD = 0.D0
 
     ! Arrays voor parameters van DMSO (Q, epsilon, sigma, mass)
-    DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE     :: Q, EPSILON, SIGMA, MASS
+    DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE     :: Q, EPSILON, SIGMA
     CHARACTER*4, DIMENSION(:), ALLOCATABLE          :: SYM
     ! Arrays voor paremeters van solute (epsilon, sigma)
     DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE     :: SOL_Q, SOL_EPSILON, SOL_SIGMA
@@ -193,6 +193,7 @@ LOGICAL:: DODEBUG = .FALSE.                                          !
     ! DMSO.txt: conformatie DMSO
     OPEN (UNIT=10, FILE=dmso_file)
     READ (10, *) nDMSO ! Lees aantal atomen
+    READ (10, *) ! Comment line
     ALLOCATE(DMSO(NDMSO)) ! Ken correcte groottes toe aan de arrays
     ALLOCATE(DMSO_sym(NDMSO))
     ALLOCATE(TABLE_DMSO(NDMSO, 3))
@@ -205,6 +206,7 @@ LOGICAL:: DODEBUG = .FALSE.                                          !
     ! solute.txt: conformatie opgeloste molecule (sol)
     OPEN (UNIT=10, FILE=sol_file)
     READ (10, *) nSol ! Lees aantal atomen
+    READ (10, *) ! Comment line
     ALLOCATE(solute(NSOL)) ! Maak de arrays groot genoeg
     ALLOCATE(SOLUTE_OLD(NSOL))
     ALLOCATE(sol_sym(NSOL))
@@ -238,9 +240,8 @@ LOGICAL:: DODEBUG = .FALSE.                                          !
     ALLOCATE(Q(NPARAM))
     ALLOCATE(epsilon(NPARAM))
     ALLOCATE(sigma(NPARAM))
-    ALLOCATE(mass(NPARAM))
     DO I= 1,NPARAM
-        READ (10,*) sym(I), Q(I), epsilon(I), sigma(I), mass(I)
+        READ (10,*) sym(I), Q(I), epsilon(I), sigma(I)
     END DO
     CLOSE(10)
 
@@ -450,7 +451,6 @@ DEALLOCATE(SYM)
 DEALLOCATE(Q)
 DEALLOCATE(EPSILON)
 DEALLOCATE(SIGMA)
-DEALLOCATE(MASS)
 DEALLOCATE(SOL_Q)
 DEALLOCATE(SOLPAR_SYM)
 DEALLOCATE(SOL_EPSILON)
@@ -605,20 +605,22 @@ SUBROUTINE calculateLJ(I)
     MOL1 = RotMatrix(CoM(I), DMSO, hoek(I))
 
     DO J=1,NCOM
-        ! Check lengte, met MIC!
-        R = CoM(J) - CoM(I)
-        R%X = R%X - BOXL2 * ANINT(R%X / BOXL)
-        R%Y = R%Y - BOXL2 * ANINT(R%Y / BOXL)
-        R%Z = R%Z - BOXL2 * ANINT(R%Z / BOXL)
+        IF ( J .NE. I) THEN
+            ! Check lengte, met MIC!
+            R = CoM(J) - CoM(I)
+            R%X = R%X - BOXL2 * ANINT(R%X / BOXL)
+            R%Y = R%Y - BOXL2 * ANINT(R%Y / BOXL)
+            R%Z = R%Z - BOXL2 * ANINT(R%Z / BOXL)
 
-        IF (length(R) .GT. 7.D0) THEN
-            EN = 0.D0
-        ELSE
-            MOL2 = RotMatrix(CoM(J), DMSO, hoek(J))
-            CALL calcLJ(MOL1, MOL2, DMSO_SYM, TABLE_DMSO, EN, BOXL, BOXL2)
+            IF (length(R) .GT. 7.D0) THEN
+                EN = 0.D0
+            ELSE
+                MOL2 = RotMatrix(CoM(J), DMSO, hoek(J))
+                CALL calcLJ(MOL1, MOL2, DMSO_SYM, TABLE_DMSO, EN, BOXL, BOXL2)
+            END IF
+            SOLVENTSOLVENT(I,J) = EN
+            SOLVENTSOLVENT(J,I) = EN
         END IF
-        SOLVENTSOLVENT(I,J) = EN
-        SOLVENTSOLVENT(J,I) = EN
     END DO
 
     ! Solvent-solute

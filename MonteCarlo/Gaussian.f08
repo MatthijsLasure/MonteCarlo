@@ -105,7 +105,7 @@ SUBROUTINE execGa(I, J, en)
     write(command0, "(A, A, A, A, A)") "[[ -e ", trim(FIFO), " ]] || mknod ", trim(FIFO), " p" ! Make Pipe als het nog niet bestaat
     !write(command1, "(A6,A,A15, A, A2)") "g09 < ", gauss_file, " | grep Done > ", FIFO, " &" ! Start Gaussian in background mode
     write(command1, "(A6,A,A15, A, A2)") "g09 < ", trim(gauss_file), " > ", trim(gauss_log) ! TEMP DEBUG
-    write(command2, "(A10, A, A3,A,A2)") "grep Done ", trim(gauss_log), " > ", trim(FIFO), " &" ! Filter log > to pipe
+    write(command2, "(A10, A, A3,A, A2)") "grep Done ", trim(gauss_log), " > ", trim(FIFO), " &" ! Filter log > to pipe
 
     ! Start gaussian
     call system (trim(command0)) ! Make pipe
