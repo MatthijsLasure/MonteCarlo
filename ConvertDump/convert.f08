@@ -11,7 +11,7 @@ program convert
     TYPE(vector), DIMENSION(:), ALLOCATABLE :: solute, DMSO, pos, MOL1
     CHARACTER*4, DIMENSION(:), ALLOCATABLE      :: DMSO_SYM, SOL_SYM
     CHARACTER*4      :: symbol
-    INTEGER          :: nDMSO, nSOL, NCOM = 30, N, TIMESTEP
+    INTEGER          :: nDMSO, nSOL, NCOM, N, TIMESTEP
     INTEGER          :: what, I, J, IOSTATUS, A, B, NHYDROGEN
     LOGICAL          :: doH = .FALSE.
 
@@ -40,6 +40,7 @@ program convert
     ! DMSO.txt: conformatie DMSO
     OPEN (UNIT=10, FILE=trim(dmso_file))
     READ (10, *) nDMSO ! Lees aantal atomen
+    READ (10, *) ! Comment
     ALLOCATE(DMSO(NDMSO)) ! Ken correcte groottes toe aan de arrays
     ALLOCATE(MOL1(NDMSO))
     ALLOCATE(DMSO_sym(NDMSO))
@@ -51,6 +52,7 @@ program convert
     ! solute.txt: conformatie opgeloste molecule (sol)
     OPEN (UNIT=10, FILE=trim(sol_file))
     READ (10, *) nSol ! Lees aantal atomen
+    READ (10, *) ! Comment
     ALLOCATE(solute(NSOL)) ! Maak de arrays groot genoeg
     ALLOCATE(sol_sym(NSOL))
     DO I=1, NSOL ! Lees de coördinaten uit
@@ -81,7 +83,7 @@ program convert
 IF (what .LE. 1) THEN ! Just dump XYZ
 
     loop: DO
-        READ (10, *, IOSTAT=IOSTATUS) N
+        READ (10, *, IOSTAT=IOSTATUS) NCOM
         IF (IOSTATUS < 0) exit
         READ (10, "(A10,I20.20)") TEMP, TIMESTEP
         N = NCOM * (NDMSO - NHYDROGEN) + NSOL
