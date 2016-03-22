@@ -25,7 +25,7 @@ PROGRAM MonteCarlo
     ! Variabelen
     !===========
     INTEGER             :: RUN_ID = 0 ! Welke run
-    DOUBLE PRECISION    :: BOXL, BOXL2 ! box grootte, halve box
+    DOUBLE PRECISION    :: BOXL, BOXL2, TEMPERATURE ! box grootte, halve box
     INTEGER             :: I, J, UNICORN, ISEED
     INTEGER             :: LJ_STEPS, GA_STEPS ! Aantal stappen per loop
     INTEGER             :: RSOLV ! Geselecteerde molecule voor MC
@@ -112,7 +112,7 @@ LOGICAL:: DODEBUG = .FALSE.                                          !
 
     ! Read from config.ini
     CALL rConfig(confile, LJ_STEPS, Ga_STEPS, iseed, LJ_nadj, LJ_nprint, GA_nadj, &
-    GA_nprint, LJ_dump, GA_dump, dposmax, dposmin, dhoekmax, dhoekmin, padj, proc, files)
+    GA_nprint, LJ_dump, GA_dump, dposmax, dposmin, dhoekmax, dhoekmin, padj, proc, files, TEMPERATURE)
 
     IF (LJ_dump .EQ. 0) LJ_dump = huge(LJ_dump)
     IF (GA_dump .EQ. 0) GA_dump = huge(GA_dump)
@@ -525,30 +525,34 @@ SUBROUTINE MCINIT(I)
 
 
         ! Check of hoeken nog binnen [-Pi, +Pi] liggen
-        !HOEK(RSOLV)%X = HOEK(RSOLV)%X - TAU * DINT(HOEK(RSOLV)%X / PI)
-        !HOEK(RSOLV)%Y = HOEK(RSOLV)%Y - TAU * DINT(HOEK(RSOLV)%Y / PI)
-        !HOEK(RSOLV)%Z = HOEK(RSOLV)%Z - TAU * DINT(HOEK(RSOLV)%Z / PI)
+        IF (.TRUE.) THEN
+        HOEK(RSOLV)%X = HOEK(RSOLV)%X - TAU * DINT(HOEK(RSOLV)%X / PI)
+        HOEK(RSOLV)%Y = HOEK(RSOLV)%Y - TAU * DINT(HOEK(RSOLV)%Y / PI)
+        HOEK(RSOLV)%Z = HOEK(RSOLV)%Z - TAU * DINT(HOEK(RSOLV)%Z / PI)
 
         ! Periodic boundaries => Computer Simulation of Liquids, p30
-        !COM(RSOLV)%X = COM(RSOLV)%X - BOXL2 * DINT(COM(RSOLV)%X / BOXL)
-        !COM(RSOLV)%Y = COM(RSOLV)%Y - BOXL2 * DINT(COM(RSOLV)%Y / BOXL)
-        !COM(RSOLV)%Z = COM(RSOLV)%Z - BOXL2 * DINT(COM(RSOLV)%Z / BOXL)
+        COM(RSOLV)%X = COM(RSOLV)%X - BOXL2 * DINT(COM(RSOLV)%X / BOXL)
+        COM(RSOLV)%Y = COM(RSOLV)%Y - BOXL2 * DINT(COM(RSOLV)%Y / BOXL)
+        COM(RSOLV)%Z = COM(RSOLV)%Z - BOXL2 * DINT(COM(RSOLV)%Z / BOXL)
+        END IF
 
-        IF (HOEK(RSOLV)%X .GT. PI) HOEK(RSOLV)%X = HOEK(RSOLV)%X - PI
-        IF (HOEK(RSOLV)%Y .GT. PI) HOEK(RSOLV)%Y = HOEK(RSOLV)%Y - PI
-        IF (HOEK(RSOLV)%Z .GT. PI) HOEK(RSOLV)%Z = HOEK(RSOLV)%Z - PI
+        IF (.FALSE.) THEN
+        IF (HOEK(RSOLV)%X .GT. PI) HOEK(RSOLV)%X = HOEK(RSOLV)%X - TAU
+        IF (HOEK(RSOLV)%Y .GT. PI) HOEK(RSOLV)%Y = HOEK(RSOLV)%Y - TAU
+        IF (HOEK(RSOLV)%Z .GT. PI) HOEK(RSOLV)%Z = HOEK(RSOLV)%Z - TAU
 
-        IF (HOEK(RSOLV)%X .LT. PI) HOEK(RSOLV)%X = HOEK(RSOLV)%X + PI
-        IF (HOEK(RSOLV)%Y .LT. PI) HOEK(RSOLV)%Y = HOEK(RSOLV)%Y + PI
-        IF (HOEK(RSOLV)%Z .LT. PI) HOEK(RSOLV)%Z = HOEK(RSOLV)%Z + PI
+        IF (HOEK(RSOLV)%X .LT. PI) HOEK(RSOLV)%X = HOEK(RSOLV)%X + TAU
+        IF (HOEK(RSOLV)%Y .LT. PI) HOEK(RSOLV)%Y = HOEK(RSOLV)%Y + TAU
+        IF (HOEK(RSOLV)%Z .LT. PI) HOEK(RSOLV)%Z = HOEK(RSOLV)%Z + TAU
 
-        IF (COM(RSOLV)%X .GT. PI) COM(RSOLV)%X = COM(RSOLV)%X - PI
-        IF (COM(RSOLV)%Y .GT. PI) COM(RSOLV)%Y = COM(RSOLV)%Y - PI
-        IF (COM(RSOLV)%Z .GT. PI) COM(RSOLV)%Z = COM(RSOLV)%Z - PI
+        IF (COM(RSOLV)%X .GT. BOXL) COM(RSOLV)%X = COM(RSOLV)%X - BOXL2
+        IF (COM(RSOLV)%Y .GT. BOXL) COM(RSOLV)%Y = COM(RSOLV)%Y - BOXL2
+        IF (COM(RSOLV)%Z .GT. BOXL) COM(RSOLV)%Z = COM(RSOLV)%Z - BOXL2
 
-        IF (COM(RSOLV)%X .LT. PI) COM(RSOLV)%X = COM(RSOLV)%X + PI
-        IF (COM(RSOLV)%Y .LT. PI) COM(RSOLV)%Y = COM(RSOLV)%Y + PI
-        IF (COM(RSOLV)%Z .LT. PI) COM(RSOLV)%Z = COM(RSOLV)%Z + PI
+        IF (COM(RSOLV)%X .LT. BOXL) COM(RSOLV)%X = COM(RSOLV)%X + BOXL2
+        IF (COM(RSOLV)%Y .LT. BOXL) COM(RSOLV)%Y = COM(RSOLV)%Y + BOXL2
+        IF (COM(RSOLV)%Z .LT. BOXL) COM(RSOLV)%Z = COM(RSOLV)%Z + BOXL2
+        END IF
 
 END SUBROUTINE MCINIT
 
@@ -564,7 +568,7 @@ SUBROUTINE METROPOLIS(I, NADJ, NPRINT, REJECTED)
         902 FORMAT(I12.12, 1X, ES20.10, 1X, ES20.10, 1X, F6.4, 1X, F6.4, 1X, I3.3, 1X, F6.4, 1X, F6.4, 1X, F6.5)
 
         DELTA = TOTENG - TOTENG_OLD
-        EXPONENT = -1.D0 * DELTA  * 1000.D0 / (8.314D0 * 2.D0)
+        EXPONENT = -1.D0 * DELTA  * 1000.D0 / (8.314D0 * TEMPERATURE)
         IF (EXPONENT .LT. -75.D0) THEN ! e^-75 < 3*10^-33: 0% kans anyway
         !write(500,*) "Large Exponent!", I
             KANS = 0.D0
@@ -603,8 +607,6 @@ SUBROUTINE METROPOLIS(I, NADJ, NPRINT, REJECTED)
             END IF
             DPOSMAX = DMAX1(DPOSMAX, DPOSMIN)
             DHOEKMAX = DMAX1(DHOEKMAX, DHOEKMIN)
-            !IF (dposMax .LT. dposMin) dposMax = DPOSMIN
-            !IF (dhoekMax .LT. dhoekMin) dhoekMax = dhoekMin
             NACCEPT = 0
         END IF
 
@@ -643,41 +645,41 @@ SUBROUTINE calculateLJ(I)
         IF ( J .NE. I) THEN
             ! Check lengte, met MIC!
 
-            RMIN = huge(en)
-            K_LOOP: DO K=-1,1
-                DO L=-1,1
-                    DO M=-1,1
-                        TEMPJ%X = CoM(J)%X + FLOAT(K) * BOXL2
-                        TEMPJ%Y = CoM(J)%Y + FLOAT(L) * BOXL2
-                        TEMPJ%Z = CoM(J)%Z + FLOAT(M) * BOXL2
+!            RMIN = huge(en)
+!            K_LOOP: DO K=-1,1
+!                DO L=-1,1
+!                    DO M=-1,1
+!                        TEMPJ%X = CoM(J)%X + FLOAT(K) * BOXL2
+!                        TEMPJ%Y = CoM(J)%Y + FLOAT(L) * BOXL2
+!                        TEMPJ%Z = CoM(J)%Z + FLOAT(M) * BOXL2
+!
+!                        RO = getDist(CoM(I), TEMPJ) ! Check
+!                        IF(RO .LT. RMIN) THEN
+!                            RMIN = RO
+!                            KMIN = K
+!                            LMIN = L
+!                            MMIN = M
+!                        ELSE
+!                        END IF
+!                    END DO
+!                END DO
+!            END DO K_LOOP
+!            TEMPJ%X = CoM(J)%X + FLOAT(KMIN) * BOXL2
+!            TEMPJ%Y = CoM(J)%Y + FLOAT(LMIN) * BOXL2
+!            TEMPJ%Z = CoM(J)%Z + FLOAT(MMIN) * BOXL2
 
-                        RO = getDist(CoM(I), TEMPJ) ! Check
-                        IF(RO .LT. RMIN) THEN
-                            RMIN = RO
-                            KMIN = K
-                            LMIN = L
-                            MMIN = M
-                        ELSE
-                        END IF
-                    END DO
-                END DO
-            END DO K_LOOP
-            TEMPJ%X = CoM(J)%X + FLOAT(K) * BOXL2
-            TEMPJ%Y = CoM(J)%Y + FLOAT(L) * BOXL2
-            TEMPJ%Z = CoM(J)%Z + FLOAT(M) * BOXL2
 
-
-            !R = CoM(J) - CoM(I)
-            R = TEMPJ - CoM(I)
-            !R%X = R%X - BOXL2 * DINT(R%X / BOXL)
-            !R%Y = R%Y - BOXL2 * DINT(R%Y / BOXL)
-            !R%Z = R%Z - BOXL2 * DINT(R%Z / BOXL)
+            R = CoM(J) - CoM(I)
+            !R = TEMPJ - CoM(I)
+            R%X = R%X - BOXL2 * DINT(R%X / BOXL)
+            R%Y = R%Y - BOXL2 * DINT(R%Y / BOXL)
+            R%Z = R%Z - BOXL2 * DINT(R%Z / BOXL)
 
             IF (length(R) .GT. 7.D0) THEN
                 EN = 0.D0
             ELSE
-                MOL2 = RotMatrix(TEMPJ, DMSO, hoek(J))
-                !MOL2 = RotMatrix(CoM(J), DMSO, hoek(J))
+                !MOL2 = RotMatrix(TEMPJ, DMSO, hoek(J))
+                MOL2 = RotMatrix(CoM(J), DMSO, hoek(J))
                 CALL calcLJ(MOL1, MOL2, DMSO_SYM, TABLE_DMSO, EN, BOXL, BOXL2)
             END IF
             SOLVENTSOLVENT(I,J) = EN
