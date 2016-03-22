@@ -130,5 +130,4 @@ MODULE lib
         RV%z = (RAND() - 0.5D0) * 2 * MAX
     END FUNCTION randVecHoek
 
-
-END MODULE lib
+    END MODULE lib

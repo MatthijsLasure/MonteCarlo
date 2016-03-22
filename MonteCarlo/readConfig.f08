@@ -3,7 +3,7 @@ module readConfig
 
     contains
 
-subroutine rConfig(confile, boxl, LJ_steps, Ga_steps, iseed, doDebug, LJ_nadj, LJ_nprint, GA_nadj,&
+subroutine rConfig(confile, LJ_steps, Ga_steps, iseed, LJ_nadj, LJ_nprint, GA_nadj,&
  GA_nprint, LJ_dump, GA_dump, dposmax, dposmin, dhoekmax, dhoekmin, padj, proc, files)
 
     integer, parameter          :: strlen = 100
@@ -15,10 +15,9 @@ subroutine rConfig(confile, boxl, LJ_steps, Ga_steps, iseed, doDebug, LJ_nadj, L
     integer, parameter          :: state_begin=1, state_in_fst=2, state_in_sep=3
 
     ! Shit to read
-    double precision :: boxl, dposmax, dposmin, dhoekmax, dhoekmin, padj
+    double precision :: dposmax, dposmin, dhoekmax, dhoekmin, padj
     integer :: LJ_steps, Ga_steps, LJ_nadj, LJ_nprint, GA_nadj, GA_nprint
     integer :: iseed, proc, LJ_dump, GA_dump
-    logical :: doDebug
 
 
     open(unit=10, file=confile)
@@ -65,12 +64,6 @@ subroutine rConfig(confile, boxl, LJ_steps, Ga_steps, iseed, doDebug, LJ_nadj, L
                 read(snd,"(I10)") LJ_steps
             case ("ga")
                 read(snd,"(I10)") Ga_steps
-            !Box grootte
-            case ("boxl")
-                read(snd, "(F10.10)") boxl
-            ! Debug
-            case ("debug")
-                doDebug = .TRUE.
             ! Seed voor random generator
             case ("seed")
                 read(snd,"(I10)") iseed

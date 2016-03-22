@@ -104,7 +104,7 @@ SUBROUTINE execGa(I, J, en)
     ! Generate commands
     write(command0, "(A, A, A, A, A)") "[[ -e ", trim(FIFO), " ]] || mknod ", trim(FIFO), " p" ! Make Pipe als het nog niet bestaat
     !write(command1, "(A6,A,A15, A, A2)") "g09 < ", gauss_file, " | grep Done > ", FIFO, " &" ! Start Gaussian in background mode
-    write(command1, "(A6,A,A15, A, A2)") "g09 < ", trim(gauss_file), " > ", trim(gauss_log) ! TEMP DEBUG
+    write(command1, "(A6,A,A15, A, A2)") "g09 < ", trim(gauss_file), " > ", trim(gauss_log), "  " ! TEMP DEBUG
     write(command2, "(A10, A, A3,A, A2)") "grep Done ", trim(gauss_log), " > ", trim(FIFO), " &" ! Filter log > to pipe
 
     ! Start gaussian
@@ -173,7 +173,7 @@ SUBROUTINE DO_SOLUTE(SOL_SYM, SOL, SOL_Q)
 
     CALL SYSTEM(COMMAND1)
     OPEN(17, file="FIFO_solute")
-    CALL SYSTEM(COMMAND2)
+    !CALL SYSTEM(COMMAND2)
     CALL SYSTEM(COMMAND3)
     DO I=1,N
         READ (17, "(A12, F9.7)") NCHAR, SOL_Q(I)

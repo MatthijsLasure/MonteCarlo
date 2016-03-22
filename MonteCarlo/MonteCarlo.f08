@@ -68,7 +68,7 @@ PROGRAM MonteCarlo
 
     ! Debug
 !====================================================================
-    INTEGER:: K                                                     !
+    INTEGER:: K, L                                                     !
     TYPE (vector), DIMENSION(10) :: ABSPOS                          !
     INTEGER:: START                                                 !
 LOGICAL:: DODEBUG = .FALSE.                                          !
@@ -99,10 +99,10 @@ LOGICAL:: DODEBUG = .FALSE.                                          !
     ! Config
 !====================================================================
 !====================================================================
-    WRITE (*,*) "******************************************************************"
-    WRITE (*,*) "* Welcome to the MC simulation of DMSO                           *"
-    WRITE (*,*) "* Author: Matthijs Lasure, Matthijs.Lasure@student.uantwerpen.be *"
-    WRITE (*,*) "******************************************************************"
+    WRITE (*,*) "****************************************"
+    WRITE (*,*) "* Welcome to the MC simulation of DMSO *"
+    WRITE (*,*) "* Author: Matthijs Lasure              *"
+    WRITE (*,*) "****************************************"
     WRITE (*,*) "Program initiated @ ", DATE
     WRITE (*,*) "Variable init Done!"
     WRITE (*,*) "Fase 0 started!"
@@ -112,7 +112,7 @@ LOGICAL:: DODEBUG = .FALSE.                                          !
     CALL get_command_argument(1, confile)
 
     ! Read from config.ini
-    CALL rConfig(confile, BOXL, LJ_STEPS, Ga_STEPS, iseed, DoDebug, LJ_nadj, LJ_nprint, GA_nadj, &
+    CALL rConfig(confile, LJ_STEPS, Ga_STEPS, iseed, LJ_nadj, LJ_nprint, GA_nadj, &
     GA_nprint, LJ_dump, GA_dump, dposmax, dposmin, dhoekmax, dhoekmin, padj, proc, files)
 
     IF (LJ_dump .EQ. 0) LJ_dump = huge(LJ_dump)
@@ -394,7 +394,7 @@ CALL system_clock(start)
         TOTENG = calcEnergy(ENERGY, SOLVENTSOLVENT)
 
         !OPEN(UNIT=20, FILE=dump_file, ACCESS="APPEND")
-        IF (MOD(UNICORN, LJ_dump) .EQ. 0) THEN
+        IF (MOD(UNICORN, GA_dump) .EQ. 0) THEN
             CALL DUMP(UNICORN)
         END IF
         !CLOSE(20)
@@ -405,6 +405,32 @@ CALL system_clock(start)
     END DO loop_Ga
 
     CLOSE(20)
+
+    !TEMPDUMP
+    Do I=1,NCOM
+    MOL1 = RotMatrix(COM(I), DMSO, HOEK(I))
+        DO K = 1, NDMSO
+            DO L = 1, NSOL
+                if(getDist(MOL1(K), SOLUTE(L)) .LT. 1.8D0) THEN
+                    CALL CalcLJ_SV(MOL1, SOLUTE, DMSO_SYM, TABLE_DMSO, TABLE_SOL, EN, BOXL, BOXL2)
+                    WRITE (*,*) I, 0, K, L, getDist(MOL1(K), SOLUTE(L)), EN
+                END IF
+            END DO
+        END DO
+        DO J=1, NCOM
+        IF (J .NE. I) THEN
+            MOL2 = RotMatrix(COM(J), DMSO, HOEK(J))
+            DO K = 1, NDMSO
+                DO L = 1, NDMSO
+                    if(getDist(MOL1(K), MOL2(L)) .LT. 1.8D0) THEN
+                        CALL calcLJ(MOL1, MOL2, DMSO_SYM, TABLE_DMSO, EN, BOXL, BOXL2)
+                        WRITE (*,*) I, J, K, L, getDist(MOL1(K), MOL2(L)), EN
+                    END IF
+                END DO
+            END DO
+        END IF
+        END DO
+    END DO
 
     CALL system_clock(START)
     !write (500,*) START
@@ -500,14 +526,14 @@ SUBROUTINE MCINIT(I)
 
 
         ! Check of hoeken nog binnen [-Pi, +Pi] liggen
-        HOEK(RSOLV)%X = HOEK(RSOLV)%X - TAU * AINT(HOEK(RSOLV)%X / PI)
-        HOEK(RSOLV)%Y = HOEK(RSOLV)%Y - TAU * AINT(HOEK(RSOLV)%Y / PI)
-        HOEK(RSOLV)%Z = HOEK(RSOLV)%Z - TAU * AINT(HOEK(RSOLV)%Z / PI)
+        HOEK(RSOLV)%X = HOEK(RSOLV)%X - TAU * DINT(HOEK(RSOLV)%X / PI)
+        HOEK(RSOLV)%Y = HOEK(RSOLV)%Y - TAU * DINT(HOEK(RSOLV)%Y / PI)
+        HOEK(RSOLV)%Z = HOEK(RSOLV)%Z - TAU * DINT(HOEK(RSOLV)%Z / PI)
 
         ! Periodic boundaries => Computer Simulation of Liquids, p30
-        COM(RSOLV)%X = COM(RSOLV)%X - BOXL2 * AINT(COM(RSOLV)%X / BOXL)
-        COM(RSOLV)%Y = COM(RSOLV)%Y - BOXL2 * AINT(COM(RSOLV)%Y / BOXL)
-        COM(RSOLV)%Z = COM(RSOLV)%Z - BOXL2 * AINT(COM(RSOLV)%Z / BOXL)
+        COM(RSOLV)%X = COM(RSOLV)%X - BOXL2 * DINT(COM(RSOLV)%X / BOXL)
+        COM(RSOLV)%Y = COM(RSOLV)%Y - BOXL2 * DINT(COM(RSOLV)%Y / BOXL)
+        COM(RSOLV)%Z = COM(RSOLV)%Z - BOXL2 * DINT(COM(RSOLV)%Z / BOXL)
 
         ! Checks for OOB
         IF(COM(RSOLV)%X .GT. BOXL .OR. COM(RSOLV)%X .LT. -1.D0 * BOXL) THEN
@@ -534,7 +560,7 @@ SUBROUTINE METROPOLIS(I, NADJ, NPRINT, REJECTED)
         902 FORMAT(I12.12, 1X, ES20.10, 1X, ES20.10, 1X, F6.4, 1X, F6.4, 1X, I3.3, 1X, F6.4, 1X, F6.4, 1X, F6.5)
 
         DELTA = TOTENG - TOTENG_OLD
-        EXPONENT = -1.D0 * DELTA  * 1000.D0 / (8.314D0 * 300.D0)
+        EXPONENT = -1.D0 * DELTA  * 1000.D0 / (8.314D0 * 2.D0)
         IF (EXPONENT .LT. -75.D0) THEN ! e^-75 < 3*10^-33: 0% kans anyway
         !write(500,*) "Large Exponent!", I
             KANS = 0.D0
@@ -608,9 +634,9 @@ SUBROUTINE calculateLJ(I)
         IF ( J .NE. I) THEN
             ! Check lengte, met MIC!
             R = CoM(J) - CoM(I)
-            R%X = R%X - BOXL2 * ANINT(R%X / BOXL)
-            R%Y = R%Y - BOXL2 * ANINT(R%Y / BOXL)
-            R%Z = R%Z - BOXL2 * ANINT(R%Z / BOXL)
+            R%X = R%X - BOXL2 * DINT(R%X / BOXL)
+            R%Y = R%Y - BOXL2 * DINT(R%Y / BOXL)
+            R%Z = R%Z - BOXL2 * DINT(R%Z / BOXL)
 
             IF (length(R) .GT. 7.D0) THEN
                 EN = 0.D0
@@ -773,7 +799,7 @@ END FUNCTION calcEnergy
 SUBROUTINE dump(i)
         INTEGER :: i
 
-        WRITE (20,*) NCOM * NDMSO + NSOL
+        WRITE (20,*) NCOM
         WRITE (20,*) "Timestep: ", I
         DO J=1,NCOM
             WRITE(20, *) CoM(J)%X, CoM(J)%Y, CoM(J)%Z, hoek(J)%X, hoek(J)%Y, hoek(J)%Z
