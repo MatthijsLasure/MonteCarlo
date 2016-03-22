@@ -146,9 +146,9 @@ FUNCTION LJ_FORMULA(E1, E2, S1, S2, Q1, Q2, RIN, BOXL, BOXL2)
     R = RIN
 
     ! Minimal image convention
-    R%X = R%X - BOXL2 * AINT(R%X / BOXL)
-    R%Y = R%Y - BOXL2 * AINT(R%Y / BOXL)
-    R%Z = R%Z - BOXL2 * AINT(R%Z / BOXL)
+    !R%X = R%X - BOXL2 * AINT(R%X / BOXL)
+    !R%Y = R%Y - BOXL2 * AINT(R%Y / BOXL)
+    !R%Z = R%Z - BOXL2 * AINT(R%Z / BOXL)
 
     RV = length(R)
 

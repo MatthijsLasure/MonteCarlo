@@ -17,7 +17,6 @@ PROGRAM MonteCarlo
     USE lib
     USE randgen
     USE readconfig
-    USE OMP_LIB
     !use iso_fortran_env
 
     IMPLICIT NONE
@@ -526,25 +525,30 @@ SUBROUTINE MCINIT(I)
 
 
         ! Check of hoeken nog binnen [-Pi, +Pi] liggen
-        HOEK(RSOLV)%X = HOEK(RSOLV)%X - TAU * DINT(HOEK(RSOLV)%X / PI)
-        HOEK(RSOLV)%Y = HOEK(RSOLV)%Y - TAU * DINT(HOEK(RSOLV)%Y / PI)
-        HOEK(RSOLV)%Z = HOEK(RSOLV)%Z - TAU * DINT(HOEK(RSOLV)%Z / PI)
+        !HOEK(RSOLV)%X = HOEK(RSOLV)%X - TAU * DINT(HOEK(RSOLV)%X / PI)
+        !HOEK(RSOLV)%Y = HOEK(RSOLV)%Y - TAU * DINT(HOEK(RSOLV)%Y / PI)
+        !HOEK(RSOLV)%Z = HOEK(RSOLV)%Z - TAU * DINT(HOEK(RSOLV)%Z / PI)
 
         ! Periodic boundaries => Computer Simulation of Liquids, p30
-        COM(RSOLV)%X = COM(RSOLV)%X - BOXL2 * DINT(COM(RSOLV)%X / BOXL)
-        COM(RSOLV)%Y = COM(RSOLV)%Y - BOXL2 * DINT(COM(RSOLV)%Y / BOXL)
-        COM(RSOLV)%Z = COM(RSOLV)%Z - BOXL2 * DINT(COM(RSOLV)%Z / BOXL)
+        !COM(RSOLV)%X = COM(RSOLV)%X - BOXL2 * DINT(COM(RSOLV)%X / BOXL)
+        !COM(RSOLV)%Y = COM(RSOLV)%Y - BOXL2 * DINT(COM(RSOLV)%Y / BOXL)
+        !COM(RSOLV)%Z = COM(RSOLV)%Z - BOXL2 * DINT(COM(RSOLV)%Z / BOXL)
 
-        ! Checks for OOB
-        IF(COM(RSOLV)%X .GT. BOXL .OR. COM(RSOLV)%X .LT. -1.D0 * BOXL) THEN
-            WRITE(500,*) "OOB on X with ", RSOLV, "@", I, ":", COM(RSOLV)%X
-        END IF
-        IF(COM(RSOLV)%Y .GT. BOXL .OR. COM(RSOLV)%Y .LT. -1.D0 * BOXL) THEN
-            WRITE(500,*) "OOB on Y with ", RSOLV, "@", I, ":", COM(RSOLV)%Y
-        END IF
-        IF(COM(RSOLV)%Z .GT. BOXL .OR. COM(RSOLV)%Z .LT. -1.D0 * BOXL) THEN
-            WRITE(500,*) "OOB on Z with ", RSOLV, "@", I, ":", COM(RSOLV)%Z
-        END IF
+        IF (HOEK(RSOLV)%X .GT. PI) HOEK(RSOLV)%X = HOEK(RSOLV)%X - PI
+        IF (HOEK(RSOLV)%Y .GT. PI) HOEK(RSOLV)%Y = HOEK(RSOLV)%Y - PI
+        IF (HOEK(RSOLV)%Z .GT. PI) HOEK(RSOLV)%Z = HOEK(RSOLV)%Z - PI
+
+        IF (HOEK(RSOLV)%X .LT. PI) HOEK(RSOLV)%X = HOEK(RSOLV)%X + PI
+        IF (HOEK(RSOLV)%Y .LT. PI) HOEK(RSOLV)%Y = HOEK(RSOLV)%Y + PI
+        IF (HOEK(RSOLV)%Z .LT. PI) HOEK(RSOLV)%Z = HOEK(RSOLV)%Z + PI
+
+        IF (COM(RSOLV)%X .GT. PI) COM(RSOLV)%X = COM(RSOLV)%X - PI
+        IF (COM(RSOLV)%Y .GT. PI) COM(RSOLV)%Y = COM(RSOLV)%Y - PI
+        IF (COM(RSOLV)%Z .GT. PI) COM(RSOLV)%Z = COM(RSOLV)%Z - PI
+
+        IF (COM(RSOLV)%X .LT. PI) COM(RSOLV)%X = COM(RSOLV)%X + PI
+        IF (COM(RSOLV)%Y .LT. PI) COM(RSOLV)%Y = COM(RSOLV)%Y + PI
+        IF (COM(RSOLV)%Z .LT. PI) COM(RSOLV)%Z = COM(RSOLV)%Z + PI
 
 END SUBROUTINE MCINIT
 
@@ -625,6 +629,11 @@ SUBROUTINE calculateLJ(I)
 
     TYPE (vector) :: R
 
+    ! DEBUG
+    TYPE (vector) :: TEMPJ
+    DOUBLE PRECISION :: RMIN, RO
+    INTEGER :: K, L, M, KMIN = 2, LMIN = 2, MMIN = 2
+
     ! Solvent solvent
     ! Notice: geen i loop: alleen molecule i is veranderd en moet opnieuw berekend worden
     SOLVENTSOLVENT(I,I) = 0.D0
@@ -633,15 +642,42 @@ SUBROUTINE calculateLJ(I)
     DO J=1,NCOM
         IF ( J .NE. I) THEN
             ! Check lengte, met MIC!
-            R = CoM(J) - CoM(I)
-            R%X = R%X - BOXL2 * DINT(R%X / BOXL)
-            R%Y = R%Y - BOXL2 * DINT(R%Y / BOXL)
-            R%Z = R%Z - BOXL2 * DINT(R%Z / BOXL)
+
+            RMIN = huge(en)
+            K_LOOP: DO K=-1,1
+                DO L=-1,1
+                    DO M=-1,1
+                        TEMPJ%X = CoM(J)%X + FLOAT(K) * BOXL2
+                        TEMPJ%Y = CoM(J)%Y + FLOAT(L) * BOXL2
+                        TEMPJ%Z = CoM(J)%Z + FLOAT(M) * BOXL2
+
+                        RO = getDist(CoM(I), TEMPJ) ! Check
+                        IF(RO .LT. RMIN) THEN
+                            RMIN = RO
+                            KMIN = K
+                            LMIN = L
+                            MMIN = M
+                        ELSE
+                        END IF
+                    END DO
+                END DO
+            END DO K_LOOP
+            TEMPJ%X = CoM(J)%X + FLOAT(K) * BOXL2
+            TEMPJ%Y = CoM(J)%Y + FLOAT(L) * BOXL2
+            TEMPJ%Z = CoM(J)%Z + FLOAT(M) * BOXL2
+
+
+            !R = CoM(J) - CoM(I)
+            R = TEMPJ - CoM(I)
+            !R%X = R%X - BOXL2 * DINT(R%X / BOXL)
+            !R%Y = R%Y - BOXL2 * DINT(R%Y / BOXL)
+            !R%Z = R%Z - BOXL2 * DINT(R%Z / BOXL)
 
             IF (length(R) .GT. 7.D0) THEN
                 EN = 0.D0
             ELSE
-                MOL2 = RotMatrix(CoM(J), DMSO, hoek(J))
+                MOL2 = RotMatrix(TEMPJ, DMSO, hoek(J))
+                !MOL2 = RotMatrix(CoM(J), DMSO, hoek(J))
                 CALL calcLJ(MOL1, MOL2, DMSO_SYM, TABLE_DMSO, EN, BOXL, BOXL2)
             END IF
             SOLVENTSOLVENT(I,J) = EN
