@@ -1,4 +1,4 @@
-MonteCarlo : randgen.o vector_class.o readConfig.o lib.o LennardJones.o Gaussian.o MonteCarlo.o
+MonteCarlo : randgen.o vector_class.o dihedral.o readConfig.o lib.o solmod.o LennardJones.o Gaussian.o MonteCarlo.o
 	gfortran -ggdb -fcheck=bounds -o MonteCarlo tmp/*.o
 
 MonteCarlo.o : MonteCarlo.f08
@@ -22,10 +22,16 @@ vector_class.o : vector_class.f08
 randgen.o : randgen.f
 	gfortran -ggdb -c -fcheck=bounds -o tmp/randgen.o randgen.f
 
+solmod.o : solmod.f08
+	gfortran -ggdb -c -fcheck=bounds -o tmp/solmod.o solmod.f08
+
+dihedral.o : dihedral.f08
+	gfortran -ggdb -c -fcheck=bounds -o tmp/dihedral.o dihedral.f08
+
 clean : 
 	rm tmp/*.o *.mod MonteCarlo
 
-OpenMP : randgenMP vector_classMP readConfigMP libMP LennardJonesMP GaussianMP MonteCarloMP
+OpenMP : randgenMP vector_classMP dihedralMP readConfigMP libMP solmodMP LennardJonesMP GaussianMP MonteCarloMP solmodMP
 	gfortran -ggdb -fopenmp -fcheck=bounds -o MonteCarloOpenMP tmp/*.o
 
 MonteCarloMP : MonteCarlo.f08
@@ -48,3 +54,9 @@ vector_classMP : vector_class.f08
 
 randgenMP : randgen.f
 	gfortran -ggdb -fopenmp -c -fcheck=bounds -o tmp/randgen.o randgen.f
+
+solmodMP : solmod.f08
+	gfortran -ggdb -fopenmp -c -fcheck=bounds -o tmp/solmod.o solmod.f08
+
+dihedralMP : dihedral.f08
+	gfortran -ggdb -fopenmp -c -fcheck=bounds -o tmp/dihedral.o dihedral.f08

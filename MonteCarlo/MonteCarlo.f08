@@ -17,6 +17,7 @@ PROGRAM MonteCarlo
     USE lib
     USE randgen
     USE readconfig
+    USE solmod
     !use iso_fortran_env
 
     IMPLICIT NONE
@@ -61,6 +62,10 @@ PROGRAM MonteCarlo
     ! CoM: Centre of Mass: locaties van de DMSO moleculen
     ! solute: conformatie van de solute
     ! Hoek: oriëntatie van de DMSO moleculen -> RotMatrix
+
+    ! Array met bindingen die gebruikt mogen worden voor de dihedrale rotatie
+    INTEGER, DIMENSION(:,:), ALLOCATABLE     :: DIHOEK
+    INTEGER :: NDIHOEK
 
     ! Tijdelijke vectoren voor mol
     TYPE (vector), DIMENSION(:), ALLOCATABLE :: MOL1, MOL2
@@ -214,6 +219,11 @@ LOGICAL:: DODEBUG = .FALSE.                                          !
         READ (10,*) sol_sym(I), solute(I)%X, solute(I)%Y, solute(I)%Z
     END DO
     READ (10,*) E_sol
+    READ (10,*) NDIHOEK
+    ALLOCATE(DIHOEK(NDIHOEK, 2))
+    DO I=1, NDIHOEK
+        READ (10,*) DIHOEK(I,1), DIHOEK(I,2)
+    END DO
     CLOSE(10)
 
     ! box.txt: plaatsen van de moleculen (CoM, hoek)
@@ -307,6 +317,7 @@ LOGICAL:: DODEBUG = .FALSE.                                          !
 
 WRITE (*,*) "Dump file opened on ", dump_file
 OPEN(UNIT=20, FILE=dump_file)
+WRITE (20,*) BOXL
 CALL DUMP(0)
 CLOSE(20)
 
@@ -512,7 +523,7 @@ SUBROUTINE MCINIT(I)
         ! Verhuis oude vars naar de _old vars
         COM_OLD = COM
         HOEK_OLD = HOEK
-        !solute_old = solute ! Wordt nog niet gevariëerd
+        solute_old = solute ! Wordt nog niet gevariëerd
         TOTENG_OLD = TOTENG
         EOLD = ENERGY
         SSOLD = SOLVENTSOLVENT
@@ -534,24 +545,6 @@ SUBROUTINE MCINIT(I)
         COM(RSOLV)%X = COM(RSOLV)%X - BOXL2 * DINT(COM(RSOLV)%X / BOXL)
         COM(RSOLV)%Y = COM(RSOLV)%Y - BOXL2 * DINT(COM(RSOLV)%Y / BOXL)
         COM(RSOLV)%Z = COM(RSOLV)%Z - BOXL2 * DINT(COM(RSOLV)%Z / BOXL)
-        END IF
-
-        IF (.FALSE.) THEN
-        IF (HOEK(RSOLV)%X .GT. PI) HOEK(RSOLV)%X = HOEK(RSOLV)%X - TAU
-        IF (HOEK(RSOLV)%Y .GT. PI) HOEK(RSOLV)%Y = HOEK(RSOLV)%Y - TAU
-        IF (HOEK(RSOLV)%Z .GT. PI) HOEK(RSOLV)%Z = HOEK(RSOLV)%Z - TAU
-
-        IF (HOEK(RSOLV)%X .LT. PI) HOEK(RSOLV)%X = HOEK(RSOLV)%X + TAU
-        IF (HOEK(RSOLV)%Y .LT. PI) HOEK(RSOLV)%Y = HOEK(RSOLV)%Y + TAU
-        IF (HOEK(RSOLV)%Z .LT. PI) HOEK(RSOLV)%Z = HOEK(RSOLV)%Z + TAU
-
-        IF (COM(RSOLV)%X .GT. BOXL) COM(RSOLV)%X = COM(RSOLV)%X - BOXL2
-        IF (COM(RSOLV)%Y .GT. BOXL) COM(RSOLV)%Y = COM(RSOLV)%Y - BOXL2
-        IF (COM(RSOLV)%Z .GT. BOXL) COM(RSOLV)%Z = COM(RSOLV)%Z - BOXL2
-
-        IF (COM(RSOLV)%X .LT. BOXL) COM(RSOLV)%X = COM(RSOLV)%X + BOXL2
-        IF (COM(RSOLV)%Y .LT. BOXL) COM(RSOLV)%Y = COM(RSOLV)%Y + BOXL2
-        IF (COM(RSOLV)%Z .LT. BOXL) COM(RSOLV)%Z = COM(RSOLV)%Z + BOXL2
         END IF
 
 END SUBROUTINE MCINIT
@@ -601,7 +594,7 @@ SUBROUTINE METROPOLIS(I, NADJ, NPRINT, REJECTED)
             IF (ratio .GT. 0.5) THEN
                 dposMax = dposMax * (1.D0 + pAdj)
                 dhoekMax = dhoekMax * (1.D0 + pAdj)
-            ELSE
+            ELSEIF (ratio .LT. 0.5D0) THEN
                 dposMax = dposMax * (1.D0 - pAdj)
                 dhoekMax = dhoekMax * (1.D0 - pAdj)
             END IF
@@ -631,11 +624,6 @@ SUBROUTINE calculateLJ(I)
 
     TYPE (vector) :: R
 
-    ! DEBUG
-    TYPE (vector) :: TEMPJ
-    DOUBLE PRECISION :: RMIN, RO
-    INTEGER :: K, L, M, KMIN = 2, LMIN = 2, MMIN = 2
-
     ! Solvent solvent
     ! Notice: geen i loop: alleen molecule i is veranderd en moet opnieuw berekend worden
     SOLVENTSOLVENT(I,I) = 0.D0
@@ -644,33 +632,7 @@ SUBROUTINE calculateLJ(I)
     DO J=1,NCOM
         IF ( J .NE. I) THEN
             ! Check lengte, met MIC!
-
-!            RMIN = huge(en)
-!            K_LOOP: DO K=-1,1
-!                DO L=-1,1
-!                    DO M=-1,1
-!                        TEMPJ%X = CoM(J)%X + FLOAT(K) * BOXL2
-!                        TEMPJ%Y = CoM(J)%Y + FLOAT(L) * BOXL2
-!                        TEMPJ%Z = CoM(J)%Z + FLOAT(M) * BOXL2
-!
-!                        RO = getDist(CoM(I), TEMPJ) ! Check
-!                        IF(RO .LT. RMIN) THEN
-!                            RMIN = RO
-!                            KMIN = K
-!                            LMIN = L
-!                            MMIN = M
-!                        ELSE
-!                        END IF
-!                    END DO
-!                END DO
-!            END DO K_LOOP
-!            TEMPJ%X = CoM(J)%X + FLOAT(KMIN) * BOXL2
-!            TEMPJ%Y = CoM(J)%Y + FLOAT(LMIN) * BOXL2
-!            TEMPJ%Z = CoM(J)%Z + FLOAT(MMIN) * BOXL2
-
-
             R = CoM(J) - CoM(I)
-            !R = TEMPJ - CoM(I)
             R%X = R%X - BOXL2 * DINT(R%X / BOXL)
             R%Y = R%Y - BOXL2 * DINT(R%Y / BOXL)
             R%Z = R%Z - BOXL2 * DINT(R%Z / BOXL)

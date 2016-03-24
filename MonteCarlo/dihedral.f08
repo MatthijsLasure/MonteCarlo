@@ -6,7 +6,7 @@ MODULE dihedral
     contains
 
     FUNCTION GETDIHEDRAL(MOL, I1, I2, I3, I4) RESULT(HOEK)
-        TYPE (VECTOR), DIMENSION(:), ALLOCATABLE :: MOL
+        TYPE (VECTOR), DIMENSION(:) :: MOL
         INTEGER :: I1, I2, I3, I4
         DOUBLE PRECISION :: HOEK, TEMP, SIGN
         TYPE (VECTOR) :: V1, V2, V3, V4
@@ -36,7 +36,7 @@ MODULE dihedral
 !====================================================================
 
     FUNCTION SETDIHEDRAL(MOL, I1, I2, I3, I4, HOEK) RESULT(MOLOUT)
-        TYPE (VECTOR), DIMENSION(:), ALLOCATABLE :: MOL
+        TYPE (VECTOR), DIMENSION(:) :: MOL
         INTEGER, DIMENSION(SIZE(MOL)) :: FRAG ! Welk fragment
         TYPE (VECTOR), DIMENSION(SIZE(MOL)) :: MOLOUT
         INTEGER :: I, I1, I2, I3, I4, NATOM

@@ -89,7 +89,7 @@ END SUBROUTINE calcGa
 SUBROUTINE execGa(I, J, en)
 
     CHARACTER*100 :: gauss_file, gauss_log, FIFO
-    CHARACTER*600 :: command1, command2, command0
+    CHARACTER*600 :: command1, command2, command0, command2b
     INTEGER, INTENT(in) :: I, J
     DOUBLE PRECISION :: en
     CHARACTER*25 :: bullshit
@@ -105,6 +105,7 @@ SUBROUTINE execGa(I, J, en)
     write(command0, "(A, A, A, A, A)") "[[ -e ", trim(FIFO), " ]] || mknod ", trim(FIFO), " p" ! Make Pipe als het nog niet bestaat
     !write(command1, "(A6,A,A15, A, A2)") "g09 < ", gauss_file, " | grep Done > ", FIFO, " &" ! Start Gaussian in background mode
     write(command1, "(A6,A,A15, A, A2)") "g09 < ", trim(gauss_file), " > ", trim(gauss_log), "  " ! TEMP DEBUG
+    write(command2b, "(A10, A, A2)") "sleep 2 > ", trim(FIFO), " &" ! Keep pipe alive
     write(command2, "(A10, A, A3,A, A2)") "grep Done ", trim(gauss_log), " > ", trim(FIFO), " &" ! Filter log > to pipe
 
     ! Start gaussian
