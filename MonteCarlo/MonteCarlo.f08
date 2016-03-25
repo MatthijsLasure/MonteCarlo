@@ -37,17 +37,17 @@ PROGRAM MonteCarlo
     DOUBLE PRECISION    :: RV, KANS,DELTA = 0, EXPONENT ! Random variabele en toebehoren voor Metropolis
     DOUBLE PRECISION    :: RATIO ! Percentage succes in NADJ trials
     DOUBLE PRECISION    :: PADJ ! Hoeveel de dposmax aangepast mag worden
-    LOGICAL             :: REJECTED
+    LOGICAL             :: REJECTED, DOROTSOLV
     INTEGER             :: PROC ! Aantal processoren voor gaussian
     DOUBLE PRECISION    :: BOXSCALE = 0.9D0 ! Schalen van de box
     character(len=30)   :: date
 
     ! FILES
     !======
-    CHARACTER*500, DIMENSION(10)    :: files
-    CHARACTER*500                   :: confile, LJ_STEPS_TEMP, GA_STEPS_TEMP, ID_TEMP ! Config
+    CHARACTER*500, DIMENSION(11)    :: files
+    CHARACTER*500                   :: confile, LJ_STEPS_TEMP, GA_STEPS_TEMP, ID_TEMP, SOLNAME ! Config
     CHARACTER*100                   :: dmso_file, box_file, sol_file, param_file, parsol_file ! input files
-    CHARACTER*100                   :: out_file, err_file, dump_file, solvsolv_file, result_file ! output files
+    CHARACTER*100                   :: out_file, err_file, dump_file, solvsolv_file, result_file, solout_file ! output files
 
     ! Energiën van de moleculen, bekomen via extern programma
     DOUBLE PRECISION                :: E_DMSO, E_SOL
@@ -82,7 +82,7 @@ LOGICAL:: DODEBUG = .FALSE.                                          !
     DOUBLE PRECISION                                :: EN ! Energie van een run
     DOUBLE PRECISION, DIMENSION(:,:), ALLOCATABLE   :: SOLVENTSOLVENT, SSOLD
     DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE     :: ENERGY, EOLD
-    DOUBLE PRECISION                                :: TOTENG = 0.D0
+    DOUBLE PRECISION                                :: TOTENG = 0.D0, PRE_ENG, POST_ENG
     DOUBLE PRECISION                                :: TOTENG_OLD = 0.D0
 
     ! Arrays voor parameters van DMSO (Q, epsilon, sigma, mass)
@@ -117,13 +117,11 @@ LOGICAL:: DODEBUG = .FALSE.                                          !
 
     ! Read from config.ini
     CALL rConfig(confile, LJ_STEPS, Ga_STEPS, iseed, LJ_nadj, LJ_nprint, GA_nadj, &
-    GA_nprint, LJ_dump, GA_dump, dposmax, dposmin, dhoekmax, dhoekmin, padj, proc, files, TEMPERATURE)
+    GA_nprint, LJ_dump, GA_dump, dposmax, dposmin, dhoekmax, dhoekmin, padj, proc, &
+    files, TEMPERATURE, DOROTSOLV)
 
     IF (LJ_dump .EQ. 0) LJ_dump = huge(LJ_dump)
     IF (GA_dump .EQ. 0) GA_dump = huge(GA_dump)
-
-    WRITE (*,*) "BOXL DPOSMAX DPOSMIN DHOEKMAX DHOEKMIN"
-    WRITE (*,*) BOXL, dposmax, dposmin, dhoekmax, dhoekmin
 
     ! Override stuff with command line
     IF (COMMAND_ARGUMENT_COUNT() .GT. 1) THEN ! Seriële modus
@@ -146,6 +144,7 @@ LOGICAL:: DODEBUG = .FALSE.                                          !
 
         ! INPUT
         box_file= trim(files(1)) // "." // trim(ID_TEMP) // ".in"
+        sol_file = trim(files(3)) // "." // trim(ID_TEMP) // ".in"
         !write(box_file, 910) files(1), ".", RUN_ID, ".in"
 
         ! OUTPUT
@@ -154,17 +153,20 @@ LOGICAL:: DODEBUG = .FALSE.                                          !
         dump_file = trim(files(7)) // "." // trim(ID_TEMP) // ".txt"
         solvsolv_file = trim(files(8)) // "." // trim(ID_TEMP) // ".txt"
         result_file = trim(files(9)) // "." // trim(ID_TEMP) // ".out"
+        solout_file = trim(files(11)) // "." // trim(ID_TEMP) // ".out"
 
     ELSE ! No command line given
         ! INPUT
         box_file = files(1)
 
         ! OUTPUT
+        sol_file = files(3)
         out_file = files(5)
         err_file = files(6)
         dump_file = files(7)
         solvsolv_file = files(8)
         result_file = files(9)
+        solout_file = files(11)
     END IF
 
     DHOEKMAX = DHOEKMAX * PI
@@ -172,9 +174,21 @@ LOGICAL:: DODEBUG = .FALSE.                                          !
 
     ! Standaard shit, altijd hetzelfde
     dmso_file = files(2)
-    sol_file = files(3)
     param_file = files(4)
     parsol_file = files(10)
+
+    ! Print info
+    WRITE(*,"(A, A)") "BOX    ", trim(box_file)
+    WRITE(*,"(A, A)") "DMSO   ", trim(dmso_file)
+    WRITE(*,"(A, A)") "SOL    ", trim(sol_file)
+    WRITE(*,"(A, A)") "PARAM  ", trim(param_file)
+    WRITE(*,"(A, A)") "OUT    ", trim(out_file)
+    WRITE(*,"(A, A)") "ERR    ", trim(err_file)
+    WRITE(*,"(A, A)") "DUMP   ", trim(dump_file)
+    WRITE(*,"(A, A)") "SOLV   ", trim(solvsolv_file)
+    WRITE(*,"(A, A)") "RES    ", trim(result_file)
+    WRITE(*,"(A, A)") "SOLOUT ", trim(solout_file)
+
 
     ! START ERR/OUT
     WRITE (*,*) "Outputstream started in ", out_file
@@ -210,7 +224,7 @@ LOGICAL:: DODEBUG = .FALSE.                                          !
     ! solute.txt: conformatie opgeloste molecule (sol)
     OPEN (UNIT=10, FILE=sol_file)
     READ (10, *) nSol ! Lees aantal atomen
-    READ (10, *) ! Comment line
+    READ (10, *) SOLNAME ! Comment line
     ALLOCATE(solute(NSOL)) ! Maak de arrays groot genoeg
     ALLOCATE(SOLUTE_OLD(NSOL))
     ALLOCATE(sol_sym(NSOL))
@@ -238,8 +252,6 @@ LOGICAL:: DODEBUG = .FALSE.                                          !
         READ(10,*) CoM(I)%X, CoM(I)%Y, CoM(I)%Z, hoek(I)%X, hoek(I)%Y, hoek(I)%Z
     END DO
     CLOSE(10)
-
-    BOXL2 = BOXL * 2.D0
 
     ! param.txt: parameters voor LJ etc
     OPEN (UNIT=10, FILE=param_file)
@@ -269,13 +281,13 @@ LOGICAL:: DODEBUG = .FALSE.                                          !
 
     WRITE (*,*) "Done loading data!"
 
-!====================================================================
-!====================================================================
+    WRITE (*,*) "BOXL DPOSMAX DPOSMIN DHOEKMAX DHOEKMIN"
+    WRITE (*,*) BOXL, dposmax, dposmin, dhoekmax, dhoekmin
 
-    ! Initiële berekening ladingen solute
-    !====================================
-    WRITE (*,*) "Calculating partial charges on solute..."
-    CALL DO_SOLUTE(SOL_SYM, SOLUTE,SOL_Q)
+    BOXL2 = BOXL * 2.D0
+
+!====================================================================
+!====================================================================
 
     write(*,*) "Working on assosiation tables..."
     CALL ASSOSIATE_DMSO(DMSO_SYM, SYM, Q, EPSILON, SIGMA, TABLE_DMSO)
@@ -294,12 +306,23 @@ LOGICAL:: DODEBUG = .FALSE.                                          !
     ALLOCATE(energy(NCOM))
     ALLOCATE(eold(NCOM))
 
+    ! Roteer de solute
+    SOLUTE_OLD = SOLUTE
+    IF (DOROTSOLV) SOLUTE = SOLUTE_INIT(SOLUTE, DIHOEK)
+
+    ! Initiële berekening ladingen solute
+    !====================================
+    WRITE (*,*) "Calculating partial charges on solute..."
+    CALL DO_SOLUTE(SOL_SYM, SOLUTE,SOL_Q)
+
     DO I=1,NCOM
-        CALL calculateLJ(I) ! Bereken alle energiën!
+        !CALL calculateLJ(I) ! Bereken alle energiën!
+        CALL calculateGA(I, 0)
     END DO
 
     TOTENG = 0.D0
-    TOTENG =  calcEnergy(ENERGY, SOLVENTSOLVENT)
+    TOTENG = calcEnergy(ENERGY, SOLVENTSOLVENT)
+    PRE_ENG = TOTENG
 
 
     ! Dump energiën
@@ -415,6 +438,7 @@ CALL system_clock(start)
     END DO loop_Ga
 
     CLOSE(20)
+    WRITE (*,*) "Exiting Gaussian loop..."
 
     !TEMPDUMP
     Do I=1,NCOM
@@ -449,7 +473,27 @@ CALL system_clock(start)
 !====================================================================
 ! Wegschrijven resultaten
 
-    WRITE (*,*) "Exiting Gaussian loop..."
+IF(DOROTSOLV) THEN
+    POST_ENG = TOTENG
+    IF(.NOT. SOLUTE_METROPOLIS(SOLUTE, PRE_ENG, POST_ENG, TEMPERATURE)) THEN
+        SOLUTE = SOLUTE_OLD
+    END IF
+END IF
+
+! solute.txt: conformatie opgeloste molecule (sol)
+OPEN (UNIT=10, FILE=solout_file)
+WRITE (10, *) nSol ! Lees aantal atomen
+WRITE (10, *) SOLNAME ! Comment line
+DO I=1, NSOL ! Lees de coördinaten uit
+    WRITE (10,*) sol_sym(I), solute(I)%X, solute(I)%Y, solute(I)%Z
+END DO
+WRITE (10,*) E_sol
+WRITE (10,*) NDIHOEK
+DO I=1, NDIHOEK
+    WRITE (10,*) DIHOEK(I,1), DIHOEK(I,2)
+END DO
+CLOSE(10)
+
 
     OPEN(UNIT=20, FILE=dump_file, ACCESS="APPEND")
     CALL DUMP(UNICORN+1)
@@ -607,7 +651,6 @@ SUBROUTINE METROPOLIS(I, NADJ, NPRINT, REJECTED)
             ! Verhuis oude vars terug naar de nieuwe
             COM = COM_OLD
             HOEK = HOEK_OLD
-            !solute = solute_old ! Wordt nog niet gevariëerd
             TOTENG = TOTENG_OLD
             ENERGY = EOLD ! Resetten!!
             SOLVENTSOLVENT = SSOLD
@@ -673,12 +716,12 @@ SUBROUTINE calculateGA(I, LOOPNR)
     MOL1 = RotMatrix(CoM(I), DMSO, hoek(I))
     MayContinue = .TRUE.
 
-    J = 1
-    DO WHILE (J .LE. NCOM .AND. MayContinue)
+    !J = 1
+    preploop: DO J = 1, NCOM
         CLIPPED(j) = .FALSE.
         TOOFAR(j) = .FALSE.
 
-        IF (J .NE. I) THEN
+        IF (J .NE. I) THEN ! Not with itself
             ! MINIMIZE DISTANCE
             RMIN = huge(en)
             K_LOOP: DO K=-1,1
@@ -688,13 +731,12 @@ SUBROUTINE calculateGA(I, LOOPNR)
                         TEMPJ%Y = CoM(J)%Y + FLOAT(L) * BOXL2
                         TEMPJ%Z = CoM(J)%Z + FLOAT(M) * BOXL2
 
-                        R = getDist(CoM(I), TEMPJ) ! Check
+                        R = getDistSq(CoM(I), TEMPJ) ! Check
                         IF(R .LT. RMIN) THEN
                             RMIN = R
                             KMIN = K
                             LMIN = L
                             MMIN = M
-                        ELSE
                         END IF
                     END DO
                 END DO
@@ -705,72 +747,65 @@ SUBROUTINE calculateGA(I, LOOPNR)
             TEMPJ%Z = CoM(J)%Z + FLOAT(MMIN) * BOXL2
 
             !write(500,*) I, J, TEMPJ%X, TEMPJ%Y, TEMPJ%Z, CoM(J)%X, CoM(J)%Y, CoM(J)%Z, KMIN, LMIN, MMIN
+            !write(500,*) I, J, getDist(CoM(I), CoM(J)), sqrt(RMIN), KMIN, LMIN, MMIN
 
-            IF (RMIN .GT. 7.D0) THEN
-                EN = 0.D0
+            IF (RMIN .GT. 49.D0) THEN
                 TooFar(j) = .TRUE.
             ELSE
                 MOL2 = RotMatrix(TEMPJ, DMSO, hoek(J))
                 CALL calcGa(I, J, MOL1, MOL2, DMSO_SYM, DMSO_SYM, CLIPPED(j), proc)
-                IF(CLIPPED(j)) MayContinue = .FALSE.
+                !IF(CLIPPED(j)) MayContinue = .FALSE.
             END IF
 
-        END IF
-
-        J = J + 1
-    END DO
+        END IF  ! Not with itself
+    END DO preploop
 
 
     ! EXECUTE
-
     ! Begin of parallel loop
     !================================================================
 
-    IF (MayContinue) THEN
+    !$OMP PARALLEL
+    !$OMP DO SCHEDULE(DYNAMIC) PRIVATE(En)
+    EXEC: DO J=1,NCOM
+        IF (J .NE. I .AND. .NOT. TooFar(J) ) THEN
+            En = 0.D0
+            CALL execGa(I, J, EN)
+        END IF
+    END DO EXEC
+    !$OMP END DO
+    !$OMP END PARALLEL
 
-        !$OMP PARALLEL
-        !$OMP DO SCHEDULE(DYNAMIC) PRIVATE(En)
-        EXEC: DO J=1,NCOM
-            IF (J .NE. I) THEN
+    ! END OF PARALLEL LOOP
+    !================================================================
+
+        ! Read in
+        grep: DO J=1,NCOM
+            IF (J .NE. I .AND. .NOT. TooFar(J)) THEN
                 En = 0.D0
-                IF (CLipped(J)) THEN ! it may not run
-                    En = HUGE(R) ! Set energy to infinity
-                    WRITE(500, *) "Clipped, infty", I, J, LOOPNR
-                ELSEIF (TooFar(j)) THEN ! too far apart
-                    En = 0.D0 ! Set energy to 0
-                ELSE
-                    CALL execGa(I, J, EN)
-                    EN = EN - E_DMSO - E_DMSO
-                    EN = EN * HARTREE2KJMOL
-                END IF
-
-                SOLVENTSOLVENT(I,J) = EN
-                SOLVENTSOLVENT(J,I) = EN
+                CALL GREPIT(I, J, EN)
+            ELSE
+                EN = 0.D0
             END IF
-        END DO EXEC
-        !$OMP END DO
-        !$OMP END PARALLEL
+
+            EN = EN - E_DMSO - E_DMSO
+            EN = EN * HARTREE2KJMOL
+
+            SOLVENTSOLVENT(I,J) = EN
+            SOLVENTSOLVENT(J,I) = EN
+
+        END DO GREP
 
         ! Solvent-solute
         CALL calcGa(I, 0, MOL1, SOLUTE, DMSO_SYM, SOL_SYM, Clipped(NCOM+1), proc)
-        IF (Clipped(NCOM+1)) THEN
-            EN = huge(en)
-            WRITE (500,*) "Clipped with solute, infty", I, 0, LOOPNR
-        ELSE
-            CALL execGa(I, 0, EN)
-            EN = EN - E_SOL - E_DMSO
-            EN = EN * HARTREE2KJMOL
-        END IF
-
+        CALL execGa(I, 0, EN)
+        CALL grepit(I, 0, EN)
+        EN = EN - E_SOL - E_DMSO
+        EN = EN * HARTREE2KJMOL
         ENERGY(I) = EN
-    ELSE
-        ENERGY(I) = HUGE(EN)
-        WRITE (500,*) "MayContinue is false!", LOOPNR
-        SOLVENTSOLVENT(I,1) = HUGE(EN)
-        SOLVENTSOLVENT(1,I) = HUGE(EN)
-    END IF
 
-END SUBROUTINE calculateGA
+
+END SUBROUTINE CALCULATEGA
 
 !====================================================================
 !====================================================================

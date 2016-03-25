@@ -19,7 +19,7 @@ module solmod
         INTEGER, DIMENSION(8) :: NEIGHBOURS
 
         NATOM = SIZE(SOL)
-        NDIH = SIZE(DIHEDRAL)
+        NDIH = SIZE(DIHEDRAL) / 2
 
         I = INT(RAND() * NDIH) + 1 ! Willeukeurige binding selecteren
         A2 = DIHEDRAL(I,1)
@@ -37,6 +37,35 @@ module solmod
         WRITE (*,"(A, F5.2, A, F5.2, A, F5.2)") "Dihedral change from ", HOEK_PRE, " with ", HOEK, " to ", HOEK_POST
 
     END FUNCTION SOLUTE_INIT
+
+    FUNCTION SOLUTE_METROPOLIS(SOL, PRE_EN, POST_EN, TEMP) RESULT(isOK)
+        TYPE (VECTOR), DIMENSION(:), INTENT(IN)  :: SOL
+        DOUBLE PRECISION :: PRE_EN, POST_EN, TEMP, EXPONENT, RV, KANS, DELTA
+        LOGICAL :: isOK
+
+        DELTA = POST_EN - PRE_EN
+        EXPONENT = -1.D0 * DELTA  * 1000.D0 / (8.314D0 * TEMP)
+        IF (EXPONENT .LT. -75.D0) THEN ! e^-75 < 3*10^-33: 0% kans anyway
+        !write(500,*) "Large Exponent!", I
+            KANS = 0.D0
+            RV = 1.D0 ! Skip rand() voor cpu tijd besparing
+        ELSE
+            KANS = E ** EXPONENT
+            RV = RAND()
+            IF (KANS .GT. 1.D0) KANS = 1.D0
+        END IF
+
+        ! Bepaal if succesvol -> volgende config
+        IF(RV .LE. KANS) THEN ! Succes!
+            WRITE (*,*) "New solute accepted!", PRE_EN, POST_EN
+            isOK = .TRUE.
+        ELSE ! Fail!
+            WRITE (*,*) "New solute rejected!", PRE_EN, POST_EN
+            isOK = .FALSE.
+        END IF
+
+    END FUNCTION SOLUTE_METROPOLIS
+
 
     FUNCTION FIND(A1, A2, SOL, NATOM) RESULT(A)
     TYPE (VECTOR), DIMENSION(:), INTENT(IN)  :: SOL

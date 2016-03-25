@@ -44,17 +44,17 @@ SUBROUTINE calcGa(i, j, mol1, mol2, sym1, sym2, hasClipped, proc)
     N2 = size(mol2)
 
     ! Calculate distances
-    kloop: do K = 1,N1
-        do L = 1,N2
-            if(getDistSq(mol1(K),mol2(L)) .LT. 1.0D0) THEN
-                hasClipped = .true.
-                write(500,*) "Molecules have clipped, discarding.", I, J, getDist(mol1(K),mol2(L))
-            END IF
-        end do
-    end Do kloop
+!    kloop: do K = 1,N1
+!        do L = 1,N2
+!            !if(getDistSq(mol1(K),mol2(L)) .LT. 1.D0) THEN
+!                !hasClipped = .true.
+!                !write(500,*) "Molecules have clipped, discarding.", I, J, getDist(mol1(K),mol2(L))
+!            !END IF
+!        end do
+!    end Do kloop
 
 
-    if (.NOT. hasClipped) THEN
+    !if (.NOT. hasClipped) THEN
         ! OPEN FILE
         OPEN(unit=15, file=trim(gauss_file))
 
@@ -79,9 +79,41 @@ SUBROUTINE calcGa(i, j, mol1, mol2, sym1, sym2, hasClipped, proc)
 
         write (15,*) '                                        '
         CLOSE(15)
-    END IF
+    !END IF
 
 END SUBROUTINE calcGa
+
+!====================================================================
+!====================================================================
+
+SUBROUTINE GREPIT(I, J, en)
+
+    CHARACTER*100 :: gauss_log, FIFO
+    CHARACTER*600 ::  command2, command2b
+    INTEGER, INTENT(in) :: I, J
+    DOUBLE PRECISION :: en
+    CHARACTER*100 :: bullshit
+
+    906 FORMAT(A, I3.3'-',I3.3,A)
+
+    write(gauss_log, 906) "gauss/output-", I, J, ".log"
+    write(FIFO, 906) "gauss/FIFO-", I, J, ""
+
+    write(command2b, "(A10, A, A2)") "sleep 1 > ", trim(FIFO), " &" ! Keep pipe alive
+    write(command2, "(A10, A, A3,A, A2)") "grep Done ", trim(gauss_log), " > ", trim(FIFO), "  " ! Filter log > to pipe
+
+    call execute_command_line(trim(command2b))
+
+    open (16, file=trim(FIFO), STATUS='OLD', ACTION='READ') ! Open de pipeline
+
+    call execute_command_line(trim(command2)) ! Execute grep
+    read (16, "(A21,F20.10)", IOSTAT=IOSTATUS) bullshit, en ! lees resultaat in(A22,F14.12)
+
+    close(16)
+
+    if(IOSTATUS .NE. 0) write(500,*) "Woeps FIFO", IOSTATUS, FIFO
+
+END SUBROUTINE GREPIT
 
 !====================================================================
 !====================================================================
@@ -89,10 +121,10 @@ END SUBROUTINE calcGa
 SUBROUTINE execGa(I, J, en)
 
     CHARACTER*100 :: gauss_file, gauss_log, FIFO
-    CHARACTER*600 :: command1, command2, command0, command2b
+    CHARACTER*600 :: command1, command2, command0, command2b, command3
     INTEGER, INTENT(in) :: I, J
     DOUBLE PRECISION :: en
-    CHARACTER*25 :: bullshit
+    CHARACTER*100 :: bullshit
 
     906 FORMAT(A, I3.3'-',I3.3,A)
 
@@ -106,7 +138,8 @@ SUBROUTINE execGa(I, J, en)
     !write(command1, "(A6,A,A15, A, A2)") "g09 < ", gauss_file, " | grep Done > ", FIFO, " &" ! Start Gaussian in background mode
     write(command1, "(A6,A,A15, A, A2)") "g09 < ", trim(gauss_file), " > ", trim(gauss_log), "  " ! TEMP DEBUG
     write(command2b, "(A10, A, A2)") "sleep 2 > ", trim(FIFO), " &" ! Keep pipe alive
-    write(command2, "(A10, A, A3,A, A2)") "grep Done ", trim(gauss_log), " > ", trim(FIFO), " &" ! Filter log > to pipe
+    write(command2, "(A10, A, A3,A, A2)") "grep Done ", trim(gauss_log), " > ", trim(FIFO), "  " ! Filter log > to pipe
+    write(command3, "(A3,A)") "rm ", trim(FIFO)
 
     ! Start gaussian
     call system (trim(command0)) ! Make pipe
@@ -121,13 +154,6 @@ SUBROUTINE execGa(I, J, en)
             return
         end if
     end if
-
-    call system (trim(command2)) ! Execute grep
-    open (16, file=trim(FIFO), IOSTAT=IOSTATUS, ERR=100) ! Open de pipeline
-    100 if(IOSTATUS .NE. 0) write(500,*) "Woeps", IOSTATUS, FIFO
-    read (16, "(A22,E19.12E2)", IOSTAT=IOSTATUS) bullshit, en ! lees resultaat in
-    close(16)
-    if(IOSTATUS .NE. 0) write(500,*) "Woeps FIFO", IOSTATUS, FIFO
 
 END SUBROUTINE execGa
 
@@ -172,10 +198,10 @@ SUBROUTINE DO_SOLUTE(SOL_SYM, SOL, SOL_Q)
     COMMAND3 = "grep -B"//trim(NCHAR2)//" 'Electrostatic Properties (Atomic Units)' "//&
     "solute_charge.txt | head -"//trim(NCHAR)//" > FIFO_solute"
 
-    CALL SYSTEM(COMMAND1)
+    CALL execute_command_line(COMMAND1)
     OPEN(17, file="FIFO_solute")
-    !CALL SYSTEM(COMMAND2)
-    CALL SYSTEM(COMMAND3)
+    !CALL execute_command_line(COMMAND2)
+    CALL execute_command_line(COMMAND3)
     DO I=1,N
         READ (17, "(A12, F9.7)") NCHAR, SOL_Q(I)
     END DO

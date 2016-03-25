@@ -4,7 +4,8 @@ module readConfig
     contains
 
 subroutine rConfig(confile, LJ_steps, Ga_steps, iseed, LJ_nadj, LJ_nprint, GA_nadj,&
- GA_nprint, LJ_dump, GA_dump, dposmax, dposmin, dhoekmax, dhoekmin, padj, proc, files, temp)
+ GA_nprint, LJ_dump, GA_dump, dposmax, dposmin, dhoekmax, dhoekmin, padj, proc, &
+ files, temp, dorotsolv)
 
     integer, parameter          :: strlen = 100
     character(len=strlen)       :: fst, snd
@@ -13,12 +14,14 @@ subroutine rConfig(confile, LJ_steps, Ga_steps, iseed, LJ_nadj, LJ_nprint, GA_na
     character*500, dimension(:) :: files ! Alle input/output files
     integer                     :: stat,  j, j0, z
     integer, parameter          :: state_begin=1, state_in_fst=2, state_in_sep=3
+    logical                     :: dorotsolv
 
     ! Shit to read
     double precision :: dposmax, dposmin, dhoekmax, dhoekmin, padj, temp
     integer :: LJ_steps, Ga_steps, LJ_nadj, LJ_nprint, GA_nadj, GA_nprint
     integer :: iseed, proc, LJ_dump, GA_dump
 
+    dorotsolv = .FALSE.
 
     open(unit=10, file=confile)
 
@@ -97,6 +100,8 @@ subroutine rConfig(confile, LJ_steps, Ga_steps, iseed, LJ_nadj, LJ_nprint, GA_na
             ! Aantal processoren, te gebruiken door Gaussian
             case ("proc")
                 read(snd,"(I10)") proc
+            case ("rotsolv")
+                dorotsolv = .TRUE.
 
             ! Files
             case ("box")
@@ -119,7 +124,8 @@ subroutine rConfig(confile, LJ_steps, Ga_steps, iseed, LJ_nadj, LJ_nprint, GA_na
                 read(snd, "(A)") files(9)
             case ("parsol")
                 read(snd, "(A)") files(10)
-
+            case ("solout")
+                read(snd, "(A)") files(11)
             ! You done f*cked up son
             case DEFAULT
                 print *, "unknown option '"//trim(fst)//"'"; stop
