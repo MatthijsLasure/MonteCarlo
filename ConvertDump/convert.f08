@@ -12,8 +12,9 @@ program convert
     CHARACTER*4, DIMENSION(:), ALLOCATABLE      :: DMSO_SYM, SOL_SYM
     CHARACTER*4      :: symbol
     INTEGER          :: nDMSO, nSOL, NCOM, N, TIMESTEP
-    INTEGER          :: what, I, J, IOSTATUS, A, B, NHYDROGEN
+    INTEGER          :: what, I, J, K, IOSTATUS, A, B, NHYDROGEN
     LOGICAL          :: doH = .FALSE.
+    DOUBLE PRECISION :: BOXL
 
     WRITE (*,*) "***************"
     WRITE (*,*) "* ConvertDump *"
@@ -80,15 +81,26 @@ program convert
 
     WRITE (*,*) "Processing dump. This may take a while..."
 
+    READ (10, *) BOXL
+
 IF (what .LE. 1) THEN ! Just dump XYZ
 
     loop: DO
         READ (10, *, IOSTAT=IOSTATUS) NCOM
         IF (IOSTATUS < 0) exit
-        READ (10, "(A10,I20.20)") TEMP, TIMESTEP
-        N = NCOM * (NDMSO - NHYDROGEN) + NSOL
+        READ (10, "(A10,I20.20, F20.20)") TEMP, TIMESTEP
+        N = NCOM * (NDMSO - NHYDROGEN) + NSOL + 8
         WRITE (11,*) N
         WRITE (11, *) "Timestep:", TIMESTEP
+
+        DO I=0,1
+            DO J=0,1
+                DO K=0,1
+                    WRITE (11,*) "Ne", (-1.D0)**I * BOXL, (-1.D0)**J * BOXL, (-1.D0)**K * BOXL
+                END DO
+            END DO
+        END DO
+
         SOL_loop: DO I=1,NSOL
             WRITE (11,*) sol_sym(I), solute(I)%X, solute(I)%Y, solute(I)%Z
         END DO SOL_loop
@@ -118,13 +130,16 @@ READ(B_char, *) B
 
 vecA = SOLUTE(A)
     DO
-        READ (10, *, IOSTAT=IOSTATUS) N
+        READ (10, *, IOSTAT=IOSTATUS) NCOM
         IF (IOSTATUS < 0) exit
         READ (10, "(A10,I20.20)") TEMP, TIMESTEP
         RMIN = HUGE(R)
         IMIN = HUGE(I)
         DO I=1,NCOM
-            READ (10, *) CoM%X, CoM%Y, CoM%Z, hoek%X, hoek%Y, hoek%Z
+            !READ (10, "(6F24.16)") CoM%X, CoM%Y, CoM%Z, hoek%X, hoek%Y, hoek%Z
+            READ (10,"(A)") TEMP
+            !WRITE (*,*) trim(TEMP)
+            READ (TEMP, *) CoM%X, CoM%Y, CoM%Z, hoek%X, hoek%Y, hoek%Z
             MOL1 = RotMatrix(CoM, DMSO, hoek)
             vecB = MOL1(B)
             R = getDist(vecA, vecB)
