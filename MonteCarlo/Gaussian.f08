@@ -200,7 +200,7 @@ SUBROUTINE DO_SOLUTE(SOL_SYM, SOL, SOL_Q)
 
     CALL execute_command_line(COMMAND1)
     OPEN(17, file="FIFO_solute")
-    !CALL execute_command_line(COMMAND2)
+    CALL execute_command_line(COMMAND2)
     CALL execute_command_line(COMMAND3)
     DO I=1,N
         READ (17, "(A12, F9.7)") NCHAR, SOL_Q(I)

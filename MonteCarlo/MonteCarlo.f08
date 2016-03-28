@@ -200,7 +200,9 @@ LOGICAL:: DODEBUG = .FALSE.                                          !
 
     CALL system_clock (START)
     WRITE(500,*) START
+    IF (ISEED .EQ. 0) ISEED = START
     CALL SRAND(REAL(iseed)) ! Prime randgen
+    WRITE (*,"(A5,I20)") "SEED ", ISEED
 
     ! Laden van configuraties
 !====================================================================
@@ -224,7 +226,7 @@ LOGICAL:: DODEBUG = .FALSE.                                          !
     ! solute.txt: conformatie opgeloste molecule (sol)
     OPEN (UNIT=10, FILE=sol_file)
     READ (10, *) nSol ! Lees aantal atomen
-    READ (10, *) SOLNAME ! Comment line
+    READ (10, "(A)") SOLNAME ! Comment line
     ALLOCATE(solute(NSOL)) ! Maak de arrays groot genoeg
     ALLOCATE(SOLUTE_OLD(NSOL))
     ALLOCATE(sol_sym(NSOL))
@@ -316,8 +318,8 @@ LOGICAL:: DODEBUG = .FALSE.                                          !
     CALL DO_SOLUTE(SOL_SYM, SOLUTE,SOL_Q)
 
     DO I=1,NCOM
-        !CALL calculateLJ(I) ! Bereken alle energiën!
-        CALL calculateGA(I, 0)
+        CALL calculateLJ(I) ! Bereken alle energiën!
+        !CALL calculateGA(I, 0)
     END DO
 
     TOTENG = 0.D0
@@ -350,7 +352,7 @@ WRITE (501,901) "i", "TotEng", "TotEng_old", "kans", "rv", "rSolv", "pSuc", "rat
 WRITE (501,902) 0, TOTENG, TOTENG, 0.D0, 0.D0, 0, REAL(0) / real(1), 0.D0, dposmax
 
 CALL system_clock(start)
-!write(500, *) start
+write(500, *) start
 
 !====================================================================
 !====================================================================
@@ -412,6 +414,12 @@ WRITE (*,*) "Fase 2 started!"
 
 CALL system_clock(start)
 !WRITE(500,*) START
+
+IF (GA_STEPS .GT. 0) THEN
+    DO I=1,NCOM
+        CALL calculateGA(I, 0)
+    END DO
+END IF
 
     WRITE (*,*) "Entering Gaussian loop..."
 
@@ -483,7 +491,7 @@ END IF
 ! solute.txt: conformatie opgeloste molecule (sol)
 OPEN (UNIT=10, FILE=solout_file)
 WRITE (10, *) nSol ! Lees aantal atomen
-WRITE (10, *) SOLNAME ! Comment line
+WRITE (10, *) trim(SOLNAME) ! Comment line
 DO I=1, NSOL ! Lees de coördinaten uit
     WRITE (10,*) sol_sym(I), solute(I)%X, solute(I)%Y, solute(I)%Z
 END DO

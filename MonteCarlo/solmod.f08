@@ -29,12 +29,12 @@ module solmod
         A4 = FIND(A3, A2, SOL, NATOM)
 
         ! DRAAIEN
-        HOEK = RAND() * 360 - 180
+        HOEK = RAND() * 90 - 45
         HOEK_PRE = GETDIHEDRAL(SOL, A1, A2, A3, A4) * 180 / PI
         SOLROT = SETDIHEDRAL(SOL, A1, A2, A3, A4, HOEK * PI / 180)
         HOEK_POST = GETDIHEDRAL(SOLROT, A1, A2, A3, A4) * 180 / PI
 
-        WRITE (*,"(A, F5.2, A, F5.2, A, F5.2)") "Dihedral change from ", HOEK_PRE, " with ", HOEK, " to ", HOEK_POST
+        WRITE (*,"(A, F6.2, A, F6.2, A, F6.2)") "Dihedral change from ", HOEK_PRE, " with ", HOEK, " to ", HOEK_POST
 
     END FUNCTION SOLUTE_INIT
 
