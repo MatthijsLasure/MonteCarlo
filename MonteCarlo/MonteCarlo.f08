@@ -18,7 +18,7 @@ PROGRAM MonteCarlo
     USE randgen
     USE readconfig
     USE solmod
-    !use iso_fortran_env
+    use iso_fortran_env
 
     IMPLICIT NONE
 
@@ -200,8 +200,14 @@ LOGICAL:: DODEBUG = .FALSE.                                          !
 
     CALL system_clock (START)
     WRITE(500,*) START
-    IF (ISEED .EQ. 0) ISEED = START
-    CALL SRAND(REAL(iseed)) ! Prime randgen
+
+    ! Get seed for randgen.
+    IF (ISEED .EQ. 0)
+        OPEN (10, FILE="/dev/urandom", ACCESS="STREAM", FORM="UNFORMATTED")
+        READ(10,*) ISEED
+        CLOSE(10)
+    END IF
+    CALL RANDOM
     WRITE (*,"(A5,I20)") "SEED ", ISEED
 
     ! Laden van configuraties

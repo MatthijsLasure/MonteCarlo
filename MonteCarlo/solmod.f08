@@ -34,6 +34,7 @@ module solmod
         SOLROT = SETDIHEDRAL(SOL, A1, A2, A3, A4, HOEK * PI / 180)
         HOEK_POST = GETDIHEDRAL(SOLROT, A1, A2, A3, A4) * 180 / PI
 
+        WRITE (*,"(A,I2.2,A3,I2.2)") "Rotation around axis ", A2, " - ", A3
         WRITE (*,"(A, F6.2, A, F6.2, A, F6.2)") "Dihedral change from ", HOEK_PRE, " with ", HOEK, " to ", HOEK_POST
 
     END FUNCTION SOLUTE_INIT

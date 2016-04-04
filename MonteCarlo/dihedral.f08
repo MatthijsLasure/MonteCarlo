@@ -81,10 +81,10 @@ MODULE dihedral
                 dist2 = length_sq(R2)
 
                 ! Atoom hoort bij fragment 1
-                IF ( (dist1 .LT. BONDL2) .AND. (dist2 .GE. BONDL2) ) THEN
+                IF ( (dist1 .LT. BONDL2) .AND. (dist2 .GE. 3.24D0) ) THEN
                     FRAG(I) = 1
                 ! Atoom hoort bij fragment 2
-                ELSEIF ( (dist1 .GE. BONDL2) .AND. (dist2 .LT. BONDL2) ) THEN
+                ELSEIF ( (dist1 .GE. 3.24D0) .AND. (dist2 .LT. BONDL2) ) THEN
                     FRAG(I) = 2
                 END IF
             END IF
@@ -97,14 +97,18 @@ MODULE dihedral
             atomLoop: DO I = 1, NATOM
                 IF (FRAG(I) .EQ. 99) THEN
                     DO J = 1, NATOM
+                        DIST1 = HUGE(DIST1)
                         ! Geen vergelijking met zichzelf, en de andere is al toegewezen
                         IF (J .NE. I .AND. ( FRAG(J) .EQ. 1 .OR. FRAG(J) .EQ. 2 ) ) THEN
                             R1 = MOL(I) - MOL(J)
                             DIST1 = length_sq(R1)
 
                             ! I behoort tot hetzelfde fragment als J: opschrijven dus
-                            IF (DIST1 .LT. BONDL2) FRAG(I) = FRAG(J)
+                            IF (DIST1 .LT. BONDL2) THEN
+                                FRAG(I) = FRAG(J)
+                            END IF
                         END IF
+                        WRITE (500,*) I, J, FRAG(I), FRAG(J), DIST1
                     END DO
                 END IF
             END DO atomLoop
@@ -115,6 +119,9 @@ MODULE dihedral
                 IF (FRAG(I) .EQ. 99) mayGo = .TRUE.
             END DO
         END DO findAtoms
+        DO I = 1,NATOM
+            WRITE (*,*) I, FRAG(I)
+        END DO
 
         write (*,*) "rotlus"
         ! Alleen fragment 2 wordt geroteerd
