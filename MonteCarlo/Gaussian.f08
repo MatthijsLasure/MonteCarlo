@@ -15,20 +15,20 @@ MODULE gaussian
 
 !====================================================================
 
-SUBROUTINE calcGa(i, j, mol1, mol2, sym1, sym2, hasClipped, proc)
+SUBROUTINE calcGa(I, J, MOL1, MOL2, SYM1, SYM2, HASCLIPPED, PROC)
     ! INPUT
     TYPE (vector), DIMENSION(:), INTENT(IN) :: MOL1, MOL2 ! absolute coords!
     CHARACTER*4, DIMENSION(:), INTENT(IN) :: SYM1, SYM2 ! Atoomtypes
-    INTEGER, INTENT(in) :: I, J
-    INTEGER, INTENT(in) :: proc ! aantal processoren voor gaussian
+    INTEGER, INTENT(IN) :: I, J
+    INTEGER, INTENT(IN) :: PROC ! aantal processoren voor gaussian
 
     ! OUTPUT
-    LOGICAL, intent(out) :: hasClipped ! Says if this set may run
+    LOGICAL, INTENT(OUT) :: HASCLIPPED ! Says if this set may run
 
     ! INTERNAL VARS
     INTEGER :: K, L ! loop de loop
-    CHARACTER*100 :: gauss_file
-    CHARACTER*16 :: str_i, str_j
+    CHARACTER*100 :: GAUSS_FILE
+    CHARACTER*16 :: STR_I, STR_J
     INTEGER :: N1, N2
     INTEGER :: IOSTATUS ! Check for EOF
 
@@ -36,12 +36,12 @@ SUBROUTINE calcGa(i, j, mol1, mol2, sym1, sym2, hasClipped, proc)
     905 FORMAT(A, 3F16.8)
     906 FORMAT(A, I3.3'-',I3.3,A)
 
-    write(gauss_file, 906) "gauss/input-", I, J, ".com"
+    WRITE(GAUSS_FILE, 906) "gauss/input-", I, J, ".com"
 
-    hasClipped = .FALSE.
+    HASCLIPPED = .FALSE.
 
-    N1 = size(mol1)
-    N2 = size(mol2)
+    N1 = size(MOL1)
+    N2 = size(MOL2)
 
     ! Calculate distances
 !    kloop: do K = 1,N1
@@ -56,28 +56,28 @@ SUBROUTINE calcGa(i, j, mol1, mol2, sym1, sym2, hasClipped, proc)
 
     !if (.NOT. hasClipped) THEN
         ! OPEN FILE
-        OPEN(unit=15, file=trim(gauss_file))
+        OPEN(UNIT=15, FILE=TRIM(GAUSS_FILE))
 
-        write (15,"(A, I2.2, A)") '%nproc=', proc, '                                '
-        write (15,*) '%mem=1Gb                                '
+        WRITE (15,"(A, I2.2, A)") '%nproc=', PROC, '                                '
+        WRITE (15,*) '%mem=1Gb                                '
         !write (15,*) '%chk=inputess.chk                       '
-        write (15,*) '#  PM6                                  '
-        write (15,*) '                                        '
-        write (15,*) 'interacties                             '
-        write (15,*) '                                        '
-        write (15,*) '0 1                                     '
+        WRITE (15,*) '#  PM6                                  '
+        WRITE (15,*) '                                        '
+        WRITE (15,*) 'interacties                             '
+        WRITE (15,*) '                                        '
+        WRITE (15,*) '0 1                                     '
 
         ! Print Mol1
-        do K=1,N1
-            write (15,905) sym1(K), mol1(K)%X, mol1(K)%Y, mol1(K)%Z
-        end do
+        DO K=1,N1
+            WRITE (15,905) sym1(K), mol1(K)%X, mol1(K)%Y, mol1(K)%Z
+        END DO
 
         ! Print mol2
-        do K=1,N2
-            write (15,905) sym2(K), mol2(K)%X, mol2(K)%Y, mol2(K)%Z
-        end do
+        DO K=1,N2
+            WRITE (15,905) sym2(K), mol2(K)%X, mol2(K)%Y, mol2(K)%Z
+        END DO
 
-        write (15,*) '                                        '
+        WRITE (15,*) '                                        '
         CLOSE(15)
     !END IF
 
@@ -86,74 +86,74 @@ END SUBROUTINE calcGa
 !====================================================================
 !====================================================================
 
-SUBROUTINE GREPIT(I, J, en)
+SUBROUTINE GREPIT(I, J, EN)
 
-    CHARACTER*100 :: gauss_log, FIFO
-    CHARACTER*600 ::  command2, command2b
-    INTEGER, INTENT(in) :: I, J
-    DOUBLE PRECISION :: en
-    CHARACTER*100 :: bullshit
+    CHARACTER*100 :: GAUSS_LOG, FIFO
+    CHARACTER*600 ::  COMMAND2, COMMAND2B
+    INTEGER, INTENT(IN) :: I, J
+    DOUBLE PRECISION :: EN
+    CHARACTER*100 :: BULLSHIT
 
     906 FORMAT(A, I3.3'-',I3.3,A)
 
-    write(gauss_log, 906) "gauss/output-", I, J, ".log"
-    write(FIFO, 906) "gauss/FIFO-", I, J, ""
+    WRITE(GAUSS_LOG, 906) "gauss/output-", I, J, ".log"
+    WRITE(FIFO, 906) "gauss/FIFO-", I, J, ""
 
-    write(command2b, "(A10, A, A2)") "sleep 1 > ", trim(FIFO), " &" ! Keep pipe alive
-    write(command2, "(A10, A, A3,A, A2)") "grep Done ", trim(gauss_log), " > ", trim(FIFO), "  " ! Filter log > to pipe
+    WRITE(COMMAND2B, "(A10, A, A2)") "sleep 1 > ", trim(FIFO), " &" ! Keep pipe alive
+    WRITE(COMMAND2, "(A10, A, A3,A, A2)") "grep Done ", trim(GAUSS_LOG), " > ", trim(FIFO), "  " ! Filter log > to pipe
 
-    call execute_command_line(trim(command2b))
+    CALL execute_command_line(trim(COMMAND2B))
 
-    open (16, file=trim(FIFO), STATUS='OLD', ACTION='READ') ! Open de pipeline
+    OPEN (16, FILE=TRIM(FIFO), STATUS='OLD', ACTION='READ') ! Open de pipeline
 
-    call execute_command_line(trim(command2)) ! Execute grep
-    read (16, "(A21,F20.10)", IOSTAT=IOSTATUS) bullshit, en ! lees resultaat in(A22,F14.12)
+    CALL execute_command_line(trim(COMMAND2)) ! Execute grep
+    READ (16, "(A21,F20.10)", IOSTAT=IOSTATUS) bullshit, en ! lees resultaat in(A22,F14.12)
 
-    close(16)
+    CLOSE(16)
 
-    if(IOSTATUS .NE. 0) write(500,*) "Woeps FIFO", IOSTATUS, FIFO
+    IF(IOSTATUS .NE. 0) WRITE(500,*) "Woeps FIFO", IOSTATUS, FIFO
 
 END SUBROUTINE GREPIT
 
 !====================================================================
 !====================================================================
 
-SUBROUTINE execGa(I, J, en)
+SUBROUTINE execGa(I, J, EN)
 
-    CHARACTER*100 :: gauss_file, gauss_log, FIFO
-    CHARACTER*600 :: command1, command2, command0, command2b, command3
-    INTEGER, INTENT(in) :: I, J
-    DOUBLE PRECISION :: en
-    CHARACTER*100 :: bullshit
+    CHARACTER*100 :: GAUSS_FILE, GAUSS_LOG, FIFO
+    CHARACTER*600 :: COMMAND1, COMMAND2, COMMAND0, COMMAND2B, COMMAND3
+    INTEGER, INTENT(IN) :: I, J
+    DOUBLE PRECISION :: EN
+    CHARACTER*100 :: BULLSHIT
 
     906 FORMAT(A, I3.3'-',I3.3,A)
 
     ! Generate filenames
-    write(gauss_file, 906) "gauss/input-", I, J, ".com"
-    write(gauss_log, 906) "gauss/output-", I, J, ".log"
-    write(FIFO, 906) "gauss/FIFO-", I, J, ""
+    WRITE(GAUSS_FILE, 906) "gauss/input-", I, J, ".com"
+    WRITE(GAUSS_LOG, 906) "gauss/output-", I, J, ".log"
+    WRITE(FIFO, 906) "gauss/FIFO-", I, J, ""
 
     ! Generate commands
-    write(command0, "(A, A, A, A, A)") "[[ -e ", trim(FIFO), " ]] || mknod ", trim(FIFO), " p" ! Make Pipe als het nog niet bestaat
+    WRITE(COMMAND0, "(A, A, A, A, A)") "[[ -e ", trim(FIFO), " ]] || mknod ", trim(FIFO), " p" ! Make Pipe als het nog niet bestaat
     !write(command1, "(A6,A,A15, A, A2)") "g09 < ", gauss_file, " | grep Done > ", FIFO, " &" ! Start Gaussian in background mode
-    write(command1, "(A6,A,A15, A, A2)") "g09 < ", trim(gauss_file), " > ", trim(gauss_log), "  " ! TEMP DEBUG
-    write(command2b, "(A10, A, A2)") "sleep 2 > ", trim(FIFO), " &" ! Keep pipe alive
-    write(command2, "(A10, A, A3,A, A2)") "grep Done ", trim(gauss_log), " > ", trim(FIFO), "  " ! Filter log > to pipe
-    write(command3, "(A3,A)") "rm ", trim(FIFO)
+    WRITE(COMMAND1, "(A6,A,A15, A, A2)") "g09 < ", trim(GAUSS_FILE), " > ", trim(GAUSS_LOG), "  " ! TEMP DEBUG
+    WRITE(COMMAND2B, "(A10, A, A2)") "sleep 2 > ", trim(FIFO), " &" ! Keep pipe alive
+    WRITE(COMMAND2, "(A10, A, A3,A, A2)") "grep Done ", trim(GAUSS_LOG), " > ", trim(FIFO), "  " ! Filter log > to pipe
+    WRITE(COMMAND3, "(A3,A)") "rm ", trim(FIFO)
 
     ! Start gaussian
-    call system (trim(command0)) ! Make pipe
-    call system (trim(command1), IOSTATUS) ! Execute gaussian
+    CALL system (trim(COMMAND0)) ! Make pipe
+    CALL system (trim(COMMAND1), IOSTATUS) ! Execute gaussian
 
-    if (IOSTATUS .NE. 0) then ! Check for failure
-        write (500,*) "Gaussian error, retrying", IOSTATUS, "@", I, J
-        call system (command1, IOSTATUS) ! Execute gaussian
-        if(IOSTATUS .NE. 0) THEN
-            write (500,*) "Gaussian error, aborting", IOSTATUS, "@", I, J
-            en = huge(en)
-            return
-        end if
-    end if
+    IF (IOSTATUS .NE. 0) THEN ! Check for failure
+        WRITE (500,*) "Gaussian error, retrying", IOSTATUS, "@", I, J
+        CALL system (COMMAND1, IOSTATUS) ! Execute gaussian
+        IF(IOSTATUS .NE. 0) THEN
+            WRITE (500,*) "Gaussian error, aborting", IOSTATUS, "@", I, J
+            EN = huge(EN)
+            RETURN
+        END IF
+    END IF
 
 END SUBROUTINE execGa
 
@@ -172,7 +172,7 @@ SUBROUTINE DO_SOLUTE(SOL_SYM, SOL, SOL_Q)
 
     N = SIZE(SOL)
 
-    OPEN(17, file="solute_charge.com")
+    OPEN(17, FILE="solute_charge.com")
     ! Preamble
     WRITE (17, *) '%nproc=8                                        '
     WRITE (17, *) '%mem=12GB                                       '
@@ -199,7 +199,7 @@ SUBROUTINE DO_SOLUTE(SOL_SYM, SOL, SOL_Q)
     "solute_charge.txt | head -"//trim(NCHAR)//" > FIFO_solute"
 
     CALL execute_command_line(COMMAND1)
-    OPEN(17, file="FIFO_solute")
+    OPEN(17, FILE="FIFO_solute")
     CALL execute_command_line(COMMAND2)
     CALL execute_command_line(COMMAND3)
     DO I=1,N

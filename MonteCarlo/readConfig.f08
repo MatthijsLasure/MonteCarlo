@@ -1,153 +1,153 @@
-module readConfig
-    implicit none
+MODULE readConfig
+    IMPLICIT NONE
 
-    contains
+    CONTAINS
 
-subroutine rConfig(confile, LJ_steps, Ga_steps, iseed, LJ_nadj, LJ_nprint, GA_nadj,&
+SUBROUTINE rConfig(confile, LJ_steps, Ga_steps, iseed, LJ_nadj, LJ_nprint, GA_nadj,&
  GA_nprint, LJ_dump, GA_dump, dposmax, dposmin, dhoekmax, dhoekmin, padj, proc, &
  files, temp, dorotsolv)
 
-    integer, parameter          :: strlen = 100
-    character(len=strlen)       :: fst, snd
-    character(len=1000)         :: line
-    character*500               :: confile ! Config file
-    character*500, dimension(:) :: files ! Alle input/output files
-    integer                     :: stat,  j, j0, z
-    integer, parameter          :: state_begin=1, state_in_fst=2, state_in_sep=3
-    logical                     :: dorotsolv
+    INTEGER, PARAMETER          :: strlen = 100
+    CHARACTER(LEN=strlen)       :: fst, snd
+    CHARACTER(LEN=1000)         :: line
+    CHARACTER*500               :: confile ! Config file
+    CHARACTER*500, DIMENSION(:) :: files ! Alle input/output files
+    INTEGER                     :: stat,  j, j0, z
+    INTEGER, PARAMETER          :: state_begin=1, state_in_fst=2, state_in_sep=3
+    LOGICAL                     :: dorotsolv
 
     ! Shit to read
-    double precision :: dposmax, dposmin, dhoekmax, dhoekmin, padj, temp
-    integer :: LJ_steps, Ga_steps, LJ_nadj, LJ_nprint, GA_nadj, GA_nprint
-    integer :: iseed, proc, LJ_dump, GA_dump
+    DOUBLE PRECISION :: dposmax, dposmin, dhoekmax, dhoekmin, padj, temp
+    INTEGER :: LJ_steps, Ga_steps, LJ_nadj, LJ_nprint, GA_nadj, GA_nprint
+    INTEGER :: iseed, proc, LJ_dump, GA_dump
 
     dorotsolv = .FALSE.
 
-    open(unit=10, file=confile)
+    OPEN(UNIT=10, FILE=confile)
 
-    inread: do
-        read(10, "(a)", iostat=stat) line
-        if(stat<0) exit
-        if ((line(1:1) == "#") .or. &
-            (line(1:1) == ";") .or. &
-            (len_trim(line)==0)) then
-          cycle
-        end if
+    inread: DO
+        READ(10, "(a)", IOSTAT=stat) line
+        IF(stat<0) EXIT
+        IF ((line(1:1) == "#") .OR. &
+            (line(1:1) == ";") .OR. &
+            (len_trim(line)==0)) THEN
+          CYCLE
+        END IF
         z = state_begin
-        do j = 1, len_trim(line)
-          if (z == state_begin) then
-            if (line(j:j)/=" ") then
+        DO j = 1, len_trim(line)
+          IF (z == state_begin) THEN
+            IF (line(j:j)/=" ") THEN
               j0 = j
               z = state_in_fst
-            end if
-          elseif (z == state_in_fst) then
-            if (index("= ",line(j:j))>0) then
+            END IF
+          ELSEIF (z == state_in_fst) THEN
+            IF (index("= ",line(j:j))>0) THEN
               fst = lower(line(j0:j-1))
               z = state_in_sep
-            end if
-          elseif (z == state_in_sep) then
-            if (index(" =",line(j:j)) == 0) then
+            END IF
+          ELSEIF (z == state_in_sep) THEN
+            IF (index(" =",line(j:j)) == 0) THEN
               snd = line(j:)
-              exit
-            end if
-          else
-             stop "not possible to be here"
-          end if
-        end do
-        if (z == state_in_fst) then
+              EXIT
+            END IF
+          ELSE
+             STOP "not possible to be here"
+          END IF
+        END DO
+        IF (z == state_in_fst) THEN
           fst = lower(line(j0:))
-        elseif (z == state_begin) then
-          cycle
-        end if
+        ELSEIF (z == state_begin) THEN
+          CYCLE
+        END IF
 
         ! Read out
         SELECT CASE (fst)
             ! Stappen
-            case ("lj")
-                read(snd,"(I10)") LJ_steps
-            case ("ga")
-                read(snd,"(I10)") Ga_steps
-            case ("temp")
-                read(snd,"(F10.10)") temp
+            CASE ("lj")
+                READ(snd,"(I10)") LJ_steps
+            CASE ("ga")
+                READ(snd,"(I10)") Ga_steps
+            CASE ("temp")
+                READ(snd,"(F10.10)") temp
             ! Seed voor random generator
-            case ("seed")
-                read(snd,"(I10)") iseed
+            CASE ("seed")
+                READ(snd,"(I10)") iseed
             ! parameters voor aanpassen + printen
-            case ("lj_nadj")
-                read(snd,"(I10)") LJ_nadj
-            case ("lj_nprint")
-                read(snd,"(I10)") LJ_nprint
-            case ("ga_nadj")
-                read(snd,"(I10)") GA_nadj
-            case ("ga_nprint")
-                read(snd,"(I10)") GA_nprint
-            case ("lj_dump")
-                read(snd,"(I10)") lj_dump
-            case ("ga_dump")
-                read(snd,"(I10)") ga_dump
+            CASE ("lj_nadj")
+                READ(snd,"(I10)") LJ_nadj
+            CASE ("lj_nprint")
+                READ(snd,"(I10)") LJ_nprint
+            CASE ("ga_nadj")
+                READ(snd,"(I10)") GA_nadj
+            CASE ("ga_nprint")
+                READ(snd,"(I10)") GA_nprint
+            CASE ("lj_dump")
+                READ(snd,"(I10)") lj_dump
+            CASE ("ga_dump")
+                READ(snd,"(I10)") ga_dump
             ! Maximale verplaatsing bij MC
-            case ("dposmax")
-                read(snd,"(F10.10)") dposmax
-            case ("dposmin")
-                read(snd,"(F10.10)") dposmin
-            case ("dhoekmax")
-                read(snd,"(F10.10)") dhoekmax
-            case ("dhoekmin")
-                read(snd,"(F10.10)") dhoekmin
+            CASE ("dposmax")
+                READ(snd,"(F10.10)") dposmax
+            CASE ("dposmin")
+                READ(snd,"(F10.10)") dposmin
+            CASE ("dhoekmax")
+                READ(snd,"(F10.10)") dhoekmax
+            CASE ("dhoekmin")
+                READ(snd,"(F10.10)") dhoekmin
             ! Aanpassingsfactor voor dposmax
-            case ("padj")
-                read(snd,"(F10.10)") padj
+            CASE ("padj")
+                READ(snd,"(F10.10)") padj
             ! Aantal processoren, te gebruiken door Gaussian
-            case ("proc")
-                read(snd,"(I10)") proc
-            case ("rotsolv")
+            CASE ("proc")
+                READ(snd,"(I10)") proc
+            CASE ("rotsolv")
                 dorotsolv = .TRUE.
 
             ! Files
-            case ("box")
-                read(snd, "(A)") files(1)
-            case ("dmso")
-                read(snd, "(A)") files(2)
-            case ("solute")
-                read(snd, "(A)") files(3)
-            case ("param")
-                read(snd, "(A)") files(4)
-            case ("out")
-                read(snd, "(A)") files(5)
-            case ("err")
-                read(snd, "(A)") files(6)
-            case ("dump")
-                read(snd, "(A)") files(7)
-            case ("solventsolvent")
-                read(snd, "(A)") files(8)
-            case ("result")
-                read(snd, "(A)") files(9)
-            case ("parsol")
-                read(snd, "(A)") files(10)
-            case ("solout")
-                read(snd, "(A)") files(11)
+            CASE ("box")
+                READ(snd, "(A)") files(1)
+            CASE ("dmso")
+                READ(snd, "(A)") files(2)
+            CASE ("solute")
+                READ(snd, "(A)") files(3)
+            CASE ("param")
+                READ(snd, "(A)") files(4)
+            CASE ("out")
+                READ(snd, "(A)") files(5)
+            CASE ("err")
+                READ(snd, "(A)") files(6)
+            CASE ("dump")
+                READ(snd, "(A)") files(7)
+            CASE ("solventsolvent")
+                READ(snd, "(A)") files(8)
+            CASE ("result")
+                READ(snd, "(A)") files(9)
+            CASE ("parsol")
+                READ(snd, "(A)") files(10)
+            CASE ("solout")
+                READ(snd, "(A)") files(11)
             ! You done f*cked up son
-            case DEFAULT
-                print *, "unknown option '"//trim(fst)//"'"; stop
+            CASE DEFAULT
+                PRINT *, "unknown option '"//trim(fst)//"'"; STOP
         END SELECT
 
-    end do inread
-    close(10)
-end subroutine rConfig
+    END DO inread
+    CLOSE(10)
+END SUBROUTINE rConfig
 
-pure function lower (str) result (string)
-    implicit none
-    character(*), intent(In) :: str
-    character(len(str))      :: string
-    Integer :: ic, i
+PURE FUNCTION lower (str) RESULT (string)
+    IMPLICIT NONE
+    CHARACTER(*), INTENT(IN) :: str
+    CHARACTER(len(str))      :: string
+    INTEGER :: ic, i
 
-    character(26), parameter :: cap = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
-    character(26), parameter :: low = 'abcdefghijklmnopqrstuvwxyz'
+    CHARACTER(26), PARAMETER :: cap = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+    CHARACTER(26), PARAMETER :: low = 'abcdefghijklmnopqrstuvwxyz'
 
     string = str
-    do i = 1, len_trim(str)
+    DO i = 1, len_trim(str)
         ic = index(cap, str(i:i))
-        if (ic > 0) string(i:i) = low(ic:ic)
-    end do
-end function
-end module readConfig
+        IF (ic > 0) string(i:i) = low(ic:ic)
+    END DO
+END FUNCTION
+END MODULE readConfig

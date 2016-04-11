@@ -1,13 +1,13 @@
-module solmod
+MODULE solmod
 
     USE RANDGEN
     USE DIHEDRAL
     USE VECTOR_CLASS
     USE LIB
 
-    implicit none
+    IMPLICIT NONE
 
-    contains
+    CONTAINS
 
     FUNCTION SOLUTE_INIT(SOL, DIHEDRAL) RESULT(SOLROT)
 
@@ -43,7 +43,7 @@ module solmod
     FUNCTION SOLUTE_METROPOLIS(SOL, PRE_EN, POST_EN, TEMP) RESULT(isOK)
         TYPE (VECTOR), DIMENSION(:), INTENT(IN)  :: SOL
         DOUBLE PRECISION :: PRE_EN, POST_EN, TEMP, EXPONENT, RV, KANS, DELTA
-        LOGICAL :: isOK
+        LOGICAL :: ISOK
 
         DELTA = POST_EN - PRE_EN
         EXPONENT = -1.D0 * DELTA  * 1000.D0 / (8.314D0 * TEMP)
@@ -63,10 +63,10 @@ module solmod
         ! Bepaal if succesvol -> volgende config
         IF(RV .LE. KANS) THEN ! Succes!
             WRITE (*,*) "New solute accepted!", PRE_EN, POST_EN
-            isOK = .TRUE.
+            ISOK = .TRUE.
         ELSE ! Fail!
             WRITE (*,*) "New solute rejected!", PRE_EN, POST_EN
-            isOK = .FALSE.
+            ISOK = .FALSE.
         END IF
 
     END FUNCTION SOLUTE_METROPOLIS
@@ -91,4 +91,4 @@ module solmod
             STOP
         END IF
     END FUNCTION FIND
-end module solmod
+END MODULE solmod

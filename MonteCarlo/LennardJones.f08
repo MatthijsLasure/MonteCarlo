@@ -1,9 +1,9 @@
-module LennardJones
+MODULE LennardJones
 
     USE vector_class
     USE lib
 
-    implicit none
+    IMPLICIT NONE
 
     CONTAINS
 
@@ -209,4 +209,4 @@ SUBROUTINE ASSOSIATE_SOLUTE(SYM, TABLE_SYM, TABLE_Q, TABLE_E, TABLE_S, TABLE)
 
 END SUBROUTINE ASSOSIATE_SOLUTE
 
-end module LennardJones
+END MODULE LennardJones

@@ -1,9 +1,9 @@
 MODULE dihedral
 
     !implicit none
-    use vector_class
+    USE vector_class
 
-    contains
+    CONTAINS
 
     FUNCTION GETDIHEDRAL(MOL, I1, I2, I3, I4) RESULT(HOEK)
         TYPE (VECTOR), DIMENSION(:) :: MOL
@@ -123,7 +123,7 @@ MODULE dihedral
             WRITE (*,*) I, FRAG(I)
         END DO
 
-        write (*,*) "rotlus"
+        WRITE (*,*) "rotlus"
         ! Alleen fragment 2 wordt geroteerd
         rotlus: DO I = 1, NATOM
             IF( FRAG(I) .EQ. 2) THEN
@@ -136,4 +136,4 @@ MODULE dihedral
         END DO rotlus
 
     END FUNCTION SETDIHEDRAL
-end MODULE dihedral
+END MODULE dihedral

@@ -18,7 +18,7 @@ PROGRAM MonteCarlo
     USE randgen
     USE readconfig
     USE solmod
-    use iso_fortran_env
+    USE iso_fortran_env
 
     IMPLICIT NONE
 
@@ -40,7 +40,7 @@ PROGRAM MonteCarlo
     LOGICAL             :: REJECTED, DOROTSOLV
     INTEGER             :: PROC ! Aantal processoren voor gaussian
     DOUBLE PRECISION    :: BOXSCALE = 0.9D0 ! Schalen van de box
-    character(len=30)   :: DATE
+    CHARACTER(LEN=30)   :: DATE
 
     ! FILES
     !======
@@ -129,9 +129,9 @@ LOGICAL:: DODEBUG = .FALSE.                                          !
         CALL GET_COMMAND_ARGUMENT(2, LJ_STEPS_TEMP)
         CALL GET_COMMAND_ARGUMENT(3, GA_STEPS_TEMP)
         CALL GET_COMMAND_ARGUMENT(4, ID_TEMP)
-        read (LJ_STEPS_TEMP, *) LJ_STEPS
-        read (GA_STEPS_TEMP, *) GA_STEPS
-        read (ID_TEMP, *) RUN_ID
+        READ (LJ_STEPS_TEMP, *) LJ_STEPS
+        READ (GA_STEPS_TEMP, *) GA_STEPS
+        READ (ID_TEMP, *) RUN_ID
 
         WRITE (*,*) "-----------------------"
         WRITE (*,*) "Serial Modus requested!"
@@ -292,7 +292,7 @@ LOGICAL:: DODEBUG = .FALSE.                                          !
 !====================================================================
 !====================================================================
 
-    write(*,*) "Working on assosiation tables..."
+    WRITE(*,*) "Working on assosiation tables..."
     CALL ASSOSIATE_DMSO(DMSO_SYM, SYM, Q, EPSILON, SIGMA, TABLE_DMSO)
     CALL ASSOSIATE_SOLUTE(SOL_SYM, SOLPAR_SYM, SOL_Q, SOL_EPSILON, SOL_SIGMA, TABLE_SOL)
 
@@ -353,7 +353,7 @@ WRITE (501,901) "i", "TotEng", "TotEng_old", "kans", "rv", "rSolv", "pSuc", "rat
 WRITE (501,902) 0, TOTENG, TOTENG, 0.D0, 0.D0, 0, REAL(0) / real(1), 0.D0, DPOSMAX
 
 CALL system_clock(START)
-write(500, *) START
+WRITE(500, *) START
 
 !====================================================================
 !====================================================================
@@ -462,11 +462,11 @@ PRE_ENG = TOTENG
     WRITE (*,*) "Exiting Gaussian loop..."
 
     !TEMPDUMP
-    Do I=1,NCOM
+    DO I=1,NCOM
     MOL1 = RotMatrix(COM(I), DMSO, HOEK(I))
         DO K = 1, NDMSO
             DO L = 1, NSOL
-                if(getDist(MOL1(K), SOLUTE(L)) .LT. 1.8D0) THEN
+                IF(getDist(MOL1(K), SOLUTE(L)) .LT. 1.8D0) THEN
                     CALL CalcLJ_SV(MOL1, SOLUTE, DMSO_SYM, TABLE_DMSO, TABLE_SOL, EN, BOXL, BOXL2)
                     WRITE (*,*) I, 0, K, L, getDist(MOL1(K), SOLUTE(L)), EN
                 END IF
@@ -477,7 +477,7 @@ PRE_ENG = TOTENG
             MOL2 = RotMatrix(COM(J), DMSO, HOEK(J))
             DO K = 1, NDMSO
                 DO L = 1, NDMSO
-                    if(getDist(MOL1(K), MOL2(L)) .LT. 1.8D0) THEN
+                    IF(getDist(MOL1(K), MOL2(L)) .LT. 1.8D0) THEN
                         CALL calcLJ(MOL1, MOL2, DMSO_SYM, TABLE_DMSO, EN, BOXL, BOXL2)
                         WRITE (*,*) I, J, K, L, getDist(MOL1(K), MOL2(L)), EN
                     END IF
