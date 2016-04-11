@@ -16,9 +16,9 @@
 			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
 				<configuration artifactName="${ProjName}" buildProperties="" cleanCommand="rm -rf" description="" errorParsers="org.eclipse.photran.core.GFortranErrorParser;org.eclipse.cdt.core.GCCErrorParser;org.eclipse.cdt.core.GLDErrorParser;org.eclipse.cdt.core.GASErrorParser;org.eclipse.cdt.core.GmakeErrorParser" id="photran.managedbuild.config.gnu.fortran.exe.debug.1445976773" name="Debug" parent="photran.managedbuild.config.gnu.fortran.exe.debug">
 					<folderInfo id="photran.managedbuild.config.gnu.fortran.exe.debug.1445976773." name="/" resourcePath="">
-						<toolChain id="photran.managedbuild.toolchain.gnu.fortran.exe.debug.2145786172" name="GCC Fortran" superClass="photran.managedbuild.toolchain.gnu.fortran.exe.debug">
+						<toolChain id="photran.managedbuild.toolchain.gnu.fortran.exe.debug.2145786172" name="GCC Fortran" nonInternalBuilderId="org.eclipse.ptp.rdt.sync.cdt.core.SyncBuilder" superClass="photran.managedbuild.toolchain.gnu.fortran.exe.debug">
 							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="photran.managedbuild.target.gnu.platform.exe.debug.1209088353" name="Debug Platform" osList="solaris,linux,hpux,aix,qnx" superClass="photran.managedbuild.target.gnu.platform.exe.debug"/>
-							<builder buildPath="${workspace_loc:/MonteCarlo}/Debug" id="org.eclipse.ptp.rdt.sync.cdt.core.SyncBuilder" keepEnvironmentInBuildfile="false" name="Sync Builder" superClass="org.eclipse.ptp.rdt.sync.cdt.core.SyncBuilder"/>
+							<builder buildPath="${workspace_loc:/MonteCarlo}/Debug" id="org.eclipse.ptp.rdt.sync.cdt.core.SyncBuilder.210877260" name="Sync Builder" superClass="org.eclipse.ptp.rdt.sync.cdt.core.SyncBuilder"/>
 							<tool id="photran.managedbuild.tool.gnu.c.compiler.exe.debug.1182086918" name="GCC C Compiler" superClass="photran.managedbuild.tool.gnu.c.compiler.exe.debug">
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.1188269071" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
 							</tool>
@@ -57,7 +57,7 @@
 					<folderInfo id="photran.managedbuild.config.gnu.fortran.exe.release.2015056898." name="/" resourcePath="">
 						<toolChain id="photran.managedbuild.toolchain.gnu.fortran.exe.release.719793532" name="GCC Fortran" superClass="photran.managedbuild.toolchain.gnu.fortran.exe.release">
 							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.ELF" id="photran.managedbuild.target.gnu.platform.fortran.exe.release.1397500516" name="Release Platform" osList="solaris,linux,hpux,aix,qnx" superClass="photran.managedbuild.target.gnu.platform.fortran.exe.release"/>
-							<builder buildPath="${workspace_loc:/MonteCarlo}/Release" id="org.eclipse.ptp.rdt.sync.cdt.core.SyncBuilder" name="Sync Builder" superClass="org.eclipse.ptp.rdt.sync.cdt.core.SyncBuilder"/>
+							<builder buildPath="${workspace_loc:/MonteCarlo}/Release" id="org.eclipse.ptp.rdt.sync.cdt.core.SyncBuilder" keepEnvironmentInBuildfile="false" name="Sync Builder" superClass="org.eclipse.ptp.rdt.sync.cdt.core.SyncBuilder"/>
 							<tool id="photran.managedbuild.tool.gnu.c.compiler.exe.release.1967000671" name="GCC C Compiler" superClass="photran.managedbuild.tool.gnu.c.compiler.exe.release">
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.341837065" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
 							</tool>
@@ -94,5 +94,17 @@
 		<configuration configurationName="Release">
 			<resource resourceType="PROJECT" workspacePath="/MonteCarlo"/>
 		</configuration>
+	</storageModule>
+	<storageModule moduleId="org.eclipse.cdt.make.core.buildtargets">
+		<buildTargets>
+			<target name="OpenMP" path="" targetID="org.eclipse.cdt.build.MakeTargetBuilder">
+				<buildCommand>make</buildCommand>
+				<buildArguments/>
+				<buildTarget>OpenMP</buildTarget>
+				<stopOnError>true</stopOnError>
+				<useDefaultCommand>true</useDefaultCommand>
+				<runAllBuilders>true</runAllBuilders>
+			</target>
+		</buildTargets>
 	</storageModule>
 </cproject>

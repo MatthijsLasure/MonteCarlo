@@ -34,7 +34,8 @@ module solmod
         SOLROT = SETDIHEDRAL(SOL, A1, A2, A3, A4, HOEK * PI / 180)
         HOEK_POST = GETDIHEDRAL(SOLROT, A1, A2, A3, A4) * 180 / PI
 
-        WRITE (*,"(A,I2.2,A3,I2.2)") "Rotation around axis ", A2, " - ", A3
+        !WRITE (*,"(A,I2.2,A3,I2.2)") "Rotation around axis ", A2, " - ", A3
+        WRITE (*,"(A,I2.2,A3,I2.2,A3,I2.2,A3,I2.2)") "Dihedral angle with ", A1, " - ", A2, " - ", A3, " - ", A4
         WRITE (*,"(A, F6.2, A, F6.2, A, F6.2)") "Dihedral change from ", HOEK_PRE, " with ", HOEK, " to ", HOEK_POST
 
     END FUNCTION SOLUTE_INIT
@@ -49,7 +50,10 @@ module solmod
         IF (EXPONENT .LT. -75.D0) THEN ! e^-75 < 3*10^-33: 0% kans anyway
         !write(500,*) "Large Exponent!", I
             KANS = 0.D0
-            RV = 1.D0 ! Skip rand() voor cpu tijd besparing
+            RV = 1.D0 ! Skip rand() voor cpu tijd besparing.
+        ELSE IF(EXPONENT .GE. 0.D0) THEN ! Lager in energie, dus 100% kans
+            KANS = 1.D0
+            RV = 0.D0
         ELSE
             KANS = E ** EXPONENT
             RV = RAND()

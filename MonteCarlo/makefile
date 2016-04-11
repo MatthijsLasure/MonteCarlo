@@ -19,8 +19,8 @@ readConfig.o : readConfig.f08
 vector_class.o : vector_class.f08
 	gfortran -ggdb -c -fcheck=bounds -o tmp/vector_class.o vector_class.f08
 
-randgen.o : randgen.f
-	gfortran -ggdb -c -fcheck=bounds -o tmp/randgen.o randgen.f
+randgen.o : randgen.f08
+	gfortran -ggdb -c -fcheck=bounds -o tmp/randgen.o randgen.f08
 
 solmod.o : solmod.f08
 	gfortran -ggdb -c -fcheck=bounds -o tmp/solmod.o solmod.f08
@@ -52,8 +52,8 @@ readConfigMP : readConfig.f08
 vector_classMP : vector_class.f08
 	gfortran -ggdb -fopenmp -c -fcheck=bounds -o tmp/vector_class.o vector_class.f08
 
-randgenMP : randgen.f
-	gfortran -ggdb -fopenmp -c -fcheck=bounds -o tmp/randgen.o randgen.f
+randgenMP : randgen.f08
+	gfortran -ggdb -fopenmp -c -fcheck=bounds -o tmp/randgen.o randgen.f08
 
 solmodMP : solmod.f08
 	gfortran -ggdb -fopenmp -c -fcheck=bounds -o tmp/solmod.o solmod.f08
