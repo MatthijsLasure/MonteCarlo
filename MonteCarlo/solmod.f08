@@ -36,7 +36,7 @@ MODULE solmod
 
         !WRITE (*,"(A,I2.2,A3,I2.2)") "Rotation around axis ", A2, " - ", A3
         WRITE (*,"(A,I2.2,A3,I2.2,A3,I2.2,A3,I2.2)") "Dihedral angle with ", A1, " - ", A2, " - ", A3, " - ", A4
-        WRITE (*,"(A, F6.2, A, F6.2, A, F6.2)") "Dihedral change from ", HOEK_PRE, " with ", HOEK, " to ", HOEK_POST
+        WRITE (*,"(A, F7.2, A, F7.2, A, F7.2)") "Dihedral change from ", HOEK_PRE, " with ", HOEK, " to ", HOEK_POST
 
     END FUNCTION SOLUTE_INIT
 

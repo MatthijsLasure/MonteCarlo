@@ -102,11 +102,11 @@ SUBROUTINE GREPIT(I, J, EN)
     WRITE(COMMAND2B, "(A10, A, A2)") "sleep 1 > ", trim(FIFO), " &" ! Keep pipe alive
     WRITE(COMMAND2, "(A10, A, A3,A, A2)") "grep Done ", trim(GAUSS_LOG), " > ", trim(FIFO), "  " ! Filter log > to pipe
 
-    CALL execute_command_line(trim(COMMAND2B))
+    CALL system(trim(COMMAND2B))
 
     OPEN (16, FILE=TRIM(FIFO), STATUS='OLD', ACTION='READ') ! Open de pipeline
 
-    CALL execute_command_line(trim(COMMAND2)) ! Execute grep
+    CALL system(trim(COMMAND2)) ! Execute grep
     READ (16, "(A21,F20.10)", IOSTAT=IOSTATUS) bullshit, en ! lees resultaat in(A22,F14.12)
 
     CLOSE(16)
@@ -166,7 +166,7 @@ SUBROUTINE DO_SOLUTE(SOL_SYM, SOL, SOL_Q)
     TYPE (VECTOR), DIMENSION(:)     :: SOL
     DOUBLE PRECISION, DIMENSION(:)  :: SOL_Q
 
-    INTEGER :: I, N
+    INTEGER :: I, N, IOSTATUS
     CHARACTER*20 :: NCHAR, NCHAR2
     CHARACTER*1000                  :: COMMAND1, COMMAND2, COMMAND3
 
@@ -198,10 +198,20 @@ SUBROUTINE DO_SOLUTE(SOL_SYM, SOL, SOL_Q)
     COMMAND3 = "grep -B"//trim(NCHAR2)//" 'Electrostatic Properties (Atomic Units)' "//&
     "solute_charge.txt | head -"//trim(NCHAR)//" > FIFO_solute"
 
-    CALL execute_command_line(COMMAND1)
+    CALL system(COMMAND1)
+
+    CALL system(COMMAND2, IOSTATUS)
+    IF (IOSTATUS .NE. 0) THEN
+        WRITE (500,*) "Gaussian error, retrying", IOSTATUS, "@ SOLUTE_CHARGE"
+        CALL system(COMMAND2, IOSTATUS)
+        IF(IOSTATUS .NE. 0) THEN
+            WRITE (500,*) "Gaussian error, aborting", IOSTATUS, "@ SOLUTE_CHARGE"
+            STOP
+        END IF
+    END IF
+
     OPEN(17, FILE="FIFO_solute")
-    CALL execute_command_line(COMMAND2)
-    CALL execute_command_line(COMMAND3)
+    CALL system(COMMAND3)
     DO I=1,N
         READ (17, "(A12, F9.7)") NCHAR, SOL_Q(I)
     END DO
