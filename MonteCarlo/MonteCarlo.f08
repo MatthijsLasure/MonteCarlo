@@ -247,6 +247,7 @@ LOGICAL:: DODEBUG = .FALSE.                                          !
     OPEN (UNIT=10, FILE=BOX_FILE)
     READ (10, *) BOXL ! Box grootte
     READ (10, *) nCoM ! Lees aantal moleculen
+    READ (10, *) ! Box ID
     ALLOCATE(CoM(NCOM))
     ALLOCATE(hoek(NCOM))
     ALLOCATE(CoM_old(NCOM))
@@ -529,6 +530,7 @@ WRITE (*,*) "Writing data..."
 OPEN (UNIT=10, FILE=RESULT_FILE)
 WRITE (10, *) BOXL ! Box grootte
 WRITE (10, *) NCOM ! Lees aantal moleculen
+WRITE (10, *) "BOX ", trim(ID_TEMP)
 DO I= 1, NCOM
     WRITE(10,*) CoM(I)%X, CoM(I)%Y, CoM(I)%Z, hoek(I)%X, hoek(I)%Y, hoek(I)%Z
 END DO
