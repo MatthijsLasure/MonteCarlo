@@ -200,10 +200,10 @@ SUBROUTINE DO_SOLUTE(SOL_SYM, SOL, SOL_Q)
 
     CALL system(COMMAND1)
 
-    CALL system(COMMAND2, IOSTATUS)
+    IOSTATUS = system(COMMAND2)
     IF (IOSTATUS .NE. 0) THEN
         WRITE (500,*) "Gaussian error, retrying", IOSTATUS, "@ SOLUTE_CHARGE"
-        CALL system(COMMAND2, IOSTATUS)
+        IOSTATUS = system(COMMAND2)
         IF(IOSTATUS .NE. 0) THEN
             WRITE (500,*) "Gaussian error, aborting", IOSTATUS, "@ SOLUTE_CHARGE"
             STOP
@@ -211,7 +211,7 @@ SUBROUTINE DO_SOLUTE(SOL_SYM, SOL, SOL_Q)
     END IF
 
     OPEN(17, FILE="FIFO_solute")
-    CALL system(COMMAND3)
+    IOSTATUS = system(COMMAND3)
     DO I=1,N
         READ (17, "(A12, F9.7)") NCHAR, SOL_Q(I)
     END DO
