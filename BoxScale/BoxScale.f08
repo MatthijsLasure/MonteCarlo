@@ -22,9 +22,11 @@ program BoxScale
     open(11, file=output)
     read (10, *) BOXL
     read (10, *) nCoM
+    read (10, "(A,I10.10)") charfactor, I
 
     write (11, *) BOXL * factor
     write (11, *) nCoM
+    write (11, "(A,I10.10)") trim(charfactor), I
 
     DO I=1,nCoM
         read (10, *) CoM1, CoM2, CoM3, h1, h2, h3
