@@ -102,11 +102,11 @@ SUBROUTINE GREPIT(I, J, EN)
     WRITE(COMMAND2B, "(A10, A, A2)") "sleep 1 > ", trim(FIFO), " &" ! Keep pipe alive
     WRITE(COMMAND2, "(A10, A, A3,A, A2)") "grep Done ", trim(GAUSS_LOG), " > ", trim(FIFO), "  " ! Filter log > to pipe
 
-    CALL system(trim(COMMAND2B))
+    CALL system(trim(COMMAND2))
 
     OPEN (16, FILE=TRIM(FIFO), STATUS='OLD', ACTION='READ') ! Open de pipeline
 
-    CALL system(trim(COMMAND2)) ! Execute grep
+    !CALL system(trim(COMMAND2)) ! Execute grep
     READ (16, "(A21,F20.10)", IOSTAT=IOSTATUS) bullshit, en ! lees resultaat in(A22,F14.12)
 
     CLOSE(16)
@@ -142,18 +142,18 @@ SUBROUTINE execGa(I, J, EN)
     WRITE(COMMAND3, "(A3,A)") "rm ", trim(FIFO)
 
     ! Start gaussian
-    CALL system (trim(COMMAND0)) ! Make pipe
+    !CALL system (trim(COMMAND0)) ! Make pipe
     IOSTATUS = system(trim(COMMAND1)) ! Execute gaussian
 
-    IF (IOSTATUS .NE. 0) THEN ! Check for failure
-        WRITE (500,*) "Gaussian error, retrying", IOSTATUS, "@", I, J
-        IOSTATUS = system(COMMAND1) ! Execute gaussian
-        IF(IOSTATUS .NE. 0) THEN
-            WRITE (500,*) "Gaussian error, aborting", IOSTATUS, "@", I, J
-            EN = huge(EN)
-            RETURN
-        END IF
-    END IF
+!    IF (IOSTATUS .NE. 0) THEN ! Check for failure
+!        WRITE (500,*) "Gaussian error, retrying", IOSTATUS, "@", I, J
+!        IOSTATUS = system(COMMAND1) ! Execute gaussian
+!        IF(IOSTATUS .NE. 0) THEN
+!            WRITE (500,*) "Gaussian error, aborting", IOSTATUS, "@", I, J
+!            EN = huge(EN)
+!            RETURN
+!        END IF
+!    END IF
 
 END SUBROUTINE execGa
 
@@ -168,7 +168,7 @@ SUBROUTINE DO_SOLUTE(SOL_SYM, SOL, SOL_Q)
 
     INTEGER :: I, N, IOSTATUS
     CHARACTER*20 :: NCHAR, NCHAR2
-    CHARACTER*1000                  :: COMMAND1, COMMAND2, COMMAND3
+    CHARACTER*1000                  :: COMMAND1, COMMAND2, COMMAND3, COMMAND2B
 
     N = SIZE(SOL)
 
@@ -195,10 +195,11 @@ SUBROUTINE DO_SOLUTE(SOL_SYM, SOL, SOL_Q)
 
     COMMAND1 = "[ -e FIFO_solute ] || mknod FIFO_solute p"
     COMMAND2 = "g09 < solute_charge.com > solute_charge.txt"
-    COMMAND3 = "grep -B"//trim(NCHAR2)//" 'Electrostatic Properties (Atomic Units)' "//&
-    "solute_charge.txt | head -"//trim(NCHAR)//" > FIFO_solute"
+    COMMAND2B = "sleep 1 > FIFO_solute &"
 
-    CALL system(COMMAND1)
+    COMMAND3 = "./doCharges.sh " // trim(NCHAR)
+
+    !CALL system(COMMAND1)
 
     IOSTATUS = system(COMMAND2)
     IF (IOSTATUS .NE. 0) THEN
@@ -210,9 +211,12 @@ SUBROUTINE DO_SOLUTE(SOL_SYM, SOL, SOL_Q)
         END IF
     END IF
 
+    IOSTATUS = SYSTEM(trim(COMMAND2B))
     OPEN(17, FILE="FIFO_solute")
-    IOSTATUS = system(COMMAND3)
+    IOSTATUS = system(trim(COMMAND3))
+    !IF(IOSTATUS .NE. 0) WRITE(*,*) "Error executing doCharges!", IOSTATUS
     DO I=1,N
+        WRITE (*,*) I
         READ (17, "(A12, F9.7)") NCHAR, SOL_Q(I)
     END DO
     CLOSE(17)

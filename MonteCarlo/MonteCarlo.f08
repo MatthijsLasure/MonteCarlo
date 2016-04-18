@@ -40,6 +40,7 @@ PROGRAM MonteCarlo
     LOGICAL             :: REJECTED, DOROTSOLV
     INTEGER             :: PROC ! Aantal processoren voor gaussian
     DOUBLE PRECISION    :: BOXSCALE = 0.9D0 ! Schalen van de box
+    DOUBLE PRECISION    :: DROTSOLV
     CHARACTER(LEN=30)   :: DATE
 
     ! FILES
@@ -118,7 +119,7 @@ LOGICAL:: DODEBUG = .FALSE.                                          !
     ! Read from config.ini
     CALL rConfig(CONFILE, LJ_STEPS, GA_STEPS, ISEED, LJ_NADJ, LJ_NPRINT, GA_NADJ, &
     GA_NPRINT, LJ_DUMP, GA_DUMP, DPOSMAX, DPOSMIN, DHOEKMAX, DHOEKMIN, PADJ, PROC, &
-    FILES, TEMPERATURE, DOROTSOLV)
+    FILES, TEMPERATURE, DOROTSOLV, DROTSOLV)
 
     IF (LJ_DUMP .EQ. 0) LJ_DUMP = huge(LJ_DUMP)
     IF (GA_DUMP .EQ. 0) GA_DUMP = huge(GA_DUMP)
@@ -287,6 +288,7 @@ LOGICAL:: DODEBUG = .FALSE.                                          !
 
     WRITE (*,*) "BOXL DPOSMAX DPOSMIN DHOEKMAX DHOEKMIN"
     WRITE (*,*) BOXL, DPOSMAX, DPOSMIN, DHOEKMAX, DHOEKMIN
+    IF (DOROTSOLV) WRITE (*,"(A,F13.10)") "Solvent rotation, max ", DROTSOLV
 
     BOXL2 = BOXL * 2.D0
 
@@ -312,7 +314,7 @@ LOGICAL:: DODEBUG = .FALSE.                                          !
 
     ! Roteer de solute
     SOLUTE_OLD = SOLUTE
-    IF (DOROTSOLV) SOLUTE = SOLUTE_INIT(SOLUTE, DIHOEK)
+    IF (DOROTSOLV) SOLUTE = SOLUTE_INIT(SOLUTE, DIHOEK, DROTSOLV)
 
     ! Initiële berekening ladingen solute
     !====================================
