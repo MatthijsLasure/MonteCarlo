@@ -321,24 +321,25 @@ LOGICAL:: DODEBUG = .FALSE.                                          !
     WRITE (*,*) "Calculating partial charges on solute..."
     CALL DO_SOLUTE(SOL_SYM, SOLUTE,SOL_Q)
 
-    DO I=1,NCOM
-        CALL calculateLJ(I) ! Bereken alle energiën!
-        !CALL calculateGA(I, 0)
-    END DO
+    IF (LJ_STEPS .GT. 0) THEN
+        DO I=1,NCOM
+            CALL calculateLJ(I) ! Bereken alle energiën!
+            !CALL calculateGA(I, 0)
+        END DO
 
-    TOTENG = 0.D0
-    TOTENG = calcEnergy(ENERGY, SOLVENTSOLVENT)
-    PRE_ENG = TOTENG
+        TOTENG = 0.D0
+        TOTENG = calcEnergy(ENERGY, SOLVENTSOLVENT)
+        PRE_ENG = TOTENG
 
 
-    ! Dump energiën
-    !tot = 0.0D
-    OPEN(UNIT=10, FILE=SOLVSOLV_FILE)
-    DO I=1,NCOM
-        WRITE(10,*) solventsolvent(I,:)
-    END DO
-    CLOSE(10)
-
+        ! Dump energiën
+        !tot = 0.0D
+        OPEN(UNIT=10, FILE=SOLVSOLV_FILE)
+        DO I=1,NCOM
+            WRITE(10,*) solventsolvent(I,:)
+        END DO
+        CLOSE(10)
+    END IF
 
 !====================================================================
 !====================================================================

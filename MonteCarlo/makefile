@@ -33,7 +33,7 @@ sys.o : sys.F08
 clean : 
 	rm tmp/*.o *.mod MonteCarlo
 
-OpenMP : sysMP randgenMP vector_classMP dihedralMP readConfigMP libMP solmodMP LennardJonesMP GaussianMP MonteCarloMP solmodMP
+OpenMP : randgenMP vector_classMP dihedralMP readConfigMP libMP solmodMP LennardJonesMP GaussianMP MonteCarloMP solmodMP
 	gfortran -ggdb -fopenmp -fcheck=bounds -o MonteCarloOpenMP tmp/*.o
 
 MonteCarloMP : MonteCarlo.f08
