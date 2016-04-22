@@ -150,6 +150,31 @@ vecA = SOLUTE(A)
         END DO
         WRITE (11, *) TIMESTEP, IMIN, RMIN
     END DO
+
+
+ELSE IF (what .EQ. 3) THEN! Calculate all distances
+
+
+    DO
+        READ (10, *, IOSTAT=IOSTATUS) NCOM
+        IF (IOSTATUS < 0) exit
+        READ (10, "(A10,I20.20)") TEMP, TIMESTEP
+            DO I=1,NCOM
+                !READ (10, "(6F24.16)") CoM%X, CoM%Y, CoM%Z, hoek%X, hoek%Y, hoek%Z
+                READ (10,"(A)") TEMP
+                !WRITE (*,*) trim(TEMP)
+                READ (TEMP, *) CoM%X, CoM%Y, CoM%Z, hoek%X, hoek%Y, hoek%Z
+                MOL1 = RotMatrix(CoM, DMSO, hoek)
+                DO A=1,nSOL
+                    vecA = SOLUTE(A)
+                    DO B=1,nDMSO
+                        vecB = MOL1(B)
+                        R = getDist(vecA, vecB)
+                        WRITE (11, *) TIMESTEP, A, I, B, R
+                    END DO
+                END DO
+            END DO
+    END DO
 END IF
 
 CLOSE(10)
