@@ -1,4 +1,7 @@
 MODULE readConfig
+
+    USE MCconstants, ONLY : IOwork
+
     IMPLICIT NONE
 
     CONTAINS
@@ -23,10 +26,10 @@ SUBROUTINE rConfig(confile, LJ_steps, Ga_steps, iseed, LJ_nadj, LJ_nprint, GA_na
 
     dorotsolv = .FALSE.
 
-    OPEN(UNIT=10, FILE=confile)
+    OPEN(UNIT=IOwork, FILE=confile)
 
     inread: DO
-        READ(10, "(a)", IOSTAT=stat) line
+        READ(IOwork, "(a)", IOSTAT=stat) line
         IF(stat<0) EXIT
         IF ((line(1:1) == "#") .OR. &
             (line(1:1) == ";") .OR. &
@@ -134,7 +137,7 @@ SUBROUTINE rConfig(confile, LJ_steps, Ga_steps, iseed, LJ_nadj, LJ_nprint, GA_na
         END SELECT
 
     END DO inread
-    CLOSE(10)
+    CLOSE(IOwork)
 END SUBROUTINE rConfig
 
 PURE FUNCTION lower (str) RESULT (string)

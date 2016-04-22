@@ -1,6 +1,7 @@
 MODULE dihedral
 
     !implicit none
+    USE MCconstants, ONLY : IOerr
     USE vector_class
 
     CONTAINS
@@ -108,7 +109,7 @@ MODULE dihedral
                                 FRAG(I) = FRAG(J)
                             END IF
                         END IF
-                        WRITE (500,*) I, J, FRAG(I), FRAG(J), DIST1
+                        WRITE (IOerr,*) I, J, FRAG(I), FRAG(J), DIST1
                     END DO
                 END IF
             END DO atomLoop

@@ -1,68 +1,107 @@
-MonteCarlo : sys.o randgen.o vector_class.o dihedral.o readConfig.o lib.o solmod.o LennardJones.o Gaussian.o MonteCarlo.o
-	gfortran -ggdb -fcheck=bounds -o MonteCarlo tmp/*.o
+intel : MonteCarloOpenMP
+GNU : MonteCarloGNU
 
-MonteCarlo.o : MonteCarlo.f08
-	gfortran -ggdb -c -fcheck=bounds -o tmp/MonteCarlo.o MonteCarlo.f08 
-
-LennardJones.o : LennardJones.f08
-	gfortran -ggdb -c -fcheck=bounds -o tmp/LennardJones.o LennardJones.f08 
-
-Gaussian.o : Gaussian.f08
-	gfortran -ggdb -c -fcheck=bounds -o tmp/Gaussian.o Gaussian.f08 
-
-lib.o : lib.f08
-	gfortran -ggdb -c -fcheck=bounds -o tmp/lib.o lib.f08
-
-readConfig.o : readConfig.f08
-	gfortran -ggdb -c -fcheck=bounds -o tmp/readConfig.o readConfig.f08
-
-vector_class.o : vector_class.f08
-	gfortran -ggdb -c -fcheck=bounds -o tmp/vector_class.o vector_class.f08
-
-randgen.o : randgen.f08
-	gfortran -ggdb -c -fcheck=bounds -o tmp/randgen.o randgen.f08
-
-solmod.o : solmod.f08
-	gfortran -ggdb -c -fcheck=bounds -o tmp/solmod.o solmod.f08
-
-dihedral.o : dihedral.f08
-	gfortran -ggdb -c -fcheck=bounds -o tmp/dihedral.o dihedral.f08
-
-sys.o : sys.F08
-	gfortran -ggdb -c -fcheck=bounds -o tmp/sys.o sys.F08
 clean : 
-	rm tmp/*.o *.mod MonteCarlo
+	-rm tmp-intel/* tmp-gnu/* MonteCarloGNU MonteCarloOpenMP
 
-OpenMP : randgenMP vector_classMP dihedralMP readConfigMP libMP solmodMP LennardJonesMP GaussianMP MonteCarloMP solmodMP
-	gfortran -ggdb -fopenmp -fcheck=bounds -o MonteCarloOpenMP tmp/*.o
+turing :
+	-mkdir -p turing
+	cp MonteCarloOpenMP turing
 
-MonteCarloMP : MonteCarlo.f08
-	gfortran -ggdb -fopenmp -c -fcheck=bounds -o tmp/MonteCarlo.o MonteCarlo.f08 
+hopper :
+	-mkdir -p hopper
+	cp MonteCarloOpenMP hopper
 
-LennardJonesMP : LennardJones.f08
-	gfortran -ggdb -fopenmp -c -fcheck=bounds -o tmp/LennardJones.o LennardJones.f08 
+#
+# Intel compile
+#
+ITMP=tmp-intel
+IOPT=-O2 -openmp -DUSE_PIPES -module $(ITMP)
+#IOPT=-O0 -g -openmp -DDEBUG -DUSE_PIPES -module $(ITMP)
+#IOPT=-O0 -g -openmp -DDEBUG -module $(ITMP)
 
-GaussianMP : Gaussian.f08
-	gfortran -ggdb -fopenmp -c -fcheck=bounds -o tmp/Gaussian.o Gaussian.f08 
+MonteCarloOpenMP : $(ITMP)/MCconstants.o $(ITMP)/randgen.o      $(ITMP)/vector_class.o \
+                   $(ITMP)/dihedral.o    $(ITMP)/readConfig.o   $(ITMP)/lib.o \
+                   $(ITMP)/solmod.o      $(ITMP)/LennardJones.o $(ITMP)/Gaussian.o \
+                   $(ITMP)/MonteCarlo.o  $(ITMP)/solmod.o
+	ifort $(IOPT) -o $@ $^
 
-libMP : lib.f08
-	gfortran -ggdb -fopenmp -c -fcheck=bounds -o tmp/lib.o lib.f08
+$(ITMP)/MCconstants.o  : MCconstants.f90        makefile
+	ifort -c $(IOPT) -o $@ $< 
 
-readConfigMP : readConfig.f08
-	gfortran -ggdb -fopenmp -c -fcheck=bounds -o tmp/readConfig.o readConfig.f08
+$(ITMP)/MonteCarlo.o   : MonteCarlo.F90         $(ITMP)/MCconstants.o  $(ITMP)/vector_class.o \
+                         $(ITMP)/LennardJones.o $(ITMP)/Gaussian.o     $(ITMP)/lib.o \
+                         $(ITMP)/randgen.o      $(ITMP)/readConfig.o   $(ITMP)/solmod.o       makefile
+	ifort -c $(IOPT) -o $@ $< 
 
-vector_classMP : vector_class.f08
-	gfortran -ggdb -fopenmp -c -fcheck=bounds -o tmp/vector_class.o vector_class.f08
+$(ITMP)/LennardJones.o : LennardJones.f90       makefile
+	ifort -c $(IOPT) -o $@ $< 
 
-randgenMP : randgen.f08
-	gfortran -ggdb -fopenmp -c -fcheck=bounds -o tmp/randgen.o randgen.f08
+$(ITMP)/Gaussian.o     : Gaussian.F90           $(ITMP)/MCconstants.o  makefile
+	ifort -c $(IOPT) -o $@ $< 
 
-solmodMP : solmod.f08
-	gfortran -ggdb -fopenmp -c -fcheck=bounds -o tmp/solmod.o solmod.f08
+$(ITMP)/lib.o          : lib.f90                $(ITMP)/MCconstants.o  makefile
+	ifort -c $(IOPT) -o $@ $< 
 
-dihedralMP : dihedral.f08
-	gfortran -ggdb -fopenmp -c -fcheck=bounds -o tmp/dihedral.o dihedral.f08
+$(ITMP)/readConfig.o   : readConfig.f90         $(ITMP)/MCconstants.o  makefile
+	ifort -c $(IOPT) -o $@ $< 
 
-sysMP : sys.F08
-	gfortran -ggdb -fopenmp -c -fcheck=bounds -o tmp/sys.o sys.F08
+$(ITMP)/vector_class.o : vector_class.f90       makefile
+	ifort -c $(IOPT) -o $@ $< 
+
+$(ITMP)/randgen.o      : randgen.f90            makefile
+	ifort -c $(IOPT) -o $@ $< 
+
+$(ITMP)/solmod.o       : solmod.f90             $(ITMP)/MCconstants.o  $(ITMP)/randgen.o \
+                         $(ITMP)/dihedral.o     $(ITMP)/lib.o          $(ITMP)/vector_class.o  makefile
+	ifort -c $(IOPT) -o $@ $< 
+
+$(ITMP)/dihedral.o     : dihedral.f90           $(ITMP)/MCconstants.o  $(ITMP)/vector_class.o  makefile
+	ifort -c $(IOPT) -o $@ $< 
+
+
+#
+# gfortran compile with OpenMP
+#
+GTMP=tmp-gnu
+GOPT=-ggdb -fopenmp -J$(GTMP)
+MonteCarloGNU : $(GTMP)/MCconstants.o $(GTMP)/randgen.o      $(GTMP)/vector_class.o \
+                $(GTMP)/dihedral.o    $(GTMP)/readConfig.o   $(GTMP)/lib.o \
+                $(GTMP)/solmod.o      $(GTMP)/LennardJones.o $(GTMP)/Gaussian.o \
+                $(GTMP)/MonteCarlo.o  $(GTMP)/solmod.o
+	gfortran $(GOPT) -o $@ $^
+
+$(GTMP)/MCconstants.o  : MCconstants.f90        makefile
+	gfortran -c $(GOPT) -o $@ $< 
+
+$(GTMP)/MonteCarlo.o   : MonteCarlo.F90         $(GTMP)/MCconstants.o  $(GTMP)/vector_class.o \
+                         $(GTMP)/LennardJones.o $(GTMP)/Gaussian.o     $(GTMP)/lib.o \
+                         $(GTMP)/randgen.o      $(GTMP)/readConfig.o   $(GTMP)/solmod.o       makefile
+	gfortran -c $(GOPT) -o $@ $< 
+
+$(GTMP)/LennardJones.o : LennardJones.f90       makefile
+	gfortran -c $(GOPT) -o $@ $< 
+
+$(GTMP)/Gaussian.o     : Gaussian.F90           $(GTMP)/MCconstants.o  makefile
+	gfortran -c $(GOPT) -o $@ $< 
+
+$(GTMP)/lib.o          : lib.f90                $(GTMP)/MCconstants.o  makefile
+	gfortran -c $(GOPT) -o $@ $< 
+
+$(GTMP)/readConfig.o   : readConfig.f90         $(GTMP)/MCconstants.o  makefile
+	gfortran -c $(GOPT) -o $@ $< 
+
+$(GTMP)/vector_class.o : vector_class.f90       makefile
+	gfortran -c $(GOPT) -o $@ $< 
+
+$(GTMP)/randgen.o      : randgen.f90            makefile
+	gfortran -c $(GOPT) -o $@ $< 
+
+$(GTMP)/solmod.o       : solmod.f90             $(GTMP)/MCconstants.o  $(GTMP)/randgen.o \
+                         $(GTMP)/dihedral.o     $(GTMP)/lib.o          $(GTMP)/vector_class.o  makefile
+	gfortran -c $(GOPT) -o $@ $< 
+
+$(GTMP)/dihedral.o     : dihedral.f90           $(GTMP)/MCconstants.o  $(GTMP)/vector_class.o  makefile
+	gfortran -c $(GOPT) -o $@ $< 
+
 
