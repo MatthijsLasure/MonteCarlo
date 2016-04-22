@@ -1,12 +1,3 @@
-/Debug/
-.cproject
-.project
-/.settings/
-/Release/
-*.txt
 /.ptp-sync/
-/Remote/
-/tmp/
-/MonteCarloOpenMP
-/makefile.bak
-/MonteCarlo
+/Debug/
+/MonteCarloGNU
