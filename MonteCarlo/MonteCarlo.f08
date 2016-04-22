@@ -99,6 +99,8 @@ LOGICAL:: DODEBUG = .FALSE.                                          !
 
     CALL FDATE(DATE)
 
+    CALL DOCHARGES()
+
 
 
     ! Config
@@ -795,7 +797,7 @@ SUBROUTINE calculateGA(I, LOOPNR)
     !================================================================
 
     !$OMP PARALLEL
-    !$OMP DO SCHEDULE(DYNAMIC) PRIVATE(En)
+    !$OMP DO SCHEDULE(GUIDED) PRIVATE(En)
     EXEC: DO J=1,NCOM
         IF (J .NE. I .AND. .NOT. TooFar(J) ) THEN
             EN = 0.D0

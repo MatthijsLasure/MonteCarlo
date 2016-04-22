@@ -102,16 +102,16 @@ SUBROUTINE GREPIT(I, J, EN)
     WRITE(COMMAND2B, "(A10, A, A2)") "sleep 1 > ", trim(FIFO), " &" ! Keep pipe alive
     WRITE(COMMAND2, "(A10, A, A3,A, A2)") "grep Done ", trim(GAUSS_LOG), " > ", trim(FIFO), "  " ! Filter log > to pipe
 
-    CALL system(trim(COMMAND2))
+    CALL system(trim(COMMAND2B))
 
-    OPEN (16, FILE=TRIM(FIFO), STATUS='OLD', ACTION='READ') ! Open de pipeline
+    OPEN (16, FILE=TRIM(FIFO), STATUS='OLD', ACTION='READ', FORM='FORMATTED') ! Open de pipeline
 
-    !CALL system(trim(COMMAND2)) ! Execute grep
+    CALL system(trim(COMMAND2)) ! Execute grep
     READ (16, "(A21,F20.10)", IOSTAT=IOSTATUS) bullshit, en ! lees resultaat in(A22,F14.12)
 
     CLOSE(16)
 
-    IF(IOSTATUS .NE. 0) WRITE(500,*) "Woeps FIFO", IOSTATUS, FIFO
+    IF(IOSTATUS .NE. 0) WRITE(500,*) "Woeps FIFO", IOSTATUS, FIFO, EN
 
 END SUBROUTINE GREPIT
 
@@ -125,6 +125,7 @@ SUBROUTINE execGa(I, J, EN)
     INTEGER, INTENT(IN) :: I, J
     DOUBLE PRECISION :: EN
     CHARACTER*100 :: BULLSHIT
+    INTEGER :: IOSTATUS
 
     906 FORMAT(A, I3.3'-',I3.3,A)
 
@@ -142,18 +143,18 @@ SUBROUTINE execGa(I, J, EN)
     WRITE(COMMAND3, "(A3,A)") "rm ", trim(FIFO)
 
     ! Start gaussian
-    !CALL system (trim(COMMAND0)) ! Make pipe
-    IOSTATUS = system(trim(COMMAND1)) ! Execute gaussian
+    CALL system (trim(COMMAND0)) ! Make pipe
+    CALL system (trim(COMMAND1), IOSTATUS) ! Execute gaussian
 
-!    IF (IOSTATUS .NE. 0) THEN ! Check for failure
-!        WRITE (500,*) "Gaussian error, retrying", IOSTATUS, "@", I, J
-!        IOSTATUS = system(COMMAND1) ! Execute gaussian
-!        IF(IOSTATUS .NE. 0) THEN
-!            WRITE (500,*) "Gaussian error, aborting", IOSTATUS, "@", I, J
-!            EN = huge(EN)
-!            RETURN
-!        END IF
-!    END IF
+    IF (IOSTATUS .NE. 0) THEN ! Check for failure
+        WRITE (500,*) "Gaussian error, retrying", IOSTATUS, "@", I, J
+        CALL system (COMMAND1, IOSTATUS) ! Execute gaussian
+        IF(IOSTATUS .NE. 0) THEN
+            WRITE (500,*) "Gaussian error, aborting", IOSTATUS, "@", I, J
+            EN = huge(EN)
+            RETURN
+        END IF
+    END IF
 
 END SUBROUTINE execGa
 
@@ -168,7 +169,7 @@ SUBROUTINE DO_SOLUTE(SOL_SYM, SOL, SOL_Q)
 
     INTEGER :: I, N, IOSTATUS
     CHARACTER*20 :: NCHAR, NCHAR2
-    CHARACTER*1000                  :: COMMAND1, COMMAND2, COMMAND3, COMMAND2B
+    CHARACTER*1000                  :: COMMAND1, COMMAND2, COMMAND3
 
     N = SIZE(SOL)
 
@@ -195,28 +196,24 @@ SUBROUTINE DO_SOLUTE(SOL_SYM, SOL, SOL_Q)
 
     COMMAND1 = "[ -e FIFO_solute ] || mknod FIFO_solute p"
     COMMAND2 = "g09 < solute_charge.com > solute_charge.txt"
-    COMMAND2B = "sleep 1 > FIFO_solute &"
+    COMMAND3 = "grep -B"//trim(NCHAR2)//" 'Electrostatic Properties (Atomic Units)' "//&
+    "solute_charge.txt | head -"//trim(NCHAR)//" > FIFO_solute"
 
-    COMMAND3 = "./doCharges.sh " // trim(NCHAR)
+    CALL system(COMMAND1)
 
-    !CALL system(COMMAND1)
-
-    IOSTATUS = system(COMMAND2)
+    CALL system(COMMAND2, IOSTATUS)
     IF (IOSTATUS .NE. 0) THEN
         WRITE (500,*) "Gaussian error, retrying", IOSTATUS, "@ SOLUTE_CHARGE"
-        IOSTATUS = system(COMMAND2)
+        CALL system(COMMAND2, IOSTATUS)
         IF(IOSTATUS .NE. 0) THEN
             WRITE (500,*) "Gaussian error, aborting", IOSTATUS, "@ SOLUTE_CHARGE"
             STOP
         END IF
     END IF
 
-    IOSTATUS = SYSTEM(trim(COMMAND2B))
     OPEN(17, FILE="FIFO_solute")
-    IOSTATUS = system(trim(COMMAND3))
-    !IF(IOSTATUS .NE. 0) WRITE(*,*) "Error executing doCharges!", IOSTATUS
+    CALL system(COMMAND3)
     DO I=1,N
-        WRITE (*,*) I
         READ (17, "(A12, F9.7)") NCHAR, SOL_Q(I)
     END DO
     CLOSE(17)
@@ -224,5 +221,39 @@ SUBROUTINE DO_SOLUTE(SOL_SYM, SOL, SOL_Q)
 END SUBROUTINE DO_SOLUTE
 
 !====================================================================
+!====================================================================
+
+SUBROUTINE DOCHARGES
+
+OPEN(16, FILE="doCharges.sh")
+
+WRITE (16,*) "#!/bin/bash"
+WRITE (16,*) ""
+WRITE (16,*) "# 1 input"
+WRITE (16,*) ""
+WRITE (16,*) "#echo Making pipe"
+WRITE (16,*) "#[ -e FIFO_solute ] || mknod FIFO_solute p"
+WRITE (16,*) ""
+WRITE (16,*) "#sleep 5 > FIFO_solute &"
+WRITE (16,*) ""
+WRITE (16,*) "#echo Executing Gaussian"
+WRITE (16,*) "#g09 < solute_charge.com > solute_charge.txt || exit $?"
+WRITE (16,*) ""
+WRITE (16,*) "if [[ ! -z $( grep ''Gaussian 09, Revision A.02'' solute_charge.txt ) ]]; then"
+WRITE (16,*) "  echo Gaussian 09 Rev A.02 detected, grepping!"
+WRITE (16,*) "  grep -B$(( $1 + 2 )) 'Electrostatic Properties (Atomic Units)' solute_charge.txt | head -$1 > FIFO_solute"
+WRITE (16,*) "elif [[ ! -z $( grep ''Gaussian 09, Revision D.01'' solute_charge.txt ) ]]; then"
+WRITE (16,*) "  echo Gaussian 09 Rev D.01 detected, grepping!"
+WRITE (16,*) "  grep -A$(( $1 + 1 )) 'ESP charges:' solute_charge.txt | tail -$1 > FIFO_solute"
+WRITE (16,*) "else"
+WRITE (16,*) "  echo Unsupported gaussian detected!"
+WRITE (16,*) "  grep ''Gaussian 09'' solute_charge.txt"
+WRITE (16,*) "  exit 2"
+WRITE (16,*) "fi"
+
+WRITE (16,*) ""
+CLOSE(16)
+
+END SUBROUTINE DOCHARGES
 
 END MODULE gaussian
