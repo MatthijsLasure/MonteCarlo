@@ -1,5 +1,6 @@
 program convert
     use lib
+    use dihedral
     implicit none
 
     CHARACTER*1000   :: in_file, out_file, sol_file, DMSO_file, temp
@@ -8,8 +9,9 @@ program convert
     TYPE (vector)    :: vecA, vecB
     DOUBLE PRECISION :: R, RMIN
     INTEGER          :: IMIN
-    TYPE(vector), DIMENSION(:), ALLOCATABLE :: solute, DMSO, pos, MOL1
+    TYPE(vector), DIMENSION(:), ALLOCATABLE :: solute, DMSO, pos, MOL1, UCOM, UHOEK
     CHARACTER*4, DIMENSION(:), ALLOCATABLE      :: DMSO_SYM, SOL_SYM
+    DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: DIST
     CHARACTER*4      :: symbol
     INTEGER          :: nDMSO, nSOL, NCOM, N, TIMESTEP
     INTEGER          :: what, I, J, K, IOSTATUS, A, B, NHYDROGEN
@@ -31,6 +33,8 @@ program convert
     CALL GET_COMMAND_ARGUMENT(3, out_file)
     CALL GET_COMMAND_ARGUMENT(4, sol_file)
     CALL GET_COMMAND_ARGUMENT(5, DMSO_file)
+
+    READ(what_char, *) what
 
         ! Laden van configuraties
 !====================================================================
@@ -66,7 +70,6 @@ program convert
 !====================================================================
 !====================================================================
 
-    READ(what_char, *) what
     NHYDROGEN = 0
     IF (what .EQ. 1) THEN
         doH = .TRUE.
@@ -75,6 +78,7 @@ program convert
             IF (DMSO_SYM(I) .EQ. "H") NHYDROGEN = NHYDROGEN + 1
         END DO
     END IF
+
 
     OPEN(10, FILE=trim(in_file))
     OPEN(11, FILE=trim(out_file))
@@ -165,16 +169,24 @@ ELSE IF (what .EQ. 3) THEN! Calculate all distances
                 !WRITE (*,*) trim(TEMP)
                 READ (TEMP, *) CoM%X, CoM%Y, CoM%Z, hoek%X, hoek%Y, hoek%Z
                 MOL1 = RotMatrix(CoM, DMSO, hoek)
+
+                RMIN = HUGE(R)
+                IMIN = HUGE(I)
                 DO A=1,nSOL
                     vecA = SOLUTE(A)
                     DO B=1,nDMSO
                         vecB = MOL1(B)
                         R = getDist(vecA, vecB)
-                        WRITE (11, *) TIMESTEP, A, I, B, R
+                        IF (R .LT. RMIN) THEN
+                            RMIN = R
+                            IMIN = B
+                        END IF
                     END DO
                 END DO
+                WRITE (11, *) TIMESTEP, A, I, IMIN, RMIN
             END DO
     END DO
+
 END IF
 
 CLOSE(10)

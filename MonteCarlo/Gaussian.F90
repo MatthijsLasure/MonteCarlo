@@ -93,7 +93,7 @@ END SUBROUTINE cleanGaussian
 !====================================================================
 !====================================================================
 
-SUBROUTINE calcGaEn(I, J, MOL1, MOL2, SYM1, SYM2, HASCLIPPED, EN, PROC, WORKDIR)
+SUBROUTINE calcGaEn(I, J, MOL1, MOL2, SYM1, SYM2, EN, PROC, WORKDIR)
 
     IMPLICIT NONE
 
@@ -105,7 +105,6 @@ SUBROUTINE calcGaEn(I, J, MOL1, MOL2, SYM1, SYM2, HASCLIPPED, EN, PROC, WORKDIR)
     CHARACTER*(*), INTENT(IN) :: WORKDIR
 
     ! Output parameters
-    LOGICAL, INTENT(OUT) :: HASCLIPPED ! Says if this set may run
     DOUBLE PRECISION, INTENT(OUT) :: EN
 
     ! Internal variables
@@ -152,8 +151,6 @@ SUBROUTINE calcGaEn(I, J, MOL1, MOL2, SYM1, SYM2, HASCLIPPED, EN, PROC, WORKDIR)
     WRITE (*,"(A,I3.3,A)") "DEBUG: calcGaEn thread", ThreadNum, ": Want to execute: " // TRIM(GAUSS_COMM)
 #endif
 
-    ! Other initialisations
-    HASCLIPPED = .FALSE.
 
 #if defined(USE_PIPES)
     ! Call Gaussian. Since the command string starts Gaussian in the background,

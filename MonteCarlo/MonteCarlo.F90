@@ -762,7 +762,7 @@ SUBROUTINE calculateGA(I, LOOPNR)
     INTEGER :: K, L, M, KMIN = 2, LMIN = 2, MMIN = 2 ! Minimal Image Convention
     DOUBLE PRECISION :: R, RMIN, EN = 0
     TYPE (vector) :: TEMPJ
-    LOGICAL, DIMENSION(NCOM+1) :: TOOFAR, CLIPPED
+    LOGICAL :: TOOFAR, CLIPPED
     LOGICAL :: MAYCONTINUE = .TRUE.
 
     ! Solvent solvent
@@ -781,8 +781,6 @@ SUBROUTINE calculateGA(I, LOOPNR)
     !$OMP PARALLEL
     !$OMP DO PRIVATE(EN,MOL2)
     EXEC: DO J = 1, NCOM
-        CLIPPED(J) = .FALSE.
-        TOOFAR(J) = .FALSE.
         SOLVENTSOLVENT(I,J) = 0.D0
         SOLVENTSOLVENT(J,I) = 0.D0
 
@@ -815,13 +813,26 @@ SUBROUTINE calculateGA(I, LOOPNR)
             !write(IOerr,*) I, J, getDist(CoM(I), CoM(J)), sqrt(RMIN), KMIN, LMIN, MMIN
 
             IF (RMIN .GT. 49.D0) THEN
-                TOOFAR(J) = .TRUE.
+                TOOFAR = .TRUE.
             ELSE
                 MOL2 = RotMatrix(TEMPJ, DMSO, hoek(J))
-                !CALL calcGa(I, J, MOL1, MOL2, DMSO_SYM, DMSO_SYM, CLIPPED(J), PROC)
-                CALL calcGaEn(I, J, MOL1, MOL2, DMSO_SYM, DMSO_SYM, CLIPPED(J), EN, PROC, WORKDIR)
-                EN = EN - E_DMSO - E_DMSO
-                EN = EN * HARTREE2KJMOL
+                DO K=1,NDMSO
+                    DO L=1,NDMSO
+                        R = getDistSq(MOL1(K), MOL2(L))
+                        IF (R .LT. 0.25) THEN ! Clipped
+                         CLIPPED = .TRUE.
+                        END IF
+                    END DO
+                END DO
+
+                IF (CLIPPED) THEN
+                    EN = 1000
+                ELSE
+                    CALL calcGaEn(I, J, MOL1, MOL2, DMSO_SYM, DMSO_SYM, EN, PROC, WORKDIR)
+                    EN = EN - E_DMSO - E_DMSO
+                    EN = EN * HARTREE2KJMOL
+                END IF
+
                 SOLVENTSOLVENT(I,J) = EN
                 SOLVENTSOLVENT(J,I) = EN
                 !IF(CLIPPED(j)) MayContinue = .FALSE.
@@ -841,7 +852,7 @@ SUBROUTINE calculateGA(I, LOOPNR)
     !CALL calcGa(I, 0, MOL1, SOLUTE, DMSO_SYM, SOL_SYM, Clipped(NCOM+1), PROC)
     !CALL execGa(I, 0, EN)
     !CALL grepit(I, 0, EN)
-    CALL calcGaEn(I, 0, MOL1, SOLUTE, DMSO_SYM, SOL_SYM, Clipped(NCOM+1), EN, PROC, WORKDIR)
+    CALL calcGaEn(I, 0, MOL1, SOLUTE, DMSO_SYM, SOL_SYM, EN, PROC, WORKDIR)
     EN = EN - E_SOL - E_DMSO
     EN = EN * HARTREE2KJMOL
     ENERGY(I) = EN
