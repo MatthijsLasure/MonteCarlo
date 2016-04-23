@@ -103,8 +103,6 @@ PROGRAM MonteCarlo
 
     CALL FDATE(DATE)
 
-
-
     ! Config
 !====================================================================
 !====================================================================
@@ -217,10 +215,7 @@ PROGRAM MonteCarlo
     OPEN(UNIT=IOdump, FILE=DUMP_FILE)
     WRITE (*,*) "Dump file opened on ", DUMP_FILE
 
-    WRITE (*,*) "Config loaded! Writing time..."
-
-    CALL system_clock (START)
-    WRITE(IOerr,*) START
+    WRITE (*,*) "Config loaded!"
 
     ! Get seed for randgen.
     CALL init_random_seed()
@@ -376,9 +371,6 @@ PROGRAM MonteCarlo
     WRITE (IOout,901) "i", "TotEng", "TotEng_old", "kans", "rv", "rSolv", "pSuc", "ratio","dposmax"
     WRITE (IOout,902) 0, TOTENG, TOTENG, 0.D0, 0.D0, 0, REAL(0) / real(1), 0.D0, DPOSMAX
 
-    CALL system_clock(START)
-    WRITE(IOerr, *) START
-
 !====================================================================
 !====================================================================
 
@@ -437,9 +429,7 @@ PROGRAM MonteCarlo
     !====================================================================
 
     WRITE (*,*) "Fase 2 started!"
-    
-    CALL system_clock(START)
-    !WRITE(IOerr,*) START
+
     
     IF (GA_STEPS .GT. 0) THEN
         DO I=1,NCOM
