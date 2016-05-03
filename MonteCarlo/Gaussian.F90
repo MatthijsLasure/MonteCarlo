@@ -319,6 +319,11 @@ SUBROUTINE DO_SOLUTE(SOL_SYM, SOL, SOL_Q, WORKDIR)
       &       "g09 <" // TRIM(GAUSS_IN) // " 2>" // TRIM(GAUSS_ERR) // " | " // &
       &       "grep -B" // TRIM(NCHAR) // " ' Sum of ESP charges =' | " // &
       &       "head -" // TRIM(NCHAR) // " >" // TRIM(GAUSS_OUT)
+
+    COMMAND = "export GAUSS_SCRDIR=" // TRIM(GAUSS_SCRATCH) // "; " // &
+      &       "g09 <" // TRIM(GAUSS_IN) // " 2>" // TRIM(GAUSS_ERR) // " | " // &
+      &       "grep -A" // TRIM(NCHAR2) // " 'Charges from ESP fit' | " // &
+      &       "tail -" // TRIM(NCHAR) // " >" // TRIM(GAUSS_OUT)
 #ifdef DEBUG
     WRITE(*,"(A)") "DEBUG: DO_SOLUTE: Will start Gaussian through: " // TRIM(COMMAND)
 #endif
@@ -387,7 +392,8 @@ SUBROUTINE DO_SOLUTE(SOL_SYM, SOL, SOL_Q, WORKDIR)
     CLOSE(FO)
 
 #ifdef DEBUG
-    WRITE (*,"(A,I3.3,A)") "DEBUG: Thread", ThreadNum, ": Exiting DO_SOLUTE"
+    !WRITE (*,"(A,I3.3,A)") "DEBUG: Thread", ThreadNum, ": Exiting DO_SOLUTE"
+    WRITE (*,*) "qsdfqsdfDEBUG: Thread", ThreadNum, ": Exiting DO_SOLUTE"
 #endif
 
 CONTAINS

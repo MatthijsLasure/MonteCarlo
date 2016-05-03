@@ -8,7 +8,7 @@ program convert
     TYPE (vector)    :: CoM, hoek
     TYPE (vector)    :: vecA, vecB
     DOUBLE PRECISION :: R, RMIN
-    INTEGER          :: IMIN
+    INTEGER          :: IMIN, AMIN
     TYPE(vector), DIMENSION(:), ALLOCATABLE :: solute, DMSO, pos, MOL1, UCOM, UHOEK
     CHARACTER*4, DIMENSION(:), ALLOCATABLE      :: DMSO_SYM, SOL_SYM
     DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: DIST
@@ -172,6 +172,7 @@ ELSE IF (what .EQ. 3) THEN! Calculate all distances
 
                 RMIN = HUGE(R)
                 IMIN = HUGE(I)
+                AMIN = HUGE(A)
                 DO A=1,nSOL
                     vecA = SOLUTE(A)
                     DO B=1,nDMSO
@@ -180,10 +181,11 @@ ELSE IF (what .EQ. 3) THEN! Calculate all distances
                         IF (R .LT. RMIN) THEN
                             RMIN = R
                             IMIN = B
+                            AMIN = A
                         END IF
                     END DO
                 END DO
-                WRITE (11, *) TIMESTEP, A, I, IMIN, RMIN
+                WRITE (11, *) TIMESTEP, AMIN, I, IMIN, RMIN
             END DO
     END DO
 

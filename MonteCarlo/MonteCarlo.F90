@@ -247,6 +247,7 @@ PROGRAM MonteCarlo
     ALLOCATE(solute(NSOL)) ! Maak de arrays groot genoeg
     ALLOCATE(SOLUTE_OLD(NSOL))
     ALLOCATE(sol_sym(NSOL))
+    ALLOCATE(SOL_Q(NSOL))
     ALLOCATE(TABLE_SOL(NSOL, 3))
     DO I=1, NSOL ! Lees de coördinaten uit
         READ (IOwork,*) sol_sym(I), solute(I)%X, solute(I)%Y, solute(I)%Z
@@ -290,7 +291,6 @@ PROGRAM MonteCarlo
     OPEN (UNIT=IOwork, FILE=PARSOL_FILE)
     READ (IOwork, *) NPARSOL
     READ (IOwork, *) ! Comment line
-    ALLOCATE(SOL_Q(NPARSOL))
     ALLOCATE(SOLPAR_SYM(NPARSOL))
     ALLOCATE(SOL_EPSILON(NPARSOL))
     ALLOCATE(SOL_SIGMA(NPARSOL))
@@ -312,7 +312,7 @@ PROGRAM MonteCarlo
 
     WRITE(*,*) "Working on assosiation tables..."
     CALL ASSOSIATE_DMSO(DMSO_SYM, SYM, Q, EPSILON, SIGMA, TABLE_DMSO)
-    CALL ASSOSIATE_SOLUTE(SOL_SYM, SOLPAR_SYM, SOL_Q, SOL_EPSILON, SOL_SIGMA, TABLE_SOL)
+    CALL ASSOSIATE_SOLUTE(SOL_SYM, SOLPAR_SYM, SOL_EPSILON, SOL_SIGMA, TABLE_SOL)
 
     ! Initiële berekening interacties
     !================================
@@ -334,7 +334,10 @@ PROGRAM MonteCarlo
     ! Initiële berekening ladingen solute
     !====================================
     WRITE (*,*) "Calculating partial charges on solute..."
-    CALL DO_SOLUTE(SOL_SYM, SOLUTE,SOL_Q,WORKDIR)
+    !SOL_Q = TABLE(
+    CALL DO_SOLUTE(SOL_SYM, SOLUTE, TABLE_SOL(:,1), WORKDIR)
+
+    WRITE (*,*) "Done calculating"
 
     IF (LJ_STEPS .GT. 0) THEN
         DO I=1,NCOM
@@ -530,10 +533,7 @@ PROGRAM MonteCarlo
     END DO
     CLOSE(IOwork)
     
-    
-    !OPEN(UNIT=IOdump, FILE=DUMP_FILE, ACCESS="APPEND")
     CALL DUMP(UNICORN+1, IOdump)
-    !CLOSE(IOdump)
     
     WRITE (*,*) "Fase 2 done!"
     WRITE (*,*) "Fase POST started!"
@@ -558,7 +558,9 @@ PROGRAM MonteCarlo
     DEALLOCATE(DMSO_SYM)
     DEALLOCATE(TABLE_DMSO)
     DEALLOCATE(TABLE_SOL)
+    DEALLOCATE (DIHOEK)
     DEALLOCATE(SOLUTE)
+    DEALLOCATE (SOLUTE_OLD)
     DEALLOCATE(SOL_SYM)
     DEALLOCATE(CoM)
     DEALLOCATE(hoek)
