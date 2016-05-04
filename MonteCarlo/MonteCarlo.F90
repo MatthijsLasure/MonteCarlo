@@ -813,6 +813,7 @@ SUBROUTINE calculateGA(I, LOOPNR)
                         R = getDistSq(MOL1(K), MOL2(L))
                         IF (R .LT. 0.25) THEN ! Clipped
                          CLIPPED = .TRUE.
+                         WRITE (IOerr, *) "Clipped @", LOOPNR, I, J, K, L, R
                         END IF
                     END DO
                 END DO

@@ -392,8 +392,8 @@ SUBROUTINE DO_SOLUTE(SOL_SYM, SOL, SOL_Q, WORKDIR)
     CLOSE(FO)
 
 #ifdef DEBUG
-    !WRITE (*,"(A,I3.3,A)") "DEBUG: Thread", ThreadNum, ": Exiting DO_SOLUTE"
-    WRITE (*,*) "qsdfqsdfDEBUG: Thread", ThreadNum, ": Exiting DO_SOLUTE"
+    WRITE (*,"(A,I3.3,A)") "DEBUG: Thread", ThreadNum, ": Exiting DO_SOLUTE"
+    !WRITE (*,*) "qsdfqsdfDEBUG: Thread", ThreadNum, ": Exiting DO_SOLUTE"
 #endif
 
 CONTAINS
