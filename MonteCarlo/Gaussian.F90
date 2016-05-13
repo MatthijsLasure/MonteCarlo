@@ -204,7 +204,9 @@ SUBROUTINE calcGaEn(I, J, MOL1, MOL2, SYM1, SYM2, EN, PROC, WORKDIR)
         WRITE(IOerr,"(A)") "END INPUT above this line"
         WRITE(IOerr,"(A)") "========================================"
 !$OMP END CRITICAL (CS_IOERR)
-        CALL ABORT()
+        !CALL ABORT()
+        EN = 10000.D0
+        RETURN
     END IF
 #if defined(DEBUG) && defined(USE_PIPES)
     WRITE(*,'(A, I3.3, A, A21, F20.10)') "DEBUG: calcGaEn thread ", ThreadNum, ": Read from pipe: ", DUMMYSTRING, EN
