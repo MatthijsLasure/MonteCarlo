@@ -187,10 +187,10 @@ END SUBROUTINE ASSOSIATE_DMSO
 !====================================================================
 !====================================================================
 
-SUBROUTINE ASSOSIATE_SOLUTE(SYM, TABLE_SYM, TABLE_Q, TABLE_E, TABLE_S, TABLE)
+SUBROUTINE ASSOSIATE_SOLUTE(SYM, TABLE_SYM, TABLE_E, TABLE_S, TABLE)
     ! INPUT
     CHARACTER*4, DIMENSION(:), INTENT(IN)         :: SYM, TABLE_SYM ! Atoomtypes
-    DOUBLE PRECISION, DIMENSION(:), INTENT(IN)    :: TABLE_Q, TABLE_E, TABLE_S ! params
+    DOUBLE PRECISION, DIMENSION(:), INTENT(IN)    :: TABLE_E, TABLE_S ! params
 
     ! OUTPUT
     DOUBLE PRECISION, DIMENSION(:,:), INTENT(OUT) :: TABLE
@@ -202,7 +202,7 @@ SUBROUTINE ASSOSIATE_SOLUTE(SYM, TABLE_SYM, TABLE_Q, TABLE_E, TABLE_S, TABLE)
 
     DO I=1,N
         A = findSym(SYM(I), TABLE_SYM)
-        TABLE(I,1) = TABLE_Q(I)
+        TABLE(I,1) = 0.D0
         TABLE(I,2) = TABLE_E(A)
         TABLE(I,3) = TABLE_S(A)
     END DO

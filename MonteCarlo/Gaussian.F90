@@ -8,252 +8,447 @@
 !====================================================================
 MODULE gaussian
 
+    USE MCconstants, ONLY : IOstartrange, IOerr
     USE vector_class
     USE lib
+    USE OMP_LIB
 
     CONTAINS
 
 !====================================================================
 
-SUBROUTINE calcGa(I, J, MOL1, MOL2, SYM1, SYM2, HASCLIPPED, PROC)
-    ! INPUT
+SUBROUTINE prepGaussian( WORKDIR )
+
+    IMPLICIT NONE
+
+    ! Input parameter
+    CHARACTER*(*), INTENT(IN) :: WORKDIR
+
+    ! Global work variables
+    CHARACTER*1000 :: GLOB_COMM
+
+    ! Per thread work variables
+    INTEGER :: ThreadNum
+    CHARACTER*500  :: THREAD_DIR
+    CHARACTER*1000 :: THREAD_COMM
+
+    ! First make sure the work directory exists
+    GLOB_COMM = "mkdir -p " // TRIM(WORKDIR)
+#ifdef DEBUG
+    WRITE (*,'(A)') "DEBUG prepGaussian: Executing " // TRIM(GLOB_COMM)
+#endif
+    CALL SYSTEM(GLOB_COMM)
+
+    ! Now the per thread part: Create thread work directory and
+    ! the pipes. We do this in an OpenMP parallel section to
+    ! make sure we got the right number of threads.
+    !$OMP PARALLEL PRIVATE(ThreadNum,THREAD_DIR,THREAD_COMM)
+    ThreadNum = OMP_get_thread_num()
+    WRITE(THREAD_DIR,"(A,'/work-',I3.3)") TRIM(WORKDIR), ThreadNum
+#if defined(USE_PIPES)
+    THREAD_COMM = "/bin/mkdir -p " // TRIM(THREAD_DIR)  // " ; " // &
+      &           "cd " // TRIM(THREAD_DIR)             // " ; " // &
+      &           "[[ -e input.pipe ]]  || mkfifo input.pipe ; " // &
+      &           "[[ -e output.pipe ]] || mkfifo output.pipe"
+#else
+    THREAD_COMM = "mkdir -p " // TRIM(THREAD_DIR)
+#endif
+#ifdef DEBUG
+    WRITE (*,'(A)') "DEBUG prepGaussian: Executing " // TRIM(THREAD_COMM)
+#endif
+    CALL SYSTEM(THREAD_COMM)
+    !$OMP END PARALLEL
+
+#ifdef DEBUG
+    ! DEEBUG: List the work directory.
+    GLOB_COMM="ls -l " // TRIM(WORKDIR) // "/work-*"
+    WRITE (*,'(A)') "DEBUG prepGaussian: Executing " // TRIM(GLOB_COMM)
+    CALL SYSTEM(GLOB_COMM)
+#endif
+
+END SUBROUTINE prepGaussian
+
+!====================================================================
+!====================================================================
+
+SUBROUTINE cleanGaussian(WORKDIR)
+
+    IMPLICIT NONE
+
+    ! Input parameter
+    CHARACTER*(*), INTENT(IN) :: WORKDIR
+
+    ! Global work variables
+    CHARACTER*250 :: GLOB_COMM
+
+    ! Remove all work-* subdirectories
+    GLOB_COMM = "/bin/rm -rf " // TRIM(WORKDIR) // "/work-*"
+#ifdef DEBUG
+    WRITE (*,'(A)') "DEBUG cleanGaussian: Executing " // TRIM(GLOB_COMM)
+#endif
+    CALL SYSTEM(GLOB_COMM)
+
+END SUBROUTINE cleanGaussian
+
+!====================================================================
+!====================================================================
+
+SUBROUTINE calcGaEn(I, J, MOL1, MOL2, SYM1, SYM2, EN, PROC, WORKDIR)
+
+    IMPLICIT NONE
+
+    ! Input parameters
     TYPE (vector), DIMENSION(:), INTENT(IN) :: MOL1, MOL2 ! absolute coords!
     CHARACTER*4, DIMENSION(:), INTENT(IN) :: SYM1, SYM2 ! Atoomtypes
     INTEGER, INTENT(IN) :: I, J
     INTEGER, INTENT(IN) :: PROC ! aantal processoren voor gaussian
+    CHARACTER*(*), INTENT(IN) :: WORKDIR
 
-    ! OUTPUT
-    LOGICAL, INTENT(OUT) :: HASCLIPPED ! Says if this set may run
+    ! Output parameters
+    DOUBLE PRECISION, INTENT(OUT) :: EN
 
-    ! INTERNAL VARS
-    INTEGER :: K, L ! loop de loop
-    CHARACTER*100 :: GAUSS_FILE
-    CHARACTER*16 :: STR_I, STR_J
-    INTEGER :: N1, N2
-    INTEGER :: IOSTATUS ! Check for EOF
+    ! Internal variables
+    CHARACTER*500  :: GAUSS_SCRATCH
+    CHARACTER*500  :: GAUSS_IN
+    CHARACTER*500  :: GAUSS_OUT
+    CHARACTER*500  :: GAUSS_ERR
+    CHARACTER*2000 :: GAUSS_COMM
+    CHARACTER*100  :: DUMMYSTRING
+    CHARACTER*16   :: STR_I, STR_J
+    INTEGER        :: IOSTATUS ! Check for EOF
+    INTEGER        :: ThreadNum
+    INTEGER        :: FI, FO         ! File handle numbers for input- and output file/pipe
+
+    ! Get our OpenMP thread number. This is used to avoid directory conflicts
+    ThreadNum = OMP_get_thread_num()
+#ifdef DEBUG
+    WRITE (*,"(A,I3.3,A)") "DEBUG: calcGaEn thread", ThreadNum, ": Entered calcGaEn"
+#endif
+    FI = IOstartrange + 2*ThreadNum
+    FO = FI + 1
+
+    ! Prepare strings with file names and commands to execute.
+    WRITE(GAUSS_SCRATCH, "(A,'/work-',I3.3)")  TRIM(WORKDIR), ThreadNum
+#if defined(USE_PIPES)
+    WRITE(GAUSS_IN, "(A,'/input.pipe')")  TRIM(GAUSS_SCRATCH)
+    WRITE(GAUSS_OUT,"(A,'/output.pipe')") TRIM(GAUSS_SCRATCH)
+#else
+    WRITE(GAUSS_IN, "(A,'/input.com')")   TRIM(GAUSS_SCRATCH)
+    WRITE(GAUSS_OUT,"(A,'/output.txt')")  TRIM(GAUSS_SCRATCH)
+#endif
+    WRITE(GAUSS_ERR,"(A,'/error_calcGaEn.log')") TRIM(GAUSS_SCRATCH)
+
+!#if defined(USE_PIPES)
+!    GAUSS_COMM = "export GAUSS_SCRDIR=" // TRIM(GAUSS_SCRATCH) // "; " //     &
+!      &          "g09 <" // TRIM(GAUSS_IN) // " 2>" // TRIM(GAUSS_ERR) // " | " // &
+!      &          "grep Done " // " >" // TRIM(GAUSS_OUT) // " &"
+!#else
+    GAUSS_COMM = "export GAUSS_SCRDIR=" // TRIM(GAUSS_SCRATCH) // "; " //     &
+      &          "g09 <" // TRIM(GAUSS_IN) // " 2>" // TRIM(GAUSS_ERR) // " | " // &
+      &          "grep Done " // " >" // TRIM(GAUSS_OUT)
+!#endif
+#ifdef DEBUG
+    WRITE (*,"(A,I3.3,A)") "DEBUG: calcGaEn thread", ThreadNum, ": Want to execute: " // TRIM(GAUSS_COMM)
+#endif
 
 
-    905 FORMAT(A, 3F16.8)
-    906 FORMAT(A, I3.3'-',I3.3,A)
+#if defined(USE_PIPES)
+    ! Call Gaussian. Since the command string starts Gaussian in the background,
+    ! the SYSTEM call should return immediately. GAussian will be waiting in the background
+    ! for us to open the pipes.
+#ifdef DEBUG
+    WRITE(*,'(A,I3.3,A)') "DEBUG: calcGaEn thread ", ThreadNum, ": Starting Gaussian in calcGaEn (to run in the background)"
+#endif
+    CALL SYSTEM( TRIM(GAUSS_COMM) // " &" )
+#ifdef DEBUG
+    WRITE(*,'(A,I3.3,A)') "DEBUG: calcGaEn thread ", ThreadNum, &
+      &                   ": Finishing system call for Gaussian; it should be running in the background"
+#endif
+#endif
 
-    WRITE(GAUSS_FILE, 906) "gauss/input-", I, J, ".com"
+    ! Open the input file/pipe
+    OPEN(UNIT=FI, FILE=TRIM(GAUSS_IN), ACTION='WRITE')
+    CALL calcGaEn_input(MOL1, MOL2, SYM1, SYM2, PROC, FI)
+    CLOSE(FI)
 
-    HASCLIPPED = .FALSE.
+#if !defined(USE_PIPES)
+    ! Using files instead of pipes: It is now the moment to launch Gaussian.
+#ifdef DEBUG
+    WRITE(*,'(A,I3.3,A)') "DEBUG: calcGaEn thread ", ThreadNum, ": Starting Gaussian in calcGaEn"
+#endif
+    CALL SYSTEM(GAUSS_COMM)
+#ifdef DEBUG
+    WRITE(*,'(A,I3.3,A)') "DEBUG: calcGaEn thread ", ThreadNum, &
+      &                   ": Finishing system call for Gaussian, Gaussian should be completed"
+#endif
+#endif
 
-    N1 = size(MOL1)
-    N2 = size(MOL2)
+    ! Open the output file/pipe.
+    OPEN(UNIT=FO, FILE=TRIM(GAUSS_OUT), STATUS='OLD', ACTION='READ')
 
-    ! Calculate distances
-!    kloop: do K = 1,N1
-!        do L = 1,N2
-!            !if(getDistSq(mol1(K),mol2(L)) .LT. 1.D0) THEN
-!                !hasClipped = .true.
-!                !write(500,*) "Molecules have clipped, discarding.", I, J, getDist(mol1(K),mol2(L))
-!            !END IF
-!        end do
-!    end Do kloop
+    ! Now get the result from the output pipe or output file.
+    READ (FO, "(A21,F20.10)", IOSTAT=IOSTATUS) DUMMYSTRING, EN ! lees resultaat in (A22,F14.12)
+    IF (IOSTATUS .NE. 0 ) THEN
+        WRITE(*,"(A,I3.3,A,I3)") "calcGaEn thread ", ThreadNum, &
+          &                      "  : Unexpected error/end-of-file while reading " // TRIM(GAUSS_OUT) // &
+          &                      ", READ returned code ", IOSTATUS
+!$OMP CRITICAL (CS_IOERR)
+        ! Safeguarding writing to the error file with a critical section so that another thread
+        ! doesn't mix its I/O, assuming it also uses a critical section of course.
+        WRITE(IOerr,"(A)") "========================================"
+        WRITE(IOerr,"(A,I3.3,A)") &
+                           "calcGaEn thread ", ThreadNum, " failed reading output data from the execution of " // &
+                           TRIM(GAUSS_COMM) // ", Input was:"
+        WRITE(IOerr,"(A)") "BEGIN INPUT below this line"
+        CALL calcGaEn_input(MOL1, MOL2, SYM1, SYM2, PROC, IOerr)
+        WRITE(IOerr,"(A)") "END INPUT above this line"
+        WRITE(IOerr,"(A)") "========================================"
+!$OMP END CRITICAL (CS_IOERR)
+        !CALL ABORT()
+        EN = 10000.D0
+        RETURN
+    END IF
+#if defined(DEBUG) && defined(USE_PIPES)
+    WRITE(*,'(A, I3.3, A, A21, F20.10)') "DEBUG: calcGaEn thread ", ThreadNum, ": Read from pipe: ", DUMMYSTRING, EN
+#endif
 
+    CLOSE(FO)
 
-    !if (.NOT. hasClipped) THEN
-        ! OPEN FILE
-        OPEN(UNIT=15, FILE=TRIM(GAUSS_FILE))
+#ifdef DEBUG
+    WRITE (*,"(A,I3.3,A)") "DEBUG: calcGaEn thread ", ThreadNum, ": Exiting calcGaEn"
+#endif
 
-        WRITE (15,"(A, I2.2, A)") '%nproc=', PROC, '                                '
-        WRITE (15,*) '%mem=1Gb                                '
-        !write (15,*) '%chk=inputess.chk                       '
-        WRITE (15,*) '#  PM6                                  '
-        WRITE (15,*) '                                        '
-        WRITE (15,*) 'interacties                             '
-        WRITE (15,*) '                                        '
-        WRITE (15,*) '0 1                                     '
+CONTAINS
+
+    SUBROUTINE calcGaEn_input(MOL1, MOL2, SYM1, SYM2, PROC, FI)
+
+        IMPLICIT NONE
+
+        ! Input arguments
+        TYPE (vector), DIMENSION(:), INTENT(IN) :: MOL1, MOL2 ! absolute coords!
+        CHARACTER*4, DIMENSION(:), INTENT(IN)   :: SYM1, SYM2 ! Atoomtypes
+        INTEGER, INTENT(IN) :: PROC ! aantal processoren voor gaussian
+        INTEGER, INTENT(IN) :: FI
+        CHARACTER*1000 :: debfile
+
+        ! Other variables
+        INTEGER :: K
+        CHARACTER*4    :: GAUSS_PROCS
+
+        ! Output formats
+        905 FORMAT(A, 3F16.8)
+
+        WRITE (debfile, "(I3.3,A)") OMP_get_thread_num(), ".inp"
+        OPEN(255, file=debfile, access='APPEND')
+
+        ! Preparations
+        WRITE(GAUSS_PROCS,'(I4)') PROC
+
+        ! Do the actual IO
+        WRITE (FI,"(A)") '%nproc=' // ADJUSTL(GAUSS_PROCS) // '                              '
+        WRITE (FI,"(A)") '%mem=1Gb                                '
+        !write (FI,*)    'chk=inputess.chk                        '
+        WRITE (FI,"(A)") '#  PM6                                  '
+        WRITE (FI,"(A)") '                                        '
+        WRITE (FI,"(A)") 'interacties                             '
+        WRITE (FI,"(A)") '                                        '
+        WRITE (FI,"(A)") '0 1                                     '
+
+        WRITE(255,*) 20
+        WRITE(255,*) "calc inter"
 
         ! Print Mol1
-        DO K=1,N1
-            WRITE (15,905) sym1(K), mol1(K)%X, mol1(K)%Y, mol1(K)%Z
+        DO K=1,size(MOL1)
+            WRITE (FI,905) sym1(K), mol1(K)%X, mol1(K)%Y, mol1(K)%Z
+            WRITE (255,905) sym1(K), mol1(K)%X, mol1(K)%Y, mol1(K)%Z
         END DO
 
         ! Print mol2
-        DO K=1,N2
-            WRITE (15,905) sym2(K), mol2(K)%X, mol2(K)%Y, mol2(K)%Z
+        DO K=1,size(MOL2)
+            WRITE (FI,905) sym2(K), mol2(K)%X, mol2(K)%Y, mol2(K)%Z
+            WRITE (255,905) sym2(K), mol2(K)%X, mol2(K)%Y, mol2(K)%Z
         END DO
 
-        WRITE (15,*) '                                        '
-        CLOSE(15)
-    !END IF
+        WRITE (FI,"(A)") '                                        '
+        CLOSE(255)
 
-END SUBROUTINE calcGa
+    END SUBROUTINE calcGaEn_input
 
-!====================================================================
-!====================================================================
-
-SUBROUTINE GREPIT(I, J, EN)
-
-    CHARACTER*100 :: GAUSS_LOG, FIFO
-    CHARACTER*600 ::  COMMAND2, COMMAND2B
-    INTEGER, INTENT(IN) :: I, J
-    DOUBLE PRECISION :: EN
-    CHARACTER*100 :: BULLSHIT
-
-    906 FORMAT(A, I3.3'-',I3.3,A)
-
-    WRITE(GAUSS_LOG, 906) "gauss/output-", I, J, ".log"
-    WRITE(FIFO, 906) "gauss/FIFO-", I, J, ""
-
-    WRITE(COMMAND2B, "(A10, A, A2)") "sleep 1 > ", trim(FIFO), " &" ! Keep pipe alive
-    WRITE(COMMAND2, "(A10, A, A3,A, A2)") "grep Done ", trim(GAUSS_LOG), " > ", trim(FIFO), "  " ! Filter log > to pipe
-
-    CALL system(trim(COMMAND2B))
-
-    OPEN (16, FILE=TRIM(FIFO), STATUS='OLD', ACTION='READ', FORM='FORMATTED') ! Open de pipeline
-
-    CALL system(trim(COMMAND2)) ! Execute grep
-    READ (16, "(A21,F20.10)", IOSTAT=IOSTATUS) bullshit, en ! lees resultaat in(A22,F14.12)
-
-    CLOSE(16)
-
-    IF(IOSTATUS .NE. 0) WRITE(500,*) "Woeps FIFO", IOSTATUS, FIFO, EN
-
-END SUBROUTINE GREPIT
+END SUBROUTINE calcGaEn
 
 !====================================================================
 !====================================================================
 
-SUBROUTINE execGa(I, J, EN)
+SUBROUTINE DO_SOLUTE(SOL_SYM, SOL, SOL_Q, WORKDIR)
 
-    CHARACTER*100 :: GAUSS_FILE, GAUSS_LOG, FIFO
-    CHARACTER*600 :: COMMAND1, COMMAND2, COMMAND0, COMMAND2B, COMMAND3
-    INTEGER, INTENT(IN) :: I, J
-    DOUBLE PRECISION :: EN
-    CHARACTER*100 :: BULLSHIT
-    INTEGER :: IOSTATUS
-
-    906 FORMAT(A, I3.3'-',I3.3,A)
-
-    ! Generate filenames
-    WRITE(GAUSS_FILE, 906) "gauss/input-", I, J, ".com"
-    WRITE(GAUSS_LOG, 906) "gauss/output-", I, J, ".log"
-    WRITE(FIFO, 906) "gauss/FIFO-", I, J, ""
-
-    ! Generate commands
-    WRITE(COMMAND0, "(A, A, A, A, A)") "[[ -e ", trim(FIFO), " ]] || mknod ", trim(FIFO), " p" ! Make Pipe als het nog niet bestaat
-    !write(command1, "(A6,A,A15, A, A2)") "g09 < ", gauss_file, " | grep Done > ", FIFO, " &" ! Start Gaussian in background mode
-    WRITE(COMMAND1, "(A6,A,A15, A, A2)") "g09 < ", trim(GAUSS_FILE), " > ", trim(GAUSS_LOG), "  " ! TEMP DEBUG
-    WRITE(COMMAND2B, "(A10, A, A2)") "sleep 2 > ", trim(FIFO), " &" ! Keep pipe alive
-    WRITE(COMMAND2, "(A10, A, A3,A, A2)") "grep Done ", trim(GAUSS_LOG), " > ", trim(FIFO), "  " ! Filter log > to pipe
-    WRITE(COMMAND3, "(A3,A)") "rm ", trim(FIFO)
-
-    ! Start gaussian
-    CALL system (trim(COMMAND0)) ! Make pipe
-    CALL system (trim(COMMAND1), IOSTATUS) ! Execute gaussian
-
-    IF (IOSTATUS .NE. 0) THEN ! Check for failure
-        WRITE (500,*) "Gaussian error, retrying", IOSTATUS, "@", I, J
-        CALL system (COMMAND1, IOSTATUS) ! Execute gaussian
-        IF(IOSTATUS .NE. 0) THEN
-            WRITE (500,*) "Gaussian error, aborting", IOSTATUS, "@", I, J
-            EN = huge(EN)
-            RETURN
-        END IF
-    END IF
-
-END SUBROUTINE execGa
-
-!====================================================================
-!====================================================================
-
-SUBROUTINE DO_SOLUTE(SOL_SYM, SOL, SOL_Q)
+    IMPLICIT NONE
 
     CHARACTER*4, DIMENSION(:)       :: SOL_SYM
     TYPE (VECTOR), DIMENSION(:)     :: SOL
     DOUBLE PRECISION, DIMENSION(:)  :: SOL_Q
+    CHARACTER*(*), INTENT(IN)       :: WORKDIR
 
-    INTEGER :: I, N, IOSTATUS
-    CHARACTER*20 :: NCHAR, NCHAR2
-    CHARACTER*1000                  :: COMMAND1, COMMAND2, COMMAND3
+    INTEGER        :: I
+    CHARACTER*20   :: NCHAR, NCHAR2
+    !CHARACTER*1000                  :: COMMAND1, COMMAND2, COMMAND3
+    CHARACTER*1000 :: COMMAND
+    CHARACTER*500  :: GAUSS_SCRATCH
+    CHARACTER*500  :: GAUSS_IN
+    CHARACTER*500  :: GAUSS_OUT
+    CHARACTER*500  :: GAUSS_ERR
+    INTEGER        :: ThreadNum
+    INTEGER        :: FI, FO         ! File handle numbers for input- and output file/pipe
+    INTEGER        :: IOSTATUS
 
-    N = SIZE(SOL)
+    ! Get our OpenMP thread number. This is used to avoid directory conflicts
+    ThreadNum = OMP_get_thread_num()
+#ifdef DEBUG
+    WRITE (*,"(A,I3.3,A)") "DEBUG: Thread", ThreadNum, ": Entered DO_SOLUTE"
+#endif
+    FI = IOstartrange + 2*ThreadNum
+    FO = FI + 1
 
-    OPEN(17, FILE="solute_charge.com")
-    ! Preamble
-    WRITE (17, *) '%nproc=8                                        '
-    WRITE (17, *) '%mem=12GB                                       '
-    WRITE (17, *) '%CHK=solute_charge.chk                          '
-    WRITE (17, *) '#P B3LYP/6-31G* POP=(CHELPG,DIPOLE)             '
-    WRITE (17, *) '                                                '
-    WRITE (17, *) 'SOLUTE CHARGE CALCULATION                       '
-    WRITE (17, *) '                                                '
-    WRITE (17, *) '0 1                                             '
+    ! Prepare strings with file names and commands to execute.
+    WRITE(GAUSS_SCRATCH, "(A,'/work-',I3.3)") TRIM(WORKDIR), ThreadNum
+#if defined(USE_PIPES)
+    WRITE(GAUSS_IN, "(A,'/input.pipe')")  TRIM(GAUSS_SCRATCH)
+    WRITE(GAUSS_OUT,"(A,'/output.pipe')") TRIM(GAUSS_SCRATCH)
+#else
+    WRITE(GAUSS_IN, "(A,'/solute_charge.com')")        TRIM(GAUSS_SCRATCH)
+    WRITE(GAUSS_OUT,"(A,'/solute_charge_output.log')") TRIM(GAUSS_SCRATCH)
+#endif
+    WRITE(GAUSS_ERR,"(A,'/error_DO_SOLUTE.log')") TRIM(GAUSS_SCRATCH)
 
-    DO I=1,N
-        WRITE (17, *) SOL_SYM(I), SOL(I)%X, SOL(I)%Y, SOL(I)%Z
-    END DO
+    WRITE(NCHAR, "(I0)")  SIZE(SOL)
+    WRITE(NCHAR2, "(I0)") SIZE(SOL) + 2
 
-    WRITE (17, *) '                                                '
-    CLOSE(17)
+    ! Prepare the commands to call Gaussian
+    !COMMAND1 = "[ -e FIFO_solute ] || mknod FIFO_solute p"
+    !COMMAND2 = "g09 < solute_charge.com > solute_charge.txt"
+    !COMMAND3 = "grep -B"//trim(NCHAR2)//" 'Electrostatic Properties (Atomic Units)' "//&
+    !"solute_charge.txt | head -"//trim(NCHAR)//" > FIFO_solute"
+    COMMAND = "export GAUSS_SCRDIR=" // TRIM(GAUSS_SCRATCH) // "; " // &
+      &       "g09 <" // TRIM(GAUSS_IN) // " 2>" // TRIM(GAUSS_ERR) // " | " // &
+      &       "grep -B" // TRIM(NCHAR) // " ' Sum of ESP charges =' | " // &
+      &       "head -" // TRIM(NCHAR) // " >" // TRIM(GAUSS_OUT)
 
-    WRITE(NCHAR, "(I0)") N
-    WRITE(NCHAR2, "(I0)") N+2
+    COMMAND = "export GAUSS_SCRDIR=" // TRIM(GAUSS_SCRATCH) // "; " // &
+      &       "g09 <" // TRIM(GAUSS_IN) // " 2>" // TRIM(GAUSS_ERR) // " | " // &
+      &       "grep -A" // TRIM(NCHAR2) // " 'Charges from ESP fit' | " // &
+      &       "tail -" // TRIM(NCHAR) // " >" // TRIM(GAUSS_OUT)
+#ifdef DEBUG
+    WRITE(*,"(A)") "DEBUG: DO_SOLUTE: Will start Gaussian through: " // TRIM(COMMAND)
+#endif
 
-    COMMAND1 = "[ -e FIFO_solute ] || mknod FIFO_solute p"
-    COMMAND2 = "g09 < solute_charge.com > solute_charge.txt"
-    COMMAND3 = "grep -B"//trim(NCHAR2)//" 'Electrostatic Properties (Atomic Units)' "//&
-    "solute_charge.txt | head -"//trim(NCHAR)//" > FIFO_solute"
+#if defined(USE_PIPES)
+    ! Using pipes: Start Gaussian in the background so that it is waiting for the pipes
+    ! to be opened by the Fortran program.
+#ifdef DEBUG
+    WRITE(*,"(A)") "DEBUG: DO_SOLUTE: Calling SYSTEM (Gaussian in the background)"
+#endif
+    CALL SYSTEM( TRIM(COMMAND) // " &" )
+#ifdef DEBUG
+    WRITE(*,"(A)") "DEBUG: DO_SOLUTE: Returned from SYSTEM (Gaussian in the background)"
+#endif
+#endif
 
-    CALL system(COMMAND1)
+    ! Open the input file/pipe
+    OPEN(FI, FILE=GAUSS_IN, ACTION='WRITE')
+    CALL solute_input(SOL_SYM, SOL, SOL_Q, FI)
+    CLOSE(FI)
+#if defined(DEBUG) && !defined(USE_PIPES)
+    WRITE(*,"(A)") "DEBUG: DO_SOLUTE: Input file for Gaussian:"
+    CALL SYSTEM( 'cat <' // TRIM(GAUSS_IN) )
+    WRITE(*,"(A)") "DEBUG: DO_SOLUTE: END DEBUG INFO input file for Gaussian"
+#endif
 
-    CALL system(COMMAND2, IOSTATUS)
-    IF (IOSTATUS .NE. 0) THEN
-        WRITE (500,*) "Gaussian error, retrying", IOSTATUS, "@ SOLUTE_CHARGE"
-        CALL system(COMMAND2, IOSTATUS)
-        IF(IOSTATUS .NE. 0) THEN
-            WRITE (500,*) "Gaussian error, aborting", IOSTATUS, "@ SOLUTE_CHARGE"
-            STOP
+
+#if !defined(USE_PIPES)
+    ! Not using pipes: We now run Gaussian.
+#ifdef DEBUG
+    WRITE(*,"(A)") "DEBUG: DO_SOLUTE: Calling SYSTEM (Gaussian, wait till completed)"
+#endif
+    CALL SYSTEM(COMMAND)
+#ifdef DEBUG
+    WRITE(*,"(A)") "DEBUG: DO_SOLUTE: Returned from SYSTEM (Gaussian completed)"
+#endif
+#endif
+
+    ! Open the output file/pipe.
+    OPEN(FO, FILE=GAUSS_OUT, STATUS='OLD', ACTION='READ')
+
+    DO I = 1, SIZE(SOL)
+        READ (FO, "(A12, F9.7)",IOSTAT=IOSTATUS) NCHAR, SOL_Q(I)
+        IF (IOSTATUS .NE. 0 ) THEN
+            WRITE(*,"(A,I3.3)") "DO_SOLUTE: Unexpected error/end-of-file while reading " // TRIM(GAUSS_OUT) // &
+              &                 ", READ returned code ", IOSTATUS
+!$OMP CRITICAL (CS_IOERR)
+            ! Safeguarding writing to the error file with a critical section so that another thread
+            ! doesn't mix its I/O, assuming it also uses a critical section of course.
+            WRITE(IOerr,"(A)") "========================================"
+            WRITE(IOerr,"(A,I3.3,A)") &
+                           "DO_SOLUTE thread ", ThreadNum, " failed reading output data from the execution of " // &
+                           TRIM(COMMAND) // ", Input was:"
+            WRITE(IOerr,"(A)") "BEGIN INPUT below this line"
+            CALL solute_input(SOL_SYM, SOL, SOL_Q, IOerr)
+            WRITE(IOerr,"(A)") "END INPUT above this line"
+            WRITE(IOerr,"(A)") "========================================"
+!$OMP END CRITICAL (CS_IOERR)
+            CALL ABORT()
         END IF
-    END IF
-
-    OPEN(17, FILE="FIFO_solute")
-    CALL system(COMMAND3)
-    DO I=1,N
-        READ (17, "(A12, F9.7)") NCHAR, SOL_Q(I)
+#if defined(DEBUG) && defined(USE_PIPES)
+        WRITE(*,'(A, A12, F10.7)') "DEBUG: DO_SOLUTE: Read from pipe: ", NCHAR, SOL_Q(I)
+#endif
     END DO
-    CLOSE(17)
+
+    CLOSE(FO)
+
+#ifdef DEBUG
+    WRITE (*,"(A,I3.3,A)") "DEBUG: Thread", ThreadNum, ": Exiting DO_SOLUTE"
+    !WRITE (*,*) "qsdfqsdfDEBUG: Thread", ThreadNum, ": Exiting DO_SOLUTE"
+#endif
+
+CONTAINS
+
+    SUBROUTINE solute_input(SOL_SYM, SOL, SOL_Q, FI)
+
+        IMPLICIT NONE
+
+        ! Input arguments
+        CHARACTER*4, DIMENSION(:)       :: SOL_SYM
+        TYPE (VECTOR), DIMENSION(:)     :: SOL
+        DOUBLE PRECISION, DIMENSION(:)  :: SOL_Q
+        INTEGER, INTENT(IN)             :: FI
+
+        ! Other variables
+        CHARACTER*4 :: GAUSS_PROCS
+        INTEGER     :: I
+
+        ! Initialisations
+        WRITE(GAUSS_PROCS,'(I4)') OMP_get_num_procs()
+
+        ! Preamble
+        WRITE (FI,"(A)") '%nproc=' // ADJUSTL(GAUSS_PROCS) // '                                     '
+        WRITE (FI,"(A)") '%mem=12GB                                       '
+        WRITE (FI,"(A)") '%CHK=solute_charge.chk                          '
+        WRITE (FI,"(A)") '#P B3LYP/6-31G* POP=(CHELPG,DIPOLE)             '
+        WRITE (FI,"(A)") '                                                '
+        WRITE (FI,"(A)") 'SOLUTE CHARGE CALCULATION                       '
+        WRITE (FI,"(A)") '                                                '
+        WRITE (FI,"(A)") '0 1                                             '
+
+        ! Data
+        DO I = 1, SIZE(SOL)
+            WRITE (FI, *) SOL_SYM(I), SOL(I)%X, SOL(I)%Y, SOL(I)%Z
+        END DO
+
+        ! Termination line
+        WRITE (FI,"(A)") '                                                '
+
+    END SUBROUTINE solute_input
 
 END SUBROUTINE DO_SOLUTE
 
 !====================================================================
-!====================================================================
-
-SUBROUTINE DOCHARGES
-
-OPEN(16, FILE="doCharges.sh")
-
-WRITE (16,*) "#!/bin/bash"
-WRITE (16,*) ""
-WRITE (16,*) "# 1 input"
-WRITE (16,*) ""
-WRITE (16,*) "#echo Making pipe"
-WRITE (16,*) "#[ -e FIFO_solute ] || mknod FIFO_solute p"
-WRITE (16,*) ""
-WRITE (16,*) "#sleep 5 > FIFO_solute &"
-WRITE (16,*) ""
-WRITE (16,*) "#echo Executing Gaussian"
-WRITE (16,*) "#g09 < solute_charge.com > solute_charge.txt || exit $?"
-WRITE (16,*) ""
-WRITE (16,*) "if [[ ! -z $( grep ''Gaussian 09, Revision A.02'' solute_charge.txt ) ]]; then"
-WRITE (16,*) "  echo Gaussian 09 Rev A.02 detected, grepping!"
-WRITE (16,*) "  grep -B$(( $1 + 2 )) 'Electrostatic Properties (Atomic Units)' solute_charge.txt | head -$1 > FIFO_solute"
-WRITE (16,*) "elif [[ ! -z $( grep ''Gaussian 09, Revision D.01'' solute_charge.txt ) ]]; then"
-WRITE (16,*) "  echo Gaussian 09 Rev D.01 detected, grepping!"
-WRITE (16,*) "  grep -A$(( $1 + 1 )) 'ESP charges:' solute_charge.txt | tail -$1 > FIFO_solute"
-WRITE (16,*) "else"
-WRITE (16,*) "  echo Unsupported gaussian detected!"
-WRITE (16,*) "  grep ''Gaussian 09'' solute_charge.txt"
-WRITE (16,*) "  exit 2"
-WRITE (16,*) "fi"
-
-WRITE (16,*) ""
-CLOSE(16)
-
-END SUBROUTINE DOCHARGES
 
 END MODULE gaussian
