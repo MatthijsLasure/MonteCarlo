@@ -1,5 +1,6 @@
 MODULE solmod
 
+    USE MCconstants, ONLY : IOerr
     USE RANDGEN
     USE DIHEDRAL
     USE VECTOR_CLASS
@@ -48,7 +49,7 @@ MODULE solmod
         DELTA = POST_EN - PRE_EN
         EXPONENT = -1.D0 * DELTA  * 1000.D0 / (8.314D0 * TEMP)
         IF (EXPONENT .LT. -75.D0) THEN ! e^-75 < 3*10^-33: 0% kans anyway
-        !write(500,*) "Large Exponent!", I
+        !write(IOerr,*) "Large Exponent!", I
             KANS = 0.D0
             RV = 1.D0 ! Skip rand() voor cpu tijd besparing.
         ELSE IF(EXPONENT .GE. 0.D0) THEN ! Lager in energie, dus 100% kans
@@ -87,7 +88,7 @@ MODULE solmod
             END IF
         END DO
         IF (A .EQ. 0) THEN
-            WRITE (500,*) "No match find in dihedral-find with", A1, A2
+            WRITE (IOerr,*) "No match find in dihedral-find with", A1, A2
             STOP
         END IF
     END FUNCTION FIND
