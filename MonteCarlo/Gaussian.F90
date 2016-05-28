@@ -135,7 +135,7 @@ SUBROUTINE execGa(I, J, EN)
     WRITE(FIFO, 906) "gauss/FIFO-", I, J, ""
 
     ! Generate commands
-    WRITE(COMMAND0, "(A, A, A, A, A)") "[[ -e ", trim(FIFO), " ]] || mknod ", trim(FIFO), " p" ! Make Pipe als het nog niet bestaat
+    WRITE(COMMAND0, "(A, A, A, A, A)") "[ -e ", trim(FIFO), " ] || mknod ", trim(FIFO), " p" ! Make Pipe als het nog niet bestaat
     !write(command1, "(A6,A,A15, A, A2)") "g09 < ", gauss_file, " | grep Done > ", FIFO, " &" ! Start Gaussian in background mode
     WRITE(COMMAND1, "(A6,A,A15, A, A2)") "g09 < ", trim(GAUSS_FILE), " > ", trim(GAUSS_LOG), "  " ! TEMP DEBUG
     WRITE(COMMAND2B, "(A10, A, A2)") "sleep 2 > ", trim(FIFO), " &" ! Keep pipe alive
@@ -178,7 +178,7 @@ SUBROUTINE DO_SOLUTE(SOL_SYM, SOL, SOL_Q)
     WRITE (17, *) '%nproc=8                                        '
     WRITE (17, *) '%mem=12GB                                       '
     WRITE (17, *) '%CHK=solute_charge.chk                          '
-    WRITE (17, *) '#P B3LYP/6-31G* POP=(CHELPG,DIPOLE)             '
+    WRITE (17, *) '#P B3LYP/6-31G* POP=(CHELPG,DIPOLE, READRADII)  '
     WRITE (17, *) '                                                '
     WRITE (17, *) 'SOLUTE CHARGE CALCULATION                       '
     WRITE (17, *) '                                                '
@@ -189,6 +189,8 @@ SUBROUTINE DO_SOLUTE(SOL_SYM, SOL, SOL_Q)
     END DO
 
     WRITE (17, *) '                                                '
+    WRITE (17, *) 'Br 2.44                                         '
+    WRITE (17, *) '                                                '
     CLOSE(17)
 
     WRITE(NCHAR, "(I0)") N
@@ -198,6 +200,8 @@ SUBROUTINE DO_SOLUTE(SOL_SYM, SOL, SOL_Q)
     COMMAND2 = "g09 < solute_charge.com > solute_charge.txt"
     COMMAND3 = "grep -B"//trim(NCHAR2)//" 'Electrostatic Properties (Atomic Units)' "//&
     "solute_charge.txt | head -"//trim(NCHAR)//" > FIFO_solute"
+    COMMAND3 = "grep -B"//trim(NCHAR)//" 'Sum of ESP charges' solute_charge.txt | "//&
+    "head -"//trim(NCHAR)//" > FIFO_solute"
 
     CALL system(COMMAND1)
 
