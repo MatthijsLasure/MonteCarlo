@@ -7,8 +7,6 @@
 ! Library met nuttige functies
 !====================================================================
 MODULE lib
-
-    USE MCconstants, ONLY : IOerr
     USE vector_class
     USE randgen
 
@@ -24,7 +22,7 @@ MODULE lib
 
     ! RotMatrix
     !==========
-    ! Roteer een set coï¿½rdinaten rond de CoM met gegeven hoeken
+    ! Roteer een set coördinaten rond de CoM met gegeven hoeken
     ! Hoek: in graden!
     FUNCTION RotMatrix(COM, RELPOS, HOEK) RESULT(AbsPos)
         TYPE (vector), INTENT(IN) :: COM
@@ -104,7 +102,7 @@ MODULE lib
         END DO
         IF (POS .EQ. 0) THEN
             POS = 1
-            write (IOerr, *) "Error in findSym: did not find", TYPE
+            write (500, *) "Error in findSym: did not find", TYPE
         END IF
     END FUNCTION findSym
 

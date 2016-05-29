@@ -418,10 +418,10 @@ CONTAINS
         WRITE(GAUSS_PROCS,'(I4)') OMP_get_num_procs()
 
         ! Preamble
-        WRITE (FI,"(A)") '%nproc=' // ADJUSTL(GAUSS_PROCS) // '                                     '
+        WRITE (FI,"(A)") '%nproc=' // ADJUSTL(GAUSS_PROCS) // '           '
         WRITE (FI,"(A)") '%mem=12GB                                       '
         WRITE (FI,"(A)") '%CHK=solute_charge.chk                          '
-        WRITE (FI,"(A)") '#P B3LYP/6-31G* POP=(CHELPG,DIPOLE)             '
+        WRITE (FI,"(A)") '#P B3LYP/6-31G* POP=(CHELPG,DIPOLE, READRADII)  '
         WRITE (FI,"(A)") '                                                '
         WRITE (FI,"(A)") 'SOLUTE CHARGE CALCULATION                       '
         WRITE (FI,"(A)") '                                                '
@@ -433,6 +433,8 @@ CONTAINS
         END DO
 
         ! Termination line
+        WRITE (FI,"(A)") '                                                '
+        WRITE (FI,"(A)") 'Br 2.44                                         '
         WRITE (FI,"(A)") '                                                '
 
     END SUBROUTINE solute_input
