@@ -808,6 +808,7 @@ SUBROUTINE calculateGA(I, LOOPNR)
                 TOOFAR = .TRUE.
             ELSE
                 MOL2 = RotMatrix(TEMPJ, DMSO, hoek(J))
+                !MOL2 = RotMatrix(CoM(J), DMSO, hoek(J))
                 DO K=1,NDMSO
                     DO L=1,NDMSO
                         R = getDistSq(MOL1(K), MOL2(L))
@@ -819,9 +820,33 @@ SUBROUTINE calculateGA(I, LOOPNR)
                 END DO
 
                 IF (CLIPPED) THEN
-                    EN = 1000
+                    EN = 1000.D0
                 ELSE
                     CALL calcGaEn(I, J, MOL1, MOL2, DMSO_SYM, DMSO_SYM, EN, PROC, WORKDIR)
+                    if(en .EQ. 10000.D0) then
+                        WRITE (IOerr,*) "+++ ", LOOPNR, I, J, " +++"
+                        WRITE (IOerr,*) KMIN, LMIN, MMIN
+                        WRITE(IOerr,*) COM(I)%X, COM(I)%Y, COM(I)%Z, HOEK(I)%X, HOEK(I)%Y, HOEK(I)%Z
+                        WRITE(IOerr,*) TEMPJ%X, TEMPJ%Y, TEMPJ%Z, HOEK(J)%X, HOEK(J)%Y, HOEK(J)%Z
+                        WRITE (IOerr,*) "+++ ", LOOPNR, " +++"
+
+                        905 FORMAT(A, 3F16.8)
+                        ! Print Mol1
+                        DO K=1,size(MOL1)
+                            WRITE (IOerr,905) DMSO_SYM(K), mol1(K)%X, mol1(K)%Y, mol1(K)%Z
+                        END DO
+
+                        ! Print mol2
+                        DO K=1,size(MOL2)
+                            WRITE (IOerr,905) DMSO_SYM(K), mol2(K)%X, mol2(K)%Y, mol2(K)%Z
+                        END DO
+                        MOL2 = RotMatrix(CoM(J), DMSO, hoek(J))
+                        DO K=1,size(MOL2)
+                            WRITE (IOerr,905) DMSO_SYM(K), mol2(K)%X + CoM(J)%X, mol2(K)%Y + CoM(J)%Y, mol2(K)%Z + CoM(J)%Z
+                        END DO
+                       CALL ABORT()
+
+                    END IF
                     EN = EN - E_DMSO - E_DMSO
                     EN = EN * HARTREE2KJMOL
                 END IF

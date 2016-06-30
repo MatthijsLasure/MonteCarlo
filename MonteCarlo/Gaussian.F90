@@ -48,8 +48,8 @@ SUBROUTINE prepGaussian( WORKDIR )
 #if defined(USE_PIPES)
     THREAD_COMM = "/bin/mkdir -p " // TRIM(THREAD_DIR)  // " ; " // &
       &           "cd " // TRIM(THREAD_DIR)             // " ; " // &
-      &           "[[ -e input.pipe ]]  || mkfifo input.pipe ; " // &
-      &           "[[ -e output.pipe ]] || mkfifo output.pipe"
+      &           "[ -e input.pipe ]  || mkfifo input.pipe ; " // &
+      &           "[ -e output.pipe ] || mkfifo output.pipe"
 #else
     THREAD_COMM = "mkdir -p " // TRIM(THREAD_DIR)
 #endif
@@ -58,6 +58,9 @@ SUBROUTINE prepGaussian( WORKDIR )
 #endif
     CALL SYSTEM(THREAD_COMM)
     !$OMP END PARALLEL
+
+    ! DEbug
+    CALL SYSTEM("echo $SHELL")
 
 #ifdef DEBUG
     ! DEEBUG: List the work directory.
@@ -196,6 +199,7 @@ SUBROUTINE calcGaEn(I, J, MOL1, MOL2, SYM1, SYM2, EN, PROC, WORKDIR)
         ! Safeguarding writing to the error file with a critical section so that another thread
         ! doesn't mix its I/O, assuming it also uses a critical section of course.
         WRITE(IOerr,"(A)") "========================================"
+        WRITE(IOerr, *) "Error @ ", I, " | ", J
         WRITE(IOerr,"(A,I3.3,A)") &
                            "calcGaEn thread ", ThreadNum, " failed reading output data from the execution of " // &
                            TRIM(GAUSS_COMM) // ", Input was:"
@@ -206,7 +210,7 @@ SUBROUTINE calcGaEn(I, J, MOL1, MOL2, SYM1, SYM2, EN, PROC, WORKDIR)
 !$OMP END CRITICAL (CS_IOERR)
         !CALL ABORT()
         EN = 10000.D0
-        RETURN
+        !RETURN
     END IF
 #if defined(DEBUG) && defined(USE_PIPES)
     WRITE(*,'(A, I3.3, A, A21, F20.10)') "DEBUG: calcGaEn thread ", ThreadNum, ": Read from pipe: ", DUMMYSTRING, EN
@@ -243,7 +247,6 @@ CONTAINS
         ! Do the actual IO
         WRITE (FI,"(A)") '%nproc=' // ADJUSTL(GAUSS_PROCS) // '                              '
         WRITE (FI,"(A)") '%mem=1Gb                                '
-        !write (FI,*)    'chk=inputess.chk                        '
         WRITE (FI,"(A)") '#  PM6                                  '
         WRITE (FI,"(A)") '                                        '
         WRITE (FI,"(A)") 'interacties                             '
@@ -384,7 +387,7 @@ SUBROUTINE DO_SOLUTE(SOL_SYM, SOL, SOL_Q, WORKDIR)
             WRITE(IOerr,"(A)") "END INPUT above this line"
             WRITE(IOerr,"(A)") "========================================"
 !$OMP END CRITICAL (CS_IOERR)
-            CALL ABORT()
+            !CALL ABORT()
         END IF
 #if defined(DEBUG) && defined(USE_PIPES)
         WRITE(*,'(A, A12, F10.7)') "DEBUG: DO_SOLUTE: Read from pipe: ", NCHAR, SOL_Q(I)
@@ -419,7 +422,8 @@ CONTAINS
 
         ! Preamble
         WRITE (FI,"(A)") '%nproc=' // ADJUSTL(GAUSS_PROCS) // '           '
-        WRITE (FI,"(A)") '%mem=12GB                                       '
+        WRITE (FI,"(A)") '%mem=1GB                                      ' ! For small Trusty CKW
+        !WRITE (FI,"(A)") '%mem=12GB                                       '
         WRITE (FI,"(A)") '%CHK=solute_charge.chk                          '
         WRITE (FI,"(A)") '#P B3LYP/6-31G* POP=(CHELPG,DIPOLE, READRADII)  '
         WRITE (FI,"(A)") '                                                '
