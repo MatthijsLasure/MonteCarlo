@@ -770,8 +770,11 @@ SUBROUTINE calculateGA(I, LOOPNR)
 #ifdef DEBUG
     PRINT *, "Entering parallel section."
 #endif
-    !$OMP PARALLEL
-    !$OMP DO PRIVATE(EN,MOL2)
+
+OPEN (5414, FILE="debug.xyz", access='append')
+    !$OMP PARALLEL default(none) PRIVATE(EN,MOL2, RMIN, KMIN, LMIN, MMIN, R, K, L, M, TEMPJ, TOOFAR, CLIPPED) &
+    !$OMP SHARED(NCOM, SOLVENTSOLVENT, I, COM, BOXL2, DMSO, HOEK, NDMSO, MOL1, LOOPNR, WORKDIR, PROC, DMSO_SYM, E_DMSO)
+    !$OMP DO
     EXEC: DO J = 1, NCOM
         SOLVENTSOLVENT(I,J) = 0.D0
         SOLVENTSOLVENT(J,I) = 0.D0
@@ -797,18 +800,25 @@ SUBROUTINE calculateGA(I, LOOPNR)
                 END DO
             END DO K_LOOP
 
-            TEMPJ%X = CoM(J)%X + FLOAT(KMIN) * BOXL2
-            TEMPJ%Y = CoM(J)%Y + FLOAT(LMIN) * BOXL2
-            TEMPJ%Z = CoM(J)%Z + FLOAT(MMIN) * BOXL2
+            TEMPJ%X = CoM(J)%X + DBLE(KMIN) * BOXL2
+            TEMPJ%Y = CoM(J)%Y + DBLE(LMIN) * BOXL2
+            TEMPJ%Z = CoM(J)%Z + DBLE(MMIN) * BOXL2
 
             !write(IOerr,*) I, J, TEMPJ%X, TEMPJ%Y, TEMPJ%Z, CoM(J)%X, CoM(J)%Y, CoM(J)%Z, KMIN, LMIN, MMIN
             !write(IOerr,*) I, J, getDist(CoM(I), CoM(J)), sqrt(RMIN), KMIN, LMIN, MMIN
 
             IF (RMIN .GT. 49.D0) THEN
                 TOOFAR = .TRUE.
+                WRITE (IOerr, *) "Molecules too far - ", I, J, " @ " , RMIN
             ELSE
                 MOL2 = RotMatrix(TEMPJ, DMSO, hoek(J))
-                !MOL2 = RotMatrix(CoM(J), DMSO, hoek(J))
+!                MOL2 = RotMatrix(CoM(J), DMSO, hoek(J))
+!                DO K=1,NDMSO
+!                    MOL2(K)%X = MOL2(K)%X + DBLE(KMIN) * BOXL2
+!                    MOL2(K)%Y = MOL2(K)%Y + DBLE(LMIN) * BOXL2
+!                    MOL2(K)%Z = MOL2(K)%Z + DBLE(MMIN) * BOXL2
+!                END DO
+
                 DO K=1,NDMSO
                     DO L=1,NDMSO
                         R = getDistSq(MOL1(K), MOL2(L))
@@ -823,7 +833,7 @@ SUBROUTINE calculateGA(I, LOOPNR)
                     EN = 1000.D0
                 ELSE
                     CALL calcGaEn(I, J, MOL1, MOL2, DMSO_SYM, DMSO_SYM, EN, PROC, WORKDIR)
-                    if(en .EQ. 10000.D0) then
+                    if(en .LE. 10000.D0) then
                         WRITE (IOerr,*) "+++ ", LOOPNR, I, J, " +++"
                         WRITE (IOerr,*) KMIN, LMIN, MMIN
                         WRITE(IOerr,*) COM(I)%X, COM(I)%Y, COM(I)%Z, HOEK(I)%X, HOEK(I)%Y, HOEK(I)%Z
@@ -831,20 +841,27 @@ SUBROUTINE calculateGA(I, LOOPNR)
                         WRITE (IOerr,*) "+++ ", LOOPNR, " +++"
 
                         905 FORMAT(A, 3F16.8)
+
+                        !!$OMP CRITICAL (CS_IOERR)
+                        WRITE (5414, *) 30
+                        WRITE (5414, *) LOOPNR, I, J, KMIN, LMIN, MMIN
                         ! Print Mol1
                         DO K=1,size(MOL1)
-                            WRITE (IOerr,905) DMSO_SYM(K), mol1(K)%X, mol1(K)%Y, mol1(K)%Z
+                            WRITE (5414,905) DMSO_SYM(K), mol1(K)%X, mol1(K)%Y, mol1(K)%Z
                         END DO
 
                         ! Print mol2
                         DO K=1,size(MOL2)
-                            WRITE (IOerr,905) DMSO_SYM(K), mol2(K)%X, mol2(K)%Y, mol2(K)%Z
+                            WRITE (5414,905) DMSO_SYM(K), mol2(K)%X, mol2(K)%Y, mol2(K)%Z
                         END DO
                         MOL2 = RotMatrix(CoM(J), DMSO, hoek(J))
+                        !MOL2 = RotMatrix(TEMPJ, DMSO, hoek(J))
                         DO K=1,size(MOL2)
-                            WRITE (IOerr,905) DMSO_SYM(K), mol2(K)%X + CoM(J)%X, mol2(K)%Y + CoM(J)%Y, mol2(K)%Z + CoM(J)%Z
+                            WRITE (5414,905) DMSO_SYM(K), mol2(K)%X + DBLE(KMIN) * BOXL2, mol2(K)%Y + DBLE(LMIN) * BOXL2&
+                            , mol2(K)%Z + DBLE(MMIN) * BOXL2
                         END DO
-                       CALL ABORT()
+                        !!$OMP END CRITICAL (CS_IOERR)
+                       !CALL ABORT()
 
                     END IF
                     EN = EN - E_DMSO - E_DMSO
@@ -860,6 +877,7 @@ SUBROUTINE calculateGA(I, LOOPNR)
     END DO  EXEC
     !$OMP END DO
     !$OMP END PARALLEL
+    close(5414)
     ! END OF PARALLEL LOOP
     !================================================================
 #ifdef DEBUG
