@@ -779,6 +779,9 @@ OPEN (5414, FILE="debug.xyz", access='append')
         SOLVENTSOLVENT(I,J) = 0.D0
         SOLVENTSOLVENT(J,I) = 0.D0
 
+        CLIPPED = .FALSE.
+        TOOFAR = .FALSE.
+
         IF (J .NE. I) THEN ! Not with itself
             ! MINIMIZE DISTANCE
             RMIN = huge(EN)
@@ -809,7 +812,7 @@ OPEN (5414, FILE="debug.xyz", access='append')
 
             IF (RMIN .GT. 49.D0) THEN
                 TOOFAR = .TRUE.
-                WRITE (IOerr, *) "Molecules too far - ", I, J, " @ " , RMIN
+                !WRITE (IOerr, *) "Molecules too far - ", I, J, " @ " , RMIN
             ELSE
                 MOL2 = RotMatrix(TEMPJ, DMSO, hoek(J))
 !                MOL2 = RotMatrix(CoM(J), DMSO, hoek(J))
@@ -833,7 +836,7 @@ OPEN (5414, FILE="debug.xyz", access='append')
                     EN = 1000.D0
                 ELSE
                     CALL calcGaEn(I, J, MOL1, MOL2, DMSO_SYM, DMSO_SYM, EN, PROC, WORKDIR)
-                    if(en .LE. 10000.D0) then
+                    if(en .EQ. 10000.D0) then
                         WRITE (IOerr,*) "+++ ", LOOPNR, I, J, " +++"
                         WRITE (IOerr,*) KMIN, LMIN, MMIN
                         WRITE(IOerr,*) COM(I)%X, COM(I)%Y, COM(I)%Z, HOEK(I)%X, HOEK(I)%Y, HOEK(I)%Z
@@ -842,7 +845,7 @@ OPEN (5414, FILE="debug.xyz", access='append')
 
                         905 FORMAT(A, 3F16.8)
 
-                        !!$OMP CRITICAL (CS_IOERR)
+                        !$OMP CRITICAL (CS_IOERR)
                         WRITE (5414, *) 30
                         WRITE (5414, *) LOOPNR, I, J, KMIN, LMIN, MMIN
                         ! Print Mol1
@@ -860,8 +863,8 @@ OPEN (5414, FILE="debug.xyz", access='append')
                             WRITE (5414,905) DMSO_SYM(K), mol2(K)%X + DBLE(KMIN) * BOXL2, mol2(K)%Y + DBLE(LMIN) * BOXL2&
                             , mol2(K)%Z + DBLE(MMIN) * BOXL2
                         END DO
-                        !!$OMP END CRITICAL (CS_IOERR)
-                       !CALL ABORT()
+                        !$OMP END CRITICAL (CS_IOERR)
+                       CALL ABORT()
 
                     END IF
                     EN = EN - E_DMSO - E_DMSO
