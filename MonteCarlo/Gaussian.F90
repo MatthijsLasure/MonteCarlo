@@ -49,7 +49,9 @@ SUBROUTINE prepGaussian( WORKDIR )
     THREAD_COMM = "/bin/mkdir -p " // TRIM(THREAD_DIR)  // " ; " // &
       &           "cd " // TRIM(THREAD_DIR)             // " ; " // &
 !      &           "[ -e input.pipe ]  || mkfifo input.pipe ; " // &
-      &           "[ -e output.pipe ] || mkfifo output.pipe"
+      &           "touch input.pipe; " // &
+      &           "touch output.pipe"
+!      &           "[ -e output.pipe ] || mkfifo output.pipe"
 #else
     THREAD_COMM = "mkdir -p " // TRIM(THREAD_DIR)
 #endif
@@ -151,7 +153,7 @@ SUBROUTINE calcGaEn(I, J, MOL1, MOL2, SYM1, SYM2, EN, WORKDIR)
 
     GAUSS_COMM = "cd " // TRIM(GAUSS_SCRATCH) // "; " // &
                  "mopac " // TRIM(GAUSS_IN) // " ; " // &
-                 "grep 'FINAL HEAT OF FORMATION =' input.out" // &
+                 "grep 'FINAL HEAT OF FORMATION =' input.pipe.out" // &
                  " > " // TRIM(GAUSS_OUT)
 !#endif
 #ifdef DEBUG
@@ -166,7 +168,7 @@ SUBROUTINE calcGaEn(I, J, MOL1, MOL2, SYM1, SYM2, EN, WORKDIR)
 #ifdef DEBUG
     WRITE(*,'(A,I3.3,A)') "DEBUG: calcGaEn thread ", ThreadNum, ": Starting Gaussian in calcGaEn (to run in the background)"
 #endif
-    CALL SYSTEM( TRIM(GAUSS_COMM) // " &" )
+!    CALL SYSTEM( TRIM(GAUSS_COMM) // " &" )
 #ifdef DEBUG
     WRITE(*,'(A,I3.3,A)') "DEBUG: calcGaEn thread ", ThreadNum, &
       &                   ": Finishing system call for Gaussian; it should be running in the background"
@@ -177,6 +179,8 @@ SUBROUTINE calcGaEn(I, J, MOL1, MOL2, SYM1, SYM2, EN, WORKDIR)
     OPEN(UNIT=FI, FILE=TRIM(GAUSS_IN), ACTION='WRITE')
     CALL calcGaEn_input(MOL1, MOL2, SYM1, SYM2, FI)
     CLOSE(FI)
+
+    CALL SYSTEM( TRIM(GAUSS_COMM))! // " &" )
 
 #if !defined(USE_PIPES)
     ! Using files instead of pipes: It is now the moment to launch Gaussian.
@@ -194,7 +198,7 @@ SUBROUTINE calcGaEn(I, J, MOL1, MOL2, SYM1, SYM2, EN, WORKDIR)
     OPEN(UNIT=FO, FILE=TRIM(GAUSS_OUT), STATUS='OLD', ACTION='READ')
 
     ! Now get the result from the output pipe or output file.
-    READ (FO, "(A21,F20.10)", IOSTAT=IOSTATUS) DUMMYSTRING, EN ! lees resultaat in (A22,F14.12)
+    READ (FO, "(A63,F12.4)", IOSTAT=IOSTATUS) DUMMYSTRING, EN ! lees resultaat in (A22,F14.12)
     IF (IOSTATUS .NE. 0 ) THEN
         WRITE(*,"(A,I3.3,A,I3)") "calcGaEn thread ", ThreadNum, &
           &                      "  : Unexpected error/end-of-file while reading " // TRIM(GAUSS_OUT) // &
@@ -343,7 +347,7 @@ SUBROUTINE DO_SOLUTE(SOL_SYM, SOL, SOL_Q, WORKDIR)
 #ifdef DEBUG
     WRITE(*,"(A)") "DEBUG: DO_SOLUTE: Calling SYSTEM (Gaussian in the background)"
 #endif
-    CALL SYSTEM( TRIM(COMMAND) // " &" )
+!    CALL SYSTEM( TRIM(COMMAND))! // " &" )
 #ifdef DEBUG
     WRITE(*,"(A)") "DEBUG: DO_SOLUTE: Returned from SYSTEM (Gaussian in the background)"
 #endif
@@ -359,6 +363,7 @@ SUBROUTINE DO_SOLUTE(SOL_SYM, SOL, SOL_Q, WORKDIR)
     WRITE(*,"(A)") "DEBUG: DO_SOLUTE: END DEBUG INFO input file for Gaussian"
 #endif
 
+CALL SYSTEM( TRIM(COMMAND))! // " &" )
 
 #if !defined(USE_PIPES)
     ! Not using pipes: We now run Gaussian.

@@ -835,7 +835,7 @@ OPEN (5414, FILE="debug.xyz", access='append')
                 IF (CLIPPED) THEN
                     EN = 1000.D0
                 ELSE
-                    CALL calcGaEn(I, J, MOL1, MOL2, DMSO_SYM, DMSO_SYM, EN, PROC, WORKDIR)
+                    CALL calcGaEn(I, J, MOL1, MOL2, DMSO_SYM, DMSO_SYM, EN, WORKDIR)
                     if(en .EQ. 10000.D0) then
                         WRITE (IOerr,*) "+++ ", LOOPNR, I, J, " +++"
                         WRITE (IOerr,*) KMIN, LMIN, MMIN
@@ -891,7 +891,7 @@ OPEN (5414, FILE="debug.xyz", access='append')
     !CALL calcGa(I, 0, MOL1, SOLUTE, DMSO_SYM, SOL_SYM, Clipped(NCOM+1), PROC)
     !CALL execGa(I, 0, EN)
     !CALL grepit(I, 0, EN)
-    CALL calcGaEn(I, 0, MOL1, SOLUTE, DMSO_SYM, SOL_SYM, EN, PROC, WORKDIR)
+    CALL calcGaEn(I, 0, MOL1, SOLUTE, DMSO_SYM, SOL_SYM, EN, WORKDIR)
     EN = EN - E_SOL - E_DMSO
     EN = EN * HARTREE2KJMOL
     ENERGY(I) = EN
