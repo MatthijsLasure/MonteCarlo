@@ -48,7 +48,7 @@ SUBROUTINE prepGaussian( WORKDIR )
 #if defined(USE_PIPES)
     THREAD_COMM = "/bin/mkdir -p " // TRIM(THREAD_DIR)  // " ; " // &
       &           "cd " // TRIM(THREAD_DIR)             // " ; " // &
-      &           "[ -e input.pipe ]  || mkfifo input.pipe ; " // &
+!      &           "[ -e input.pipe ]  || mkfifo input.pipe ; " // &
       &           "[ -e output.pipe ] || mkfifo output.pipe"
 #else
     THREAD_COMM = "mkdir -p " // TRIM(THREAD_DIR)
@@ -135,7 +135,7 @@ SUBROUTINE calcGaEn(I, J, MOL1, MOL2, SYM1, SYM2, EN, WORKDIR)
     WRITE(GAUSS_IN, "(A,'/input.pipe')")  TRIM(GAUSS_SCRATCH)
     WRITE(GAUSS_OUT,"(A,'/output.pipe')") TRIM(GAUSS_SCRATCH)
 #else
-    WRITE(GAUSS_IN, "(A,'/input.com')")   TRIM(GAUSS_SCRATCH)
+    WRITE(GAUSS_IN, "(A,'/input.mop')")   TRIM(GAUSS_SCRATCH)
     WRITE(GAUSS_OUT,"(A,'/output.txt')")  TRIM(GAUSS_SCRATCH)
 #endif
     WRITE(GAUSS_ERR,"(A,'/error_calcGaEn.log')") TRIM(GAUSS_SCRATCH)
@@ -145,9 +145,14 @@ SUBROUTINE calcGaEn(I, J, MOL1, MOL2, SYM1, SYM2, EN, WORKDIR)
 !      &          "g09 <" // TRIM(GAUSS_IN) // " 2>" // TRIM(GAUSS_ERR) // " | " // &
 !      &          "grep Done " // " >" // TRIM(GAUSS_OUT) // " &"
 !#else
-    GAUSS_COMM = "export GAUSS_SCRDIR=" // TRIM(GAUSS_SCRATCH) // "; " //     &
-      &          "g09 <" // TRIM(GAUSS_IN) // " 2>" // TRIM(GAUSS_ERR) // " | " // &
-      &          "grep Done " // " >" // TRIM(GAUSS_OUT)
+!    GAUSS_COMM = "export GAUSS_SCRDIR=" // TRIM(GAUSS_SCRATCH) // "; " //     &
+!      &          "g09 <" // TRIM(GAUSS_IN) // " 2>" // TRIM(GAUSS_ERR) // " | " // &
+!      &          "grep Done " // " >" // TRIM(GAUSS_OUT)
+
+    GAUSS_COMM = "cd " // TRIM(GAUSS_SCRATCH) // "; " // &
+                 "mopac " // TRIM(GAUSS_IN) // " ; " // &
+                 "grep 'FINAL HEAT OF FORMATION =' input.out" // &
+                 " > " // TRIM(GAUSS_OUT)
 !#endif
 #ifdef DEBUG
     WRITE (*,"(A,I3.3,A)") "DEBUG: calcGaEn thread", ThreadNum, ": Want to execute: " // TRIM(GAUSS_COMM)
@@ -239,13 +244,13 @@ CONTAINS
         905 FORMAT(A, 3F16.8)
 
         ! Do the actual IO
-        WRITE (FI,"(A)") '%nproc=1                                '
-        WRITE (FI,"(A)") '%mem=1Gb                                '
-        WRITE (FI,"(A)") '#  PM6                                  '
-        WRITE (FI,"(A)") '                                        '
-        WRITE (FI,"(A)") 'interacties                             '
-        WRITE (FI,"(A)") '                                        '
-        WRITE (FI,"(A)") '0 1                                     '
+!        WRITE (FI,"(A)") '%nproc=1                                '
+!        WRITE (FI,"(A)") '%mem=1Gb                                '
+!        WRITE (FI,"(A)") '#  PM6                                  '
+!        WRITE (FI,"(A)") '                                        '
+!        WRITE (FI,"(A)") 'interacties                             '
+!        WRITE (FI,"(A)") '                                        '
+!        WRITE (FI,"(A)") '0 1                                     '
 
         WRITE (FI,"(A)") 'PM6 1SCF         '
         WRITE (FI,"(A)") 'Dual calculation '
