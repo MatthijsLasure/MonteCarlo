@@ -57,11 +57,22 @@ SUBROUTINE prepGaussian( WORKDIR )
     WRITE (*,'(A)') "DEBUG prepGaussian: Executing " // TRIM(THREAD_COMM)
 #endif
     CALL SYSTEM(THREAD_COMM)
-    write (*,*)' test'
-    !$OMP END PARALLEL
 
-    ! DEbug
-    CALL SYSTEM("echo $SHELL")
+    ! Make the script
+    WRITE(THREAD_COMM, "(A,'/do.sh')") THREAD_DIR
+    OPEN(10, FILE=THREAD_COMM)
+    WRITE (10, "(A)") "#!/bin/bash"
+    WRITE (10, "(A)") "trap 'exit' SIGRTMAX-10"
+    WRITE (10, "(A)") "echo $$ >> ../PIDS.txt"
+    WRITE (10, "(A)") "while : do g09 < input.pipe > output.pipe; done"
+    CLOSE(10)
+
+    WRITE (THREAD_COMM, "(A)") "cd " // TRIM(THREAD_DIR) // " ; " // &
+     &                         "chmod 777 do.sh; ./do.sh"
+
+    CALL SYSTEM(THREAD_COMM)
+
+    !$OMP END PARALLEL
 
 #ifdef DEBUG
     ! DEEBUG: List the work directory.
