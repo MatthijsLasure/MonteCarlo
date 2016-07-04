@@ -8,18 +8,38 @@ SUBROUTINE rConfig(confile, LJ_steps, Ga_steps, iseed, LJ_nadj, LJ_nprint, GA_na
  files, temp, dorotsolv, drotsolv)
 
     INTEGER, PARAMETER          :: strlen = 100
-    CHARACTER(LEN=strlen)       :: fst, snd
-    CHARACTER(LEN=1000)         :: line
-    CHARACTER*500               :: confile ! Config file
+    CHARACTER(LEN=strlen):: fst
+    CHARACTER(LEN=strlen):: snd
+    CHARACTER(LEN=1000):: line
+    CHARACTER*500:: confile ! Config file
     CHARACTER*500, DIMENSION(:) :: files ! Alle input/output files
-    INTEGER                     :: stat,  j, j0, z
-    INTEGER, PARAMETER          :: state_begin=1, state_in_fst=2, state_in_sep=3
-    LOGICAL                     :: dorotsolv
+    INTEGER:: stat
+    INTEGER::  j
+    INTEGER:: j0
+    INTEGER:: z
+    INTEGER, PARAMETER          :: state_begin=1
+    INTEGER, PARAMETER          :: state_in_fst=2
+    INTEGER, PARAMETER          :: state_in_sep=3
+    LOGICAL:: dorotsolv
 
     ! Shit to read
-    DOUBLE PRECISION :: dposmax, dposmin, dhoekmax, dhoekmin, padj, temp, drotsolv
-    INTEGER :: LJ_steps, Ga_steps, LJ_nadj, LJ_nprint, GA_nadj, GA_nprint
-    INTEGER :: iseed, proc, LJ_dump, GA_dump
+    DOUBLE PRECISION:: dposmax
+    DOUBLE PRECISION:: dposmin
+    DOUBLE PRECISION:: dhoekmax
+    DOUBLE PRECISION:: dhoekmin
+    DOUBLE PRECISION:: padj
+    DOUBLE PRECISION:: temp
+    DOUBLE PRECISION:: drotsolv
+    INTEGER:: LJ_steps
+    INTEGER:: Ga_steps
+    INTEGER:: LJ_nadj
+    INTEGER:: LJ_nprint
+    INTEGER:: GA_nadj
+    INTEGER:: GA_nprint
+    INTEGER:: iseed
+    INTEGER:: proc
+    INTEGER:: LJ_dump
+    INTEGER:: GA_dump
 
     dorotsolv = .FALSE.
 
@@ -140,8 +160,9 @@ END SUBROUTINE rConfig
 PURE FUNCTION lower (str) RESULT (string)
     IMPLICIT NONE
     CHARACTER(*), INTENT(IN) :: str
-    CHARACTER(len(str))      :: string
-    INTEGER :: ic, i
+    CHARACTER(len(str)):: string
+    INTEGER:: ic
+    INTEGER:: i
 
     CHARACTER(26), PARAMETER :: cap = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
     CHARACTER(26), PARAMETER :: low = 'abcdefghijklmnopqrstuvwxyz'

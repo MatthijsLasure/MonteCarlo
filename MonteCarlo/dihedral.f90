@@ -7,10 +7,22 @@ MODULE dihedral
 
     FUNCTION GETDIHEDRAL(MOL, I1, I2, I3, I4) RESULT(HOEK)
         TYPE (VECTOR), DIMENSION(:) :: MOL
-        INTEGER :: I1, I2, I3, I4
-        DOUBLE PRECISION :: HOEK, TEMP, SIGN
-        TYPE (VECTOR) :: V1, V2, V3, V4
-        TYPE (VECTOR) :: B1, B2, B3, N1, N2
+        INTEGER:: I1
+        INTEGER:: I2
+        INTEGER:: I3
+        INTEGER:: I4
+        DOUBLE PRECISION:: HOEK
+        DOUBLE PRECISION:: TEMP
+        DOUBLE PRECISION:: SIGN
+        TYPE (VECTOR):: V1
+        TYPE (VECTOR):: V2
+        TYPE (VECTOR):: V3
+        TYPE (VECTOR):: V4
+        TYPE (VECTOR):: B1
+        TYPE (VECTOR):: B2
+        TYPE (VECTOR):: B3
+        TYPE (VECTOR):: N1
+        TYPE (VECTOR):: N2
 
         V1 = MOL(I1)
         V2 = MOL(I2)
@@ -39,12 +51,27 @@ MODULE dihedral
         TYPE (VECTOR), DIMENSION(:) :: MOL
         INTEGER, DIMENSION(SIZE(MOL)) :: FRAG ! Welk fragment
         TYPE (VECTOR), DIMENSION(SIZE(MOL)) :: MOLOUT
-        INTEGER :: I, I1, I2, I3, I4, NATOM
-        DOUBLE PRECISION :: HOEK, dist1, dist2, cosH, sinH
-        TYPE (VECTOR) :: V1, V2, V3, V4, V
-        TYPE (VECTOR) :: K ! Rotatie as
-        TYPE (VECTOR) :: ATOM, R1, R2
-        LOGICAL :: mayGo = .TRUE.
+        INTEGER:: I
+        INTEGER:: I1
+        INTEGER:: I2
+        INTEGER:: I3
+        INTEGER:: I4
+        INTEGER:: NATOM
+        DOUBLE PRECISION:: HOEK
+        DOUBLE PRECISION:: dist1
+        DOUBLE PRECISION:: dist2
+        DOUBLE PRECISION:: cosH
+        DOUBLE PRECISION:: sinH
+        TYPE (VECTOR):: V1
+        TYPE (VECTOR):: V2
+        TYPE (VECTOR):: V3
+        TYPE (VECTOR):: V4
+        TYPE (VECTOR):: V
+        TYPE (VECTOR):: K ! Rotatie as
+        TYPE (VECTOR):: ATOM
+        TYPE (VECTOR):: R1
+        TYPE (VECTOR):: R2
+        LOGICAL:: mayGo = .TRUE.
 
         DOUBLE PRECISION, PARAMETER :: BONDL = 1.90
         DOUBLE PRECISION, PARAMETER :: BONDL2 = BONDL * BONDL

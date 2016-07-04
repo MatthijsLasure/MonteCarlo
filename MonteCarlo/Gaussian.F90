@@ -96,7 +96,7 @@ END SUBROUTINE cleanGaussian
 !====================================================================
 !====================================================================
 
-SUBROUTINE calcGaEn(I, J, MOL1, MOL2, SYM1, SYM2, EN, PROC, WORKDIR)
+SUBROUTINE calcGaEn(I, J, MOL1, MOL2, SYM1, SYM2, EN, WORKDIR)
 
     IMPLICIT NONE
 
@@ -104,7 +104,6 @@ SUBROUTINE calcGaEn(I, J, MOL1, MOL2, SYM1, SYM2, EN, PROC, WORKDIR)
     TYPE (vector), DIMENSION(:), INTENT(IN) :: MOL1, MOL2 ! absolute coords!
     CHARACTER*4, DIMENSION(:), INTENT(IN) :: SYM1, SYM2 ! Atoomtypes
     INTEGER, INTENT(IN) :: I, J
-    INTEGER, INTENT(IN) :: PROC ! aantal processoren voor gaussian
     CHARACTER*(*), INTENT(IN) :: WORKDIR
 
     ! Output parameters
@@ -171,7 +170,7 @@ SUBROUTINE calcGaEn(I, J, MOL1, MOL2, SYM1, SYM2, EN, PROC, WORKDIR)
 
     ! Open the input file/pipe
     OPEN(UNIT=FI, FILE=TRIM(GAUSS_IN), ACTION='WRITE')
-    CALL calcGaEn_input(MOL1, MOL2, SYM1, SYM2, PROC, FI)
+    CALL calcGaEn_input(MOL1, MOL2, SYM1, SYM2, FI)
     CLOSE(FI)
 
 #if !defined(USE_PIPES)
@@ -204,7 +203,7 @@ SUBROUTINE calcGaEn(I, J, MOL1, MOL2, SYM1, SYM2, EN, PROC, WORKDIR)
                            "calcGaEn thread ", ThreadNum, " failed reading output data from the execution of " // &
                            TRIM(GAUSS_COMM) // ", Input was:"
         WRITE(IOerr,"(A)") "BEGIN INPUT below this line"
-        CALL calcGaEn_input(MOL1, MOL2, SYM1, SYM2, PROC, IOerr)
+        CALL calcGaEn_input(MOL1, MOL2, SYM1, SYM2, IOerr)
         WRITE(IOerr,"(A)") "END INPUT above this line"
         WRITE(IOerr,"(A)") "========================================"
 !$OMP END CRITICAL (CS_IOERR)
@@ -224,34 +223,33 @@ SUBROUTINE calcGaEn(I, J, MOL1, MOL2, SYM1, SYM2, EN, PROC, WORKDIR)
 
 CONTAINS
 
-    SUBROUTINE calcGaEn_input(MOL1, MOL2, SYM1, SYM2, PROC, FI)
+    SUBROUTINE calcGaEn_input(MOL1, MOL2, SYM1, SYM2, FI)
 
         IMPLICIT NONE
 
         ! Input arguments
         TYPE (vector), DIMENSION(:), INTENT(IN) :: MOL1, MOL2 ! absolute coords!
         CHARACTER*4, DIMENSION(:), INTENT(IN)   :: SYM1, SYM2 ! Atoomtypes
-        INTEGER, INTENT(IN) :: PROC ! aantal processoren voor gaussian
         INTEGER, INTENT(IN) :: FI
 
         ! Other variables
         INTEGER :: K
-        CHARACTER*4    :: GAUSS_PROCS
 
         ! Output formats
         905 FORMAT(A, 3F16.8)
 
-        ! Preparations
-        WRITE(GAUSS_PROCS,'(I4)') PROC
-
         ! Do the actual IO
-        WRITE (FI,"(A)") '%nproc=' // ADJUSTL(GAUSS_PROCS) // '                              '
+        WRITE (FI,"(A)") '%nproc=1                                '
         WRITE (FI,"(A)") '%mem=1Gb                                '
         WRITE (FI,"(A)") '#  PM6                                  '
         WRITE (FI,"(A)") '                                        '
         WRITE (FI,"(A)") 'interacties                             '
         WRITE (FI,"(A)") '                                        '
         WRITE (FI,"(A)") '0 1                                     '
+
+        WRITE (FI,"(A)") 'PM6 1SCF         '
+        WRITE (FI,"(A)") 'Dual calculation '
+        WRITE (FI,"(A)") 'yes dual         '
 
         ! Print Mol1
         DO K=1,size(MOL1)
@@ -262,6 +260,7 @@ CONTAINS
         DO K=1,size(MOL2)
             WRITE (FI,905) sym2(K), mol2(K)%X, mol2(K)%Y, mol2(K)%Z
         END DO
+
 
         WRITE (FI,"(A)") '                                        '
 
@@ -422,8 +421,7 @@ CONTAINS
 
         ! Preamble
         WRITE (FI,"(A)") '%nproc=' // ADJUSTL(GAUSS_PROCS) // '           '
-        WRITE (FI,"(A)") '%mem=1GB                                      ' ! For small Trusty CKW
-        !WRITE (FI,"(A)") '%mem=12GB                                       '
+        WRITE (FI,"(A)") '%mem=12GB                                       '
         WRITE (FI,"(A)") '%CHK=solute_charge.chk                          '
         WRITE (FI,"(A)") '#P B3LYP/6-31G* POP=(CHELPG,DIPOLE, READRADII)  '
         WRITE (FI,"(A)") '                                                '

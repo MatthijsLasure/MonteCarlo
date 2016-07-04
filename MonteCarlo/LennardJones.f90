@@ -23,21 +23,31 @@ MODULE LennardJones
 
     SUBROUTINE calcLJ(MOL1, MOL2, SYM1, TABLE, EN, BOXL, BOXL2)
         ! INPUT
-        TYPE (vector), DIMENSION(:), INTENT(IN)         :: MOL1, MOL2 ! absolute coords!
+        TYPE (vector), DIMENSION(:), INTENT(IN)         :: MOL1 ! absolute coords!
+        TYPE (vector), DIMENSION(:), INTENT(IN)         :: MOL2 ! absolute coords!
         CHARACTER*4, DIMENSION(:), INTENT(IN)           :: SYM1 ! Atoomtypes
         DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN)    :: TABLE ! params
-        DOUBLE PRECISION                                :: CONV, BOXL, BOXL2
+        DOUBLE PRECISION:: CONV
+        DOUBLE PRECISION:: BOXL
+        DOUBLE PRECISION:: BOXL2
 
         ! OUTPUT
-        DOUBLE PRECISION    :: EN
+        DOUBLE PRECISION:: EN
 
         ! TEMP
-        TYPE (vector)       :: R
-        DOUBLE PRECISION    :: RV, E, S ! temp params
-        DOUBLE PRECISION    :: SUML, SUMR ! sommen
+        TYPE (vector):: R
+        DOUBLE PRECISION:: RV ! temp params
+        DOUBLE PRECISION:: E ! temp params
+        DOUBLE PRECISION:: S ! temp params
+        DOUBLE PRECISION:: SUML ! sommen
+        DOUBLE PRECISION:: SUMR ! sommen
         DOUBLE PRECISION, DIMENSION(2)       :: TEMP ! tijdelijke optelling
-        INTEGER             :: I, J, N1, N2 ! loop vars, totale grootte arrays
-        INTEGER             :: A, B ! welke atoomsoort
+        INTEGER:: I ! loop vars, totale grootte arrays
+        INTEGER:: J ! loop vars, totale grootte arrays
+        INTEGER:: N1 ! loop vars, totale grootte arrays
+        INTEGER:: N2 ! loop vars, totale grootte arrays
+        INTEGER:: A ! welke atoomsoort
+        INTEGER:: B ! welke atoomsoort
 
         ! Omzetting naar kJ/mol
         CONV = 6.023 * (1.60217646)**2
@@ -78,21 +88,32 @@ MODULE LennardJones
 
 SUBROUTINE CalcLJ_SV(MOL1, MOL2, SYM1, TABLE_DMSO, TABLE_SOL, EN, BOXL, BOXL2)
         ! INPUT
-        TYPE (vector), DIMENSION(:), INTENT(IN)         :: MOL1, MOL2 ! absolute coords!
+        TYPE (vector), DIMENSION(:), INTENT(IN)         :: MOL1 ! absolute coords!
+        TYPE (vector), DIMENSION(:), INTENT(IN)         :: MOL2 ! absolute coords!
         CHARACTER*4, DIMENSION(:), INTENT(IN)           :: SYM1 ! Atoomtypes
-        DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN)    :: TABLE_DMSO, TABLE_SOL ! params
-        DOUBLE PRECISION                                :: CONV, BOXL, BOXL2
+        DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN)    :: TABLE_DMSO ! params
+        DOUBLE PRECISION, DIMENSION(:,:), INTENT(IN)    :: TABLE_SOL ! params
+        DOUBLE PRECISION:: CONV
+        DOUBLE PRECISION:: BOXL
+        DOUBLE PRECISION:: BOXL2
 
         ! OUTPUT
-        DOUBLE PRECISION    :: EN
+        DOUBLE PRECISION:: EN
 
         ! TEMP
-        TYPE (vector)       :: R
-        DOUBLE PRECISION    :: RV, E, S ! temp params
-        DOUBLE PRECISION    :: SUML, SUMR ! sommen
+        TYPE (vector):: R
+        DOUBLE PRECISION:: RV ! temp params
+        DOUBLE PRECISION:: E ! temp params
+        DOUBLE PRECISION:: S ! temp params
+        DOUBLE PRECISION:: SUML ! sommen
+        DOUBLE PRECISION:: SUMR ! sommen
         DOUBLE PRECISION, DIMENSION(2)       :: TEMP ! tijdelijke optelling
-        INTEGER             :: I, J, N1, N2 ! loop vars, totale grootte arrays
-        INTEGER             :: A, B ! welke atoomsoort
+        INTEGER:: I ! loop vars, totale grootte arrays
+        INTEGER:: J ! loop vars, totale grootte arrays
+        INTEGER:: N1 ! loop vars, totale grootte arrays
+        INTEGER:: N2 ! loop vars, totale grootte arrays
+        INTEGER:: A ! welke atoomsoort
+        INTEGER:: B ! welke atoomsoort
 
         ! Omzetting naar kJ/mol
         CONV = 6.023 * (1.60217646)**2
@@ -132,14 +153,22 @@ END SUBROUTINE CalcLJ_SV
 FUNCTION LJ_FORMULA(E1, E2, S1, S2, Q1, Q2, RIN, BOXL, BOXL2)
 
     ! INPUT
-    DOUBLE PRECISION, INTENT(IN)    :: E1, E2, S1, S2, Q1, Q2
-    DOUBLE PRECISION, INTENT(IN)    :: BOXL, BOXL2
+    DOUBLE PRECISION, INTENT(IN)    :: E1
+    DOUBLE PRECISION, INTENT(IN)    :: E2
+    DOUBLE PRECISION, INTENT(IN)    :: S1
+    DOUBLE PRECISION, INTENT(IN)    :: S2
+    DOUBLE PRECISION, INTENT(IN)    :: Q1
+    DOUBLE PRECISION, INTENT(IN)    :: Q2
+    DOUBLE PRECISION, INTENT(IN)    :: BOXL
+    DOUBLE PRECISION, INTENT(IN)    :: BOXL2
     TYPE (VECTOR), INTENT(IN)       :: RIN
 
     ! INTERN
     DOUBLE PRECISION, DIMENSION(2)  :: LJ_FORMULA
-    DOUBLE PRECISION                :: E, S, RV
-    TYPE (VECTOR)                   :: R
+    DOUBLE PRECISION:: E
+    DOUBLE PRECISION:: S
+    DOUBLE PRECISION:: RV
+    TYPE (VECTOR):: R
 
     E = sqrt(E1 * E2)
     S = (S1 + S2)/2
@@ -162,14 +191,19 @@ END FUNCTION LJ_FORMULA
 
 SUBROUTINE ASSOSIATE_DMSO(SYM, TABLE_SYM, TABLE_Q, TABLE_E, TABLE_S, TABLE)
     ! INPUT
-    CHARACTER*4, DIMENSION(:), INTENT(IN)         :: SYM, TABLE_SYM ! Atoomtypes
-    DOUBLE PRECISION, DIMENSION(:), INTENT(IN)    :: TABLE_Q, TABLE_E, TABLE_S ! params
+    CHARACTER*4, DIMENSION(:), INTENT(IN)         :: SYM ! Atoomtypes
+    CHARACTER*4, DIMENSION(:), INTENT(IN)         :: TABLE_SYM ! Atoomtypes
+    DOUBLE PRECISION, DIMENSION(:), INTENT(IN)    :: TABLE_Q ! params
+    DOUBLE PRECISION, DIMENSION(:), INTENT(IN)    :: TABLE_E ! params
+    DOUBLE PRECISION, DIMENSION(:), INTENT(IN)    :: TABLE_S ! params
 
     ! OUTPUT
     DOUBLE PRECISION, DIMENSION(:,:), INTENT(OUT) :: TABLE
 
     ! TEMP
-    INTEGER :: N, I, A
+    INTEGER:: N
+    INTEGER:: I
+    INTEGER:: A
 
     N = SIZE(SYM)
 
@@ -189,14 +223,18 @@ END SUBROUTINE ASSOSIATE_DMSO
 
 SUBROUTINE ASSOSIATE_SOLUTE(SYM, TABLE_SYM, TABLE_E, TABLE_S, TABLE)
     ! INPUT
-    CHARACTER*4, DIMENSION(:), INTENT(IN)         :: SYM, TABLE_SYM ! Atoomtypes
-    DOUBLE PRECISION, DIMENSION(:), INTENT(IN)    :: TABLE_E, TABLE_S ! params
+    CHARACTER*4, DIMENSION(:), INTENT(IN)         :: SYM ! Atoomtypes
+    CHARACTER*4, DIMENSION(:), INTENT(IN)         :: TABLE_SYM ! Atoomtypes
+    DOUBLE PRECISION, DIMENSION(:), INTENT(IN)    :: TABLE_E ! params
+    DOUBLE PRECISION, DIMENSION(:), INTENT(IN)    :: TABLE_S ! params
 
     ! OUTPUT
     DOUBLE PRECISION, DIMENSION(:,:), INTENT(OUT) :: TABLE
 
     ! TEMP
-    INTEGER :: N, I, A
+    INTEGER:: N
+    INTEGER:: I
+    INTEGER:: A
 
     N = SIZE(SYM)
 

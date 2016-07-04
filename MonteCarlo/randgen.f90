@@ -13,17 +13,22 @@ END INTERFACE
  END MODULE RANDGEN
 
 FUNCTION RAND() RESULT(R)
-    DOUBLE PRECISION :: R
+    DOUBLE PRECISION:: R
     CALL RANDOM_NUMBER(R)
 END FUNCTION RAND
 
 SUBROUTINE init_random_seed()
 USE iso_fortran_env, ONLY: int64
 IMPLICIT NONE
-INTEGER*4 :: GETPID
+INTEGER*4:: GETPID
 INTEGER, ALLOCATABLE :: SEED(:)
-INTEGER :: I, N, UN, ISTAT, DT(8), PID
-INTEGER(INT64) :: T
+INTEGER:: I
+INTEGER:: N
+INTEGER:: UN
+INTEGER:: ISTAT
+INTEGER:: DT(8)
+INTEGER:: PID
+INTEGER(INT64):: T
 
 CALL random_seed(size = N)
 ALLOCATE(seed(N))
@@ -58,8 +63,8 @@ CONTAINS
 ! This simple PRNG might not be good enough for real work, but is
 ! sufficient for seeding a better PRNG.
 FUNCTION lcg(S)
-  INTEGER :: lcg
-  INTEGER(INT64) :: S
+  INTEGER:: lcg
+  INTEGER(INT64):: S
   IF (S == 0) THEN
      S = 104729
   ELSE

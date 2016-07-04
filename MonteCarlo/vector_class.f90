@@ -84,7 +84,7 @@ MODULE vector_class
     FUNCTION cross(A, B) RESULT(c)
         TYPE (vector), INTENT(IN) :: A
         TYPE (vector), INTENT(IN) :: B
-        TYPE (vector) :: C
+        TYPE (vector):: C
         C%x = A%y * B%z - A%z * B%y
         C%y = A%z * B%x - A%x * B%z
         C%z = A%x * B%y - A%y * B%x
@@ -93,7 +93,7 @@ MODULE vector_class
     FUNCTION dot(A, B) RESULT(d)
         TYPE (vector):: A
         TYPE (vector):: B
-        DOUBLE PRECISION :: D
+        DOUBLE PRECISION:: D
         D = 0.D0
         D = D + A%x * B%x
         D = D + A%y * B%y
