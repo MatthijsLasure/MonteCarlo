@@ -95,6 +95,19 @@ SUBROUTINE cleanGaussian(WORKDIR)
 
     ! Global work variables
     CHARACTER*250 :: GLOB_COMM
+    INTEGER       :: PID, STAT
+    CHARACTER*500 :: FILE
+
+    FILE = TRIM(WORKDIR) // "PIDS.txt"
+    OPEN(10, FILE=FILE)
+    DO
+        READ(10,'(I5.5)', IOSTAT=STAT) PID
+        IF (STAT .LT. 0) EXIT
+        CALL KILL(PID, 54)
+    END
+    CLOSE(10)
+
+
 
     ! Remove all work-* subdirectories
     GLOB_COMM = "/bin/rm -rf " // TRIM(WORKDIR) // "/work-*"
