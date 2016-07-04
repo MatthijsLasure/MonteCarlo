@@ -57,6 +57,7 @@ SUBROUTINE prepGaussian( WORKDIR )
     WRITE (*,'(A)') "DEBUG prepGaussian: Executing " // TRIM(THREAD_COMM)
 #endif
     CALL SYSTEM(THREAD_COMM)
+    write (*,*)' test'
     !$OMP END PARALLEL
 
     ! DEbug
