@@ -152,7 +152,7 @@ SUBROUTINE calcGaEn(I, J, MOL1, MOL2, SYM1, SYM2, EN, WORKDIR)
 !      &          "grep Done " // " >" // TRIM(GAUSS_OUT)
 
     GAUSS_COMM = "cd " // TRIM(GAUSS_SCRATCH) // "; " // &
-                 "mopac " // TRIM(GAUSS_IN) // " ; " // &
+                 "mopac " // TRIM(GAUSS_IN) // " &> /dev/null; " // &
                  "grep 'FINAL HEAT OF FORMATION =' input.pipe.out" // &
                  " > " // TRIM(GAUSS_OUT)
 !#endif
@@ -199,6 +199,10 @@ SUBROUTINE calcGaEn(I, J, MOL1, MOL2, SYM1, SYM2, EN, WORKDIR)
 
     ! Now get the result from the output pipe or output file.
     READ (FO, "(A63,F12.4)", IOSTAT=IOSTATUS) DUMMYSTRING, EN ! lees resultaat in (A22,F14.12)
+    REWIND(FO)
+    READ(FO, *) DUMMYSTRING
+    WRITE (*,*) "calcGaEn thread ", ThreadNum, " found interaction energy ", EN
+    WRITE (*,"(A,I3.3,A,A)") "calcGaEn thread ", ThreadNum, "string: ", DUMMYSTRING
     IF (IOSTATUS .NE. 0 ) THEN
         WRITE(*,"(A,I3.3,A,I3)") "calcGaEn thread ", ThreadNum, &
           &                      "  : Unexpected error/end-of-file while reading " // TRIM(GAUSS_OUT) // &

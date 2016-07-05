@@ -260,6 +260,7 @@ PROGRAM MonteCarlo
     END DO
     CLOSE(IOwork)
 
+
     ! box.txt: plaatsen van de moleculen (CoM, hoek)
     OPEN (UNIT=IOwork, FILE=BOX_FILE)
     READ (IOwork, *) BOXL ! Box grootte
@@ -306,6 +307,11 @@ PROGRAM MonteCarlo
     IF (DOROTSOLV) WRITE (*,"(A,F13.10)") "Solvent rotation, max ", DROTSOLV
 
     BOXL2 = BOXL * 2.D0
+    !E_SOL = E_SOL * HARTREE2KJMOL
+    !E_DMSO = E_DMSO * HARTREE2KJMOL
+
+    WRITE (*,*) "E_SOL  (Hartree): ", E_SOL
+    WRITE (*,*) "E_DMSO (Hartree): ", E_DMSO
 
 !====================================================================
 !====================================================================
@@ -526,7 +532,7 @@ PROGRAM MonteCarlo
     DO I=1, NSOL ! Lees de co�rdinaten uit
         WRITE (IOwork,*) sol_sym(I), solute(I)%X, solute(I)%Y, solute(I)%Z
     END DO
-    WRITE (IOwork,*) E_SOL
+    WRITE (IOwork,*) E_SOL / HARTREE2KJMOL
     WRITE (IOwork,*) NDIHOEK
     DO I=1, NDIHOEK
         WRITE (IOwork,*) DIHOEK(I,1), DIHOEK(I,2)
@@ -773,7 +779,7 @@ SUBROUTINE calculateGA(I, LOOPNR)
 
 OPEN (5414, FILE="debug.xyz", access='append')
     !$OMP PARALLEL default(none) PRIVATE(EN,MOL2, RMIN, KMIN, LMIN, MMIN, R, K, L, M, TEMPJ, TOOFAR, CLIPPED) &
-    !$OMP SHARED(NCOM, SOLVENTSOLVENT, I, COM, BOXL2, DMSO, HOEK, NDMSO, MOL1, LOOPNR, WORKDIR, PROC, DMSO_SYM, E_DMSO)
+    !$OMP SHARED(NCOM, SOLVENTSOLVENT, I, COM, BOXL2, DMSO, HOEK, NDMSO, MOL1, LOOPNR, WORKDIR, PROC, DMSO_SYM, E_DMSO, E_SOL)
     !$OMP DO
     EXEC: DO J = 1, NCOM
         SOLVENTSOLVENT(I,J) = 0.D0
@@ -867,8 +873,9 @@ OPEN (5414, FILE="debug.xyz", access='append')
                        CALL ABORT()
 
                     END IF
-                    EN = EN - E_DMSO - E_DMSO
-                    EN = EN * HARTREE2KJMOL
+                    EN = EN - (E_SOL - E_DMSO) * HARTREE2KJMOL
+                    !EN = EN - E_SOL - E_DMSO
+                    !EN = EN * HARTREE2KJMOL
                 END IF
 
                 SOLVENTSOLVENT(I,J) = EN
@@ -892,8 +899,9 @@ OPEN (5414, FILE="debug.xyz", access='append')
     !CALL execGa(I, 0, EN)
     !CALL grepit(I, 0, EN)
     CALL calcGaEn(I, 0, MOL1, SOLUTE, DMSO_SYM, SOL_SYM, EN, WORKDIR)
-    EN = EN - E_SOL - E_DMSO
-    EN = EN * HARTREE2KJMOL
+    EN = EN - (E_SOL - E_DMSO) * HARTREE2KJMOL
+    !EN = EN - E_SOL - E_DMSO
+    !EN = EN * HARTREE2KJMOL
     ENERGY(I) = EN
 
 END SUBROUTINE CALCULATEGA
