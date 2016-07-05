@@ -532,7 +532,7 @@ PROGRAM MonteCarlo
     DO I=1, NSOL ! Lees de co�rdinaten uit
         WRITE (IOwork,*) sol_sym(I), solute(I)%X, solute(I)%Y, solute(I)%Z
     END DO
-    WRITE (IOwork,*) E_SOL / HARTREE2KJMOL
+    WRITE (IOwork,*) E_SOL
     WRITE (IOwork,*) NDIHOEK
     DO I=1, NDIHOEK
         WRITE (IOwork,*) DIHOEK(I,1), DIHOEK(I,2)
