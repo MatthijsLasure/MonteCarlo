@@ -452,11 +452,11 @@ PROGRAM MonteCarlo
     
     ! Dump energiën
     !tot = 0.0D
-    !OPEN(UNIT=IOwork, FILE="gaussian.txt")
-    !DO I=1,NCOM
-    !    WRITE(IOwork,*) solventsolvent(I,:)
-    !END DO
-    !CLOSE(IOwork)
+    OPEN(UNIT=IOwork, FILE="gaussian.txt")
+    DO I=1,NCOM
+        WRITE(IOwork,*) solventsolvent(I,:)
+    END DO
+    CLOSE(IOwork)
 
     WRITE (*,*) "Entering Gaussian loop..."
 
@@ -873,7 +873,7 @@ OPEN (5414, FILE="debug.xyz", access='append')
                        CALL ABORT()
 
                     END IF
-                    EN = EN - (E_SOL + E_DMSO) * HARTREE2KJMOL
+                    !EN = EN - (E_SOL + E_DMSO) * HARTREE2KJMOL
                     !EN = EN - E_SOL - E_DMSO
                     !EN = EN * HARTREE2KJMOL
                 END IF
@@ -899,7 +899,7 @@ OPEN (5414, FILE="debug.xyz", access='append')
     !CALL execGa(I, 0, EN)
     !CALL grepit(I, 0, EN)
     CALL calcGaEn(I, 0, MOL1, SOLUTE, DMSO_SYM, SOL_SYM, EN, WORKDIR)
-    EN = EN - (E_SOL + E_DMSO) * HARTREE2KJMOL
+    !EN = EN - (E_SOL + E_DMSO) * HARTREE2KJMOL
     !EN = EN - E_SOL - E_DMSO
     !EN = EN * HARTREE2KJMOL
     ENERGY(I) = EN
