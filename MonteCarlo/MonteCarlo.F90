@@ -131,6 +131,7 @@ PROGRAM MonteCarlo
 
     ! Read command line
     CALL get_command_argument(1, CONFILE)
+    WRITE (*,*) "Reading config from: ", TRIM(CONFILE)
 
     ! Read from config.ini
     CALL rConfig(CONFILE, LJ_STEPS, GA_STEPS, ISEED, LJ_NADJ, LJ_NPRINT, GA_NADJ, &
