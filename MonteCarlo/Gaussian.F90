@@ -60,20 +60,6 @@ SUBROUTINE prepGaussian( WORKDIR )
 #endif
     CALL SYSTEM(THREAD_COMM)
 
-    ! Make the script
-    WRITE(THREAD_COMM, "(A,'/do.sh')") THREAD_DIR
-    OPEN(10, FILE=THREAD_COMM)
-    WRITE (10, "(A)") "#!/bin/bash"
-    WRITE (10, "(A)") "trap 'exit' SIGRTMAX-10"
-    WRITE (10, "(A)") "echo $$ >> ../PIDS.txt"
-    WRITE (10, "(A)") "while : do g09 < input.pipe > output.pipe; done"
-    CLOSE(10)
-
-    WRITE (THREAD_COMM, "(A)") "cd " // TRIM(THREAD_DIR) // " ; " // &
-     &                         "chmod 777 do.sh; ./do.sh"
-
-    CALL SYSTEM(THREAD_COMM)
-
     !$OMP END PARALLEL
 
 #ifdef DEBUG
@@ -97,19 +83,7 @@ SUBROUTINE cleanGaussian(WORKDIR)
 
     ! Global work variables
     CHARACTER*250 :: GLOB_COMM
-    INTEGER       :: PID, STAT
     CHARACTER*500 :: FILE
-
-    FILE = TRIM(WORKDIR) // "PIDS.txt"
-    OPEN(10, FILE=FILE)
-    DO
-        READ(10,'(I5.5)', IOSTAT=STAT) PID
-        IF (STAT .LT. 0) EXIT
-        CALL KILL(PID, 54)
-    END
-    CLOSE(10)
-
-
 
     ! Remove all work-* subdirectories
     GLOB_COMM = "/bin/rm -rf " // TRIM(WORKDIR) // "/work-*"
