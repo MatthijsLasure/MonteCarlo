@@ -168,13 +168,6 @@ SUBROUTINE calcGaEn(I, J, MOL1, MOL2, SYM1, SYM2, EN, WORKDIR)
     WRITE(GAUSS_ERR,"(A,'/error_calcGaEn.log')") TRIM(GAUSS_SCRATCH)
 
 !#if defined(USE_PIPES)
-!    GAUSS_COMM = "export GAUSS_SCRDIR=" // TRIM(GAUSS_SCRATCH) // "; " //     &
-!      &          "g09 <" // TRIM(GAUSS_IN) // " 2>" // TRIM(GAUSS_ERR) // " | " // &
-!      &          "grep Done " // " >" // TRIM(GAUSS_OUT) // " &"
-!#else
-!    GAUSS_COMM = "export GAUSS_SCRDIR=" // TRIM(GAUSS_SCRATCH) // "; " //     &
-!      &          "g09 <" // TRIM(GAUSS_IN) // " 2>" // TRIM(GAUSS_ERR) // " | " // &
-!      &          "grep Done " // " >" // TRIM(GAUSS_OUT)
 
     GAUSS_COMM = "cd " // TRIM(GAUSS_SCRATCH) // "; " // &
                  "mopac " // TRIM(GAUSS_IN) // " &> /dev/null; " // &
@@ -277,14 +270,6 @@ CONTAINS
         905 FORMAT(A, 3F16.8)
 
         ! Do the actual IO
-!        WRITE (FI,"(A)") '%nproc=1                                '
-!        WRITE (FI,"(A)") '%mem=1Gb                                '
-!        WRITE (FI,"(A)") '#  PM6                                  '
-!        WRITE (FI,"(A)") '                                        '
-!        WRITE (FI,"(A)") 'interacties                             '
-!        WRITE (FI,"(A)") '                                        '
-!        WRITE (FI,"(A)") '0 1                                     '
-
         WRITE (FI,"(A)") 'PM6 1SCF         '
         WRITE (FI,"(A)") 'Dual calculation '
         WRITE (FI,"(A)") 'yes dual         '
@@ -353,15 +338,6 @@ SUBROUTINE DO_SOLUTE(SOL_SYM, SOL, SOL_Q, WORKDIR)
     WRITE(NCHAR2, "(I0)") SIZE(SOL) + 2
 
     ! Prepare the commands to call Gaussian
-    !COMMAND1 = "[ -e FIFO_solute ] || mknod FIFO_solute p"
-    !COMMAND2 = "g09 < solute_charge.com > solute_charge.txt"
-    !COMMAND3 = "grep -B"//trim(NCHAR2)//" 'Electrostatic Properties (Atomic Units)' "//&
-    !"solute_charge.txt | head -"//trim(NCHAR)//" > FIFO_solute"
-    COMMAND = "export GAUSS_SCRDIR=" // TRIM(GAUSS_SCRATCH) // "; " // &
-      &       "g09 <" // TRIM(GAUSS_IN) // " 2>" // TRIM(GAUSS_ERR) // " | " // &
-      &       "grep -B" // TRIM(NCHAR) // " ' Sum of ESP charges =' | " // &
-      &       "head -" // TRIM(NCHAR) // " >" // TRIM(GAUSS_OUT)
-
     COMMAND = "export GAUSS_SCRDIR=" // TRIM(GAUSS_SCRATCH) // "; " // &
       &       "g09 <" // TRIM(GAUSS_IN) // " 2>" // TRIM(GAUSS_ERR) // " | " // &
       &       "grep -A" // TRIM(NCHAR2) // " 'Charges from ESP fit' | " // &
@@ -436,7 +412,6 @@ CALL SYSTEM( TRIM(COMMAND))! // " &" )
 
 #ifdef DEBUG
     WRITE (*,"(A,I3.3,A)") "DEBUG: Thread", ThreadNum, ": Exiting DO_SOLUTE"
-    !WRITE (*,*) "qsdfqsdfDEBUG: Thread", ThreadNum, ": Exiting DO_SOLUTE"
 #endif
 
 CONTAINS
