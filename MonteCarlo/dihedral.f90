@@ -73,7 +73,7 @@ MODULE dihedral
         TYPE (VECTOR):: R2
         LOGICAL:: mayGo = .TRUE.
 
-        DOUBLE PRECISION, PARAMETER :: BONDL = 1.90
+        DOUBLE PRECISION, PARAMETER :: BONDL = 2.05
         DOUBLE PRECISION, PARAMETER :: BONDL2 = BONDL * BONDL
 
         NATOM = SIZE(MOL)
@@ -108,10 +108,10 @@ MODULE dihedral
                 dist2 = length_sq(R2)
 
                 ! Atoom hoort bij fragment 1
-                IF ( (dist1 .LT. BONDL2) .AND. (dist2 .GE. 3.24D0) ) THEN
+                IF ( (dist1 .LT. BONDL2) .AND. (dist2 .GE. 4.21D0) ) THEN
                     FRAG(I) = 1
                 ! Atoom hoort bij fragment 2
-                ELSEIF ( (dist1 .GE. 3.24D0) .AND. (dist2 .LT. BONDL2) ) THEN
+                ELSEIF ( (dist1 .GE. 4.21D0) .AND. (dist2 .LT. BONDL2) ) THEN
                     FRAG(I) = 2
                 END IF
             END IF
@@ -133,6 +133,7 @@ MODULE dihedral
                             ! I behoort tot hetzelfde fragment als J: opschrijven dus
                             IF (DIST1 .LT. BONDL2) THEN
                                 FRAG(I) = FRAG(J)
+                                CYCLE atomLoop
                             END IF
                         END IF
                         WRITE (500,*) I, J, FRAG(I), FRAG(J), DIST1
