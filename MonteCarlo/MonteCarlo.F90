@@ -340,13 +340,13 @@ PROGRAM MonteCarlo
 
     ! Initiële berekening ladingen solute
     !====================================
-    WRITE (*,*) "Calculating partial charges on solute..."
-    !SOL_Q = TABLE(
-    CALL DO_SOLUTE(SOL_SYM, SOLUTE, TABLE_SOL(:,1), WORKDIR)
-
-    WRITE (*,*) "Done calculating"
-
     IF (LJ_STEPS .GT. 0) THEN
+        WRITE (*,*) "Calculating partial charges on solute..."
+        CALL DO_SOLUTE(SOL_SYM, SOLUTE, TABLE_SOL(:,1), WORKDIR)
+        WRITE (*,*) "Done calculating"
+    END IF
+
+    IF (LJ_STEPS .GT. 0 .OR. LJ_STEPS .EQ. -5) THEN
         DO I=1,NCOM
             CALL calculateLJ(I) ! Bereken alle energiën!
             !CALL calculateGA(I, 0)
@@ -379,7 +379,7 @@ PROGRAM MonteCarlo
     901 FORMAT(A12, 1X, A20, 1X, A20, 1X, A6, 1X, A6, 1X, A3, 1X, A6, 1X, A6, 1X, A6)
     902 FORMAT(I12.12, 1X, ES20.10, 1X, ES20.10, 1X, F6.4, 1X, F6.4, 1X, I3.3, 1X, F6.4, 1X, F6.4, 1X, F6.5)
     WRITE (IOout,901) "i", "TotEng", "TotEng_old", "kans", "rv", "rSolv", "pSuc", "ratio","dposmax"
-    WRITE (IOout,902) 0, TOTENG, TOTENG, 0.D0, 0.D0, 0, REAL(0) / real(1), 0.D0, DPOSMAX
+    IF(LJ_STEPS .GT. 0) WRITE (IOout,902) 0, TOTENG, TOTENG, 0.D0, 0.D0, 0, REAL(0) / real(1), 0.D0, DPOSMAX
 
 !====================================================================
 !====================================================================
@@ -441,14 +441,15 @@ PROGRAM MonteCarlo
     WRITE (*,*) "Fase 2 started!"
 
     
-    IF (GA_STEPS .GT. 0) THEN
+    IF (GA_STEPS .GT. 0 .OR. LJ_STEPS .EQ. -1) THEN
         DO I=1,NCOM
             CALL calculateGA(I, 0)
         END DO
+        TOTENG = 0.D0
+        TOTENG = calcEnergy(ENERGY, SOLVENTSOLVENT)
+        WRITE (IOout,902) 0, TOTENG, TOTENG, 0.D0, 0.D0, 0, 0.D0, 0.D0, DPOSMAX
     END IF
     
-    TOTENG = 0.D0
-    TOTENG = calcEnergy(ENERGY, SOLVENTSOLVENT)
     IF(LJ_STEPS .EQ. 0) PRE_ENG = TOTENG
     
     ! Dump energiën
