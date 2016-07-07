@@ -336,7 +336,7 @@ PROGRAM MonteCarlo
 
     ! Roteer de solute
     SOLUTE_OLD = SOLUTE
-    IF (DOROTSOLV) SOLUTE = SOLUTE_INIT(SOLUTE, DIHOEK, DROTSOLV)
+    IF (DOROTSOLV) SOLUTE = SOLUTE_INIT(SOLUTE, SOL_SYM, DIHOEK, DROTSOLV)
 
     ! Initiële berekening ladingen solute
     !====================================

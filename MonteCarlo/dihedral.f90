@@ -47,8 +47,9 @@ MODULE dihedral
 !====================================================================
 !====================================================================
 
-    FUNCTION SETDIHEDRAL(MOL, I1, I2, I3, I4, HOEK) RESULT(MOLOUT)
+    FUNCTION SETDIHEDRAL(MOL, SYM, I1, I2, I3, I4, HOEK) RESULT(MOLOUT)
         TYPE (VECTOR), DIMENSION(:) :: MOL
+        CHARACTER*4, DIMENSION(:)   :: SYM
         INTEGER, DIMENSION(SIZE(MOL)) :: FRAG ! Welk fragment
         TYPE (VECTOR), DIMENSION(SIZE(MOL)) :: MOLOUT
         INTEGER:: I
@@ -107,12 +108,30 @@ MODULE dihedral
                 dist1 = length_sq(R1)
                 dist2 = length_sq(R2)
 
+                ! Andere waarden voor H
+                IF(SYM(I) .EQ. 'H') THEN
                 ! Atoom hoort bij fragment 1
-                IF ( (dist1 .LT. BONDL2) .AND. (dist2 .GE. 4.21D0) ) THEN
-                    FRAG(I) = 1
-                ! Atoom hoort bij fragment 2
-                ELSEIF ( (dist1 .GE. 4.21D0) .AND. (dist2 .LT. BONDL2) ) THEN
-                    FRAG(I) = 2
+                    IF ( (dist1 .LT. 2.25D0) .AND. (dist2 .GE. 2.25D0) ) THEN
+                        FRAG(I) = 1
+                        WRITE (500,*) I, I2, FRAG(I), FRAG(I2), DIST1
+
+                    ! Atoom hoort bij fragment 2
+                    ELSEIF ( (dist1 .GE. 2.25D0) .AND. (dist2 .LT. 2.25D0) ) THEN
+                        FRAG(I) = 2
+                        WRITE (500,*) I, I3, FRAG(I), FRAG(I3), DIST2
+                    END IF
+                ELSE
+                    ! Atoom hoort bij fragment 1
+                    IF ( (dist1 .LT. BONDL2) .AND. (dist2 .GE. 4.21D0) ) THEN
+                        FRAG(I) = 1
+                        WRITE (500,*) I, I2, FRAG(I), FRAG(I2), DIST1
+
+                    ! Atoom hoort bij fragment 2
+                    ELSEIF ( (dist1 .GE. 4.21D0) .AND. (dist2 .LT. BONDL2) ) THEN
+                        FRAG(I) = 2
+                        WRITE (500,*) I, I3, FRAG(I), FRAG(I3), DIST2
+
+                    END IF
                 END IF
             END IF
         END DO first
@@ -133,6 +152,7 @@ MODULE dihedral
                             ! I behoort tot hetzelfde fragment als J: opschrijven dus
                             IF (DIST1 .LT. BONDL2) THEN
                                 FRAG(I) = FRAG(J)
+                                WRITE (500,*) I, J, FRAG(I), FRAG(J), DIST1
                                 CYCLE atomLoop
                             END IF
                         END IF
