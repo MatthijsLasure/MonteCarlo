@@ -874,7 +874,7 @@ OPEN (5414, FILE="debug.xyz", access='append')
 
                     END IF
                     !EN = EN - (E_DMSO + E_DMSO) * HARTREE2KJMOL
-                    EN = EN - E_SOL - E_DMSO
+                    EN = EN - E_DMSO - E_DMSO
                     !EN = EN * HARTREE2KJMOL
                 END IF
 

@@ -144,7 +144,7 @@ SUBROUTINE calcGaEn(I, J, MOL1, MOL2, SYM1, SYM2, EN, WORKDIR)
 !#if defined(USE_PIPES)
 
     GAUSS_COMM = "cd " // TRIM(GAUSS_SCRATCH) // "; " // &
-                 "mopac " // TRIM(GAUSS_IN) // " &> /dev/null; " // &
+                 "mopac " // TRIM(GAUSS_IN) // " 2> /dev/null; " // &
                  "grep 'FINAL HEAT OF FORMATION =' input.pipe.out" // &
                  " > " // TRIM(GAUSS_OUT)
 !#endif
@@ -240,9 +240,9 @@ CONTAINS
         905 FORMAT(A, 3F16.8)
 
         ! Do the actual IO
-        WRITE (FI,"(A)") 'PM6 1SCF         '
-        WRITE (FI,"(A)") 'Dual calculation '
-        WRITE (FI,"(A)") 'yes dual         '
+        WRITE (FI,"(A)") 'PM6 1SCF THREADS=1 '
+        WRITE (FI,"(A)") 'Dual calculation   '
+        WRITE (FI,"(A)") 'yes dual           '
 
         ! Print Mol1
         DO K=1,size(MOL1)
@@ -338,7 +338,7 @@ SUBROUTINE DO_SOLUTE(SOL_SYM, SOL, SOL_Q, WORKDIR)
     WRITE(*,"(A)") "DEBUG: DO_SOLUTE: END DEBUG INFO input file for Gaussian"
 #endif
 
-CALL SYSTEM( TRIM(COMMAND))! // " &" )
+CALL SYSTEM( TRIM(COMMAND) // " &" )
 
 #if !defined(USE_PIPES)
     ! Not using pipes: We now run Gaussian.

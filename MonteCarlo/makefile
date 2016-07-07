@@ -64,7 +64,7 @@ $(ITMP)/dihedral.o     : dihedral.f90           $(ITMP)/MCconstants.o  $(ITMP)/v
 # gfortran compile with OpenMP
 #
 GTMP=tmp-gnu
-GOPT= -fopenmp -DUSE_PIPES -J$(GTMP)
+GOPT= -fopenmp -DDEBUG -DUSE_PIPES -J$(GTMP)
 MonteCarloGNU : $(GTMP)/MCconstants.o $(GTMP)/randgen.o      $(GTMP)/vector_class.o \
                 $(GTMP)/dihedral.o    $(GTMP)/readConfig.o   $(GTMP)/lib.o \
                 $(GTMP)/solmod.o      $(GTMP)/LennardJones.o $(GTMP)/Gaussian.o \
