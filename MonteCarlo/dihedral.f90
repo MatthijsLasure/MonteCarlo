@@ -1,6 +1,7 @@
 MODULE dihedral
 
     !implicit none
+    USE mcconstants
     USE vector_class
 
     CONTAINS
@@ -113,23 +114,23 @@ MODULE dihedral
                 ! Atoom hoort bij fragment 1
                     IF ( (dist1 .LT. 2.25D0) .AND. (dist2 .GE. 2.25D0) ) THEN
                         FRAG(I) = 1
-                        WRITE (500,*) I, I2, FRAG(I), FRAG(I2), DIST1
+                        WRITE (IOerr,*) I, I2, FRAG(I), FRAG(I2), DIST1
 
                     ! Atoom hoort bij fragment 2
                     ELSEIF ( (dist1 .GE. 2.25D0) .AND. (dist2 .LT. 2.25D0) ) THEN
                         FRAG(I) = 2
-                        WRITE (500,*) I, I3, FRAG(I), FRAG(I3), DIST2
+                        WRITE (IOerr,*) I, I3, FRAG(I), FRAG(I3), DIST2
                     END IF
                 ELSE
                     ! Atoom hoort bij fragment 1
                     IF ( (dist1 .LT. BONDL2) .AND. (dist2 .GE. 4.21D0) ) THEN
                         FRAG(I) = 1
-                        WRITE (500,*) I, I2, FRAG(I), FRAG(I2), DIST1
+                        WRITE (IOerr,*) I, I2, FRAG(I), FRAG(I2), DIST1
 
                     ! Atoom hoort bij fragment 2
                     ELSEIF ( (dist1 .GE. 4.21D0) .AND. (dist2 .LT. BONDL2) ) THEN
                         FRAG(I) = 2
-                        WRITE (500,*) I, I3, FRAG(I), FRAG(I3), DIST2
+                        WRITE (IOerr,*) I, I3, FRAG(I), FRAG(I3), DIST2
 
                     END IF
                 END IF
@@ -152,11 +153,11 @@ MODULE dihedral
                             ! I behoort tot hetzelfde fragment als J: opschrijven dus
                             IF (DIST1 .LT. BONDL2) THEN
                                 FRAG(I) = FRAG(J)
-                                WRITE (500,*) I, J, FRAG(I), FRAG(J), DIST1
+                                WRITE (IOerr,*) I, J, FRAG(I), FRAG(J), DIST1
                                 CYCLE atomLoop
                             END IF
                         END IF
-                        WRITE (500,*) I, J, FRAG(I), FRAG(J), DIST1
+                        WRITE (IOerr,*) I, J, FRAG(I), FRAG(J), DIST1
                     END DO
                 END IF
             END DO atomLoop
