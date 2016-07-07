@@ -307,11 +307,11 @@ PROGRAM MonteCarlo
     IF (DOROTSOLV) WRITE (*,"(A,F13.10)") "Solvent rotation, max ", DROTSOLV
 
     BOXL2 = BOXL * 2.D0
-    !E_SOL = E_SOL * HARTREE2KJMOL
-    !E_DMSO = E_DMSO * HARTREE2KJMOL
+    E_SOL = E_SOL * HARTREE2KJMOL
+    E_DMSO = E_DMSO * HARTREE2KJMOL
 
-    WRITE (*,*) "E_SOL  (Hartree): ", E_SOL
-    WRITE (*,*) "E_DMSO (Hartree): ", E_DMSO
+    WRITE (*,*) "E_SOL  (kJ/mol): ", E_SOL
+    WRITE (*,*) "E_DMSO (kJ/mol): ", E_DMSO
 
 !====================================================================
 !====================================================================
@@ -532,7 +532,7 @@ PROGRAM MonteCarlo
     DO I=1, NSOL ! Lees de co�rdinaten uit
         WRITE (IOwork,*) sol_sym(I), solute(I)%X, solute(I)%Y, solute(I)%Z
     END DO
-    WRITE (IOwork,*) E_SOL
+    WRITE (IOwork,*) E_SOL / HARTREE2KJMOL
     WRITE (IOwork,*) NDIHOEK
     DO I=1, NDIHOEK
         WRITE (IOwork,*) DIHOEK(I,1), DIHOEK(I,2)
@@ -873,8 +873,8 @@ OPEN (5414, FILE="debug.xyz", access='append')
                        CALL ABORT()
 
                     END IF
-                    EN = EN - (E_DMSO + E_DMSO) * HARTREE2KJMOL
-                    !EN = EN - E_SOL - E_DMSO
+                    !EN = EN - (E_DMSO + E_DMSO) * HARTREE2KJMOL
+                    EN = EN - E_SOL - E_DMSO
                     !EN = EN * HARTREE2KJMOL
                 END IF
 
@@ -899,8 +899,8 @@ OPEN (5414, FILE="debug.xyz", access='append')
     !CALL execGa(I, 0, EN)
     !CALL grepit(I, 0, EN)
     CALL calcGaEn(I, 0, MOL1, SOLUTE, DMSO_SYM, SOL_SYM, EN, WORKDIR)
-    EN = EN - (E_SOL + E_DMSO) * HARTREE2KJMOL
-    !EN = EN - E_SOL - E_DMSO
+    !EN = EN - (E_SOL + E_DMSO) * HARTREE2KJMOL
+    EN = EN - E_SOL - E_DMSO
     !EN = EN * HARTREE2KJMOL
     ENERGY(I) = EN
 
