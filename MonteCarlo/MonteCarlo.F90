@@ -45,6 +45,7 @@ PROGRAM MonteCarlo
     DOUBLE PRECISION    :: DROTSOLV
     CHARACTER(LEN=30)   :: DATE
     INTEGER             :: STATUS
+    INTEGER             :: ISTAT
 
     ! FILES
     !======
@@ -54,6 +55,9 @@ PROGRAM MonteCarlo
     CHARACTER*100                   :: OUT_FILE, ERR_FILE, DUMP_FILE, SOLVSOLV_FILE, RESULT_FILE, SOLOUT_FILE ! output files
     CHARACTER*500                   :: WORKDIR
 
+    ! Do Stuff?
+    LOGICAL             :: doDump = .TRUE., doOut = .TRUE.
+
     ! Energiën van de moleculen, bekomen via extern programma
     DOUBLE PRECISION                :: E_DMSO, E_SOL
 
@@ -61,6 +65,7 @@ PROGRAM MonteCarlo
     TYPE (vector), DIMENSION(:), ALLOCATABLE    :: DMSO, COM, SOLUTE, HOEK
     ! Variabelen voor de vorige run van MC
     TYPE (vector), DIMENSION(:), ALLOCATABLE    :: COM_OLD, SOLUTE_OLD, HOEK_OLD
+    TYPE (vector), DIMENSION(:), ALLOCATABLE    :: COM_FIRST, HOEK_FIRST
     CHARACTER*4, DIMENSION(:), ALLOCATABLE      :: DMSO_SYM, SOL_SYM
     INTEGER                                     :: NDMSO, NCOM, NSOL, NPARAM, NPARSOL ! Aantal units
     ! DMSO: relatieve coördinaten voor de atomen
@@ -78,17 +83,17 @@ PROGRAM MonteCarlo
 
     ! Debug
 !====================================================================
-    INTEGER:: K, L                                                     !
+    INTEGER:: K, L                                                  !
     TYPE (vector), DIMENSION(10) :: ABSPOS                          !
     INTEGER:: START                                                 !
-    LOGICAL:: DODEBUG = .FALSE.                                          !
+    LOGICAL:: DODEBUG = .FALSE.                                     !
 !====================================================================
 
     ! output calc
     DOUBLE PRECISION                                :: EN ! Energie van een run
     DOUBLE PRECISION, DIMENSION(:,:), ALLOCATABLE   :: SOLVENTSOLVENT, SSOLD
     DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE     :: ENERGY, EOLD
-    DOUBLE PRECISION                                :: TOTENG = 0.D0, PRE_ENG, POST_ENG
+    DOUBLE PRECISION                                :: TOTENG = 0.D0, PRE_ENG, POST_ENG ! PRE_ENG: from previous run
     DOUBLE PRECISION                                :: TOTENG_OLD = 0.D0
 
     ! Arrays voor parameters van DMSO (Q, epsilon, sigma, mass)
@@ -139,8 +144,12 @@ PROGRAM MonteCarlo
     GA_NPRINT, LJ_DUMP, GA_DUMP, DPOSMAX, DPOSMIN, DHOEKMAX, DHOEKMIN, PADJ, PROC, &
     FILES, TEMPERATURE, DOROTSOLV, DROTSOLV)
 
+    IF (LJ_DUMP .EQ. 0 .AND. GA_DUMP .EQ. 0) doDump = .FALSE.
+    IF (LJ_NPRINT .EQ. 0 .AND. GA_NPRINT .EQ. 0) doOut = .FALSE.
     IF (LJ_DUMP .EQ. 0) LJ_DUMP = huge(LJ_DUMP)
     IF (GA_DUMP .EQ. 0) GA_DUMP = huge(GA_DUMP)
+    IF (LJ_NPRINT .EQ. 0) LJ_NPRINT = huge(LJ_NPRINT)
+    IF (GA_NPRINT .EQ. 0) GA_NPRINT = huge(GA_NPRINT)
 
     ! Override stuff with command line
     IF (COMMAND_ARGUMENT_COUNT() .GT. 1) THEN ! Seriële modus
@@ -164,7 +173,6 @@ PROGRAM MonteCarlo
         ! INPUT
         BOX_FILE= trim(files(1)) // "." // trim(ID_TEMP) // ".in"
         SOL_FILE = trim(files(3)) // "." // trim(ID_TEMP) // ".in"
-        !write(box_file, 910) files(1), ".", RUN_ID, ".in"
 
         ! OUTPUT
         OUT_FILE = trim(files(5)) // "." // trim(ID_TEMP) // ".txt"
@@ -210,12 +218,22 @@ PROGRAM MonteCarlo
 
 
     ! START ERR/OUT
-    OPEN(UNIT=IOout, FILE=OUT_FILE)
-    WRITE (*,*) "Outputstream started in ", OUT_FILE
+    IF (doOut) THEN
+        OPEN(UNIT=IOout, FILE=OUT_FILE)
+        WRITE (*,*) "Outputstream started in ", TRIM(OUT_FILE)
+    ELSE
+        WRITE (*,*) "No outputstream requested!"
+    END IF
+
     OPEN(UNIT=IOerr, FILE=ERR_FILE)
-    WRITE (*,*) "Errorstream started in ", ERR_FILE
-    OPEN(UNIT=IOdump, FILE=DUMP_FILE)
-    WRITE (*,*) "Dump file opened on ", DUMP_FILE
+    WRITE (*,*) "Errorstream started in ", TRIM(ERR_FILE)
+
+    IF (doDump) THEN
+        OPEN(UNIT=IOdump, FILE=DUMP_FILE)
+        WRITE (*,*) "Dump file opened on ", TRIM(DUMP_FILE)
+    ELSE
+        WRITE (*,*) "No Dumpfile requested!"
+    END IF
 
     WRITE (*,*) "Config loaded!"
 
@@ -230,12 +248,16 @@ PROGRAM MonteCarlo
     WRITE (*,*) "Loading data..."
 
     ! DMSO.txt: conformatie DMSO
-    OPEN (UNIT=IOwork, FILE=DMSO_FILE)
+    OPEN (UNIT=IOwork, FILE=DMSO_FILE, ACTION='READ', STATUS='OLD', IOSTAT=istat)
+    IF (istat .NE. 0) THEN
+        WRITE (*,*) "Error opening DMSO in ", TRIM(DMSO_FILE)
+        STOP
+    END IF
     READ (IOwork, *) nDMSO ! Lees aantal atomen
     READ (IOwork, *) ! Comment line
     ALLOCATE(DMSO(NDMSO)) ! Ken correcte groottes toe aan de arrays
     ALLOCATE(DMSO_sym(NDMSO))
-    ALLOCATE(TABLE_DMSO(NDMSO, 3))
+    IF (LJ_STEPS .GT. 0) ALLOCATE(TABLE_DMSO(NDMSO, 3))
     DO I=1, NDMSO
         READ (IOwork,*) DMSO_sym(I), DMSO(I)%X, DMSO(I)%Y, DMSO(I)%Z
     END DO
@@ -243,14 +265,18 @@ PROGRAM MonteCarlo
     CLOSE(IOwork)
 
     ! solute.txt: conformatie opgeloste molecule (sol)
-    OPEN (UNIT=IOwork, FILE=SOL_FILE)
+    OPEN (UNIT=IOwork, FILE=SOL_FILE, ACTION='READ', STATUS='OLD', IOSTAT=istat)
+    IF (istat .NE. 0) THEN
+        WRITE (*,*) "Error opening solute in ", TRIM(SOL_FILE)
+        STOP
+    END IF
     READ (IOwork, *) nSol ! Lees aantal atomen
     READ (IOwork, "(A)") SOLNAME ! Comment line
     ALLOCATE(solute(NSOL)) ! Maak de arrays groot genoeg
     ALLOCATE(SOLUTE_OLD(NSOL))
     ALLOCATE(sol_sym(NSOL))
-    ALLOCATE(SOL_Q(NSOL))
-    ALLOCATE(TABLE_SOL(NSOL, 3))
+    IF (LJ_STEPS .GT. 0) ALLOCATE(SOL_Q(NSOL))
+    IF (LJ_STEPS .GT. 0) ALLOCATE(TABLE_SOL(NSOL, 3))
     DO I=1, NSOL ! Lees de coördinaten uit
         READ (IOwork,*) sol_sym(I), solute(I)%X, solute(I)%Y, solute(I)%Z
     END DO
@@ -266,43 +292,69 @@ PROGRAM MonteCarlo
 
 
     ! box.txt: plaatsen van de moleculen (CoM, hoek)
-    OPEN (UNIT=IOwork, FILE=BOX_FILE)
+    OPEN (UNIT=IOwork, FILE=BOX_FILE, ACTION='READ', STATUS='OLD', IOSTAT=istat)
+    IF (istat .NE. 0) THEN
+        WRITE (*,*) "Error opening box in ", TRIM(BOX_FILE)
+        STOP
+    END IF
     READ (IOwork, *) BOXL ! Box grootte
     READ (IOwork, *) nCoM ! Lees aantal moleculen
+    READ (IOwork,"(E20.10)", IOSTAT=istat) PRE_ENG ! Energy from previous run
+    IF (istat .NE. 0) THEN
+        WRITE (*,*) "No energy detected in input box. Will be calculated."
+        PRE_ENG = 123456.789
+        BACKSPACE(IOwork)
+    END IF
+
     READ (IOwork, *)      ! Box ID
     ALLOCATE(CoM(NCOM))
     ALLOCATE(hoek(NCOM))
     ALLOCATE(CoM_old(NCOM))
     ALLOCATE(hoek_old(NCOM))
+    ALLOCATE(COM_FIRST(NCOM))
+    ALLOCATE(HOEK_FIRST(NCOM))
     DO I= 1, NCOM
         READ(IOwork,*) CoM(I)%X, CoM(I)%Y, CoM(I)%Z, hoek(I)%X, hoek(I)%Y, hoek(I)%Z
     END DO
     CLOSE(IOwork)
+    ! Save for solute MC
+    COM_FIRST = CoM
+    HOEK_FIRST = HOEK
 
-    ! param.txt: parameters voor LJ etc
-    OPEN (UNIT=IOwork, FILE=PARAM_FILE)
-    READ (IOwork, *) nParam ! Aantal beschikbare parameters
-    READ (IOwork, *) ! skip comment line
-    ALLOCATE(sym(NPARAM))
-    ALLOCATE(Q(NPARAM))
-    ALLOCATE(epsilon(NPARAM))
-    ALLOCATE(sigma(NPARAM))
-    DO I= 1,NPARAM
-        READ (IOwork,*) sym(I), Q(I), epsilon(I), sigma(I)
-    END DO
-    CLOSE(IOwork)
+    IF ( LJ_STEPS .GT. 0) THEN
+        ! param.txt: parameters voor LJ etc
+        OPEN (UNIT=IOwork, FILE=PARAM_FILE, ACTION='READ', STATUS='OLD', IOSTAT=istat)
+        IF (istat .NE. 0) THEN
+            WRITE (*,*) "Error opening param in ", TRIM(PARAM_FILE)
+            STOP
+        END IF
+        READ (IOwork, *) nParam ! Aantal beschikbare parameters
+        READ (IOwork, *) ! skip comment line
+        ALLOCATE(sym(NPARAM))
+        ALLOCATE(Q(NPARAM))
+        ALLOCATE(epsilon(NPARAM))
+        ALLOCATE(sigma(NPARAM))
+        DO I= 1,NPARAM
+            READ (IOwork,*) sym(I), Q(I), epsilon(I), sigma(I)
+        END DO
+        CLOSE(IOwork)
 
-    ! par_solute.txt: parameters voor LJ van het solute
-    OPEN (UNIT=IOwork, FILE=PARSOL_FILE)
-    READ (IOwork, *) NPARSOL
-    READ (IOwork, *) ! Comment line
-    ALLOCATE(SOLPAR_SYM(NPARSOL))
-    ALLOCATE(SOL_EPSILON(NPARSOL))
-    ALLOCATE(SOL_SIGMA(NPARSOL))
-    DO I= 1,NPARSOL
-        READ (IOwork,*) SOLPAR_SYM(I), SOL_EPSILON(I), SOL_SIGMA(I)
-    END DO
-    CLOSE(IOwork)
+        ! par_solute.txt: parameters voor LJ van het solute
+        OPEN (UNIT=IOwork, FILE=PARSOL_FILE, ACTION='READ', STATUS='OLD', IOSTAT=istat)
+        IF (istat .NE. 0) THEN
+            WRITE (*,*) "Error opening parsol in ", TRIM(PARSOL_FILE)
+            STOP
+        END IF
+        READ (IOwork, *) NPARSOL
+        READ (IOwork, *) ! Comment line
+        ALLOCATE(SOLPAR_SYM(NPARSOL))
+        ALLOCATE(SOL_EPSILON(NPARSOL))
+        ALLOCATE(SOL_SIGMA(NPARSOL))
+        DO I= 1,NPARSOL
+            READ (IOwork,*) SOLPAR_SYM(I), SOL_EPSILON(I), SOL_SIGMA(I)
+        END DO
+        CLOSE(IOwork)
+    END IF
 
     WRITE (*,*) "Done loading data!"
 
@@ -325,9 +377,11 @@ PROGRAM MonteCarlo
 !====================================================================
 !====================================================================
 
-    WRITE(*,*) "Working on assosiation tables..."
-    CALL ASSOSIATE_DMSO(DMSO_SYM, SYM, Q, EPSILON, SIGMA, TABLE_DMSO)
-    CALL ASSOSIATE_SOLUTE(SOL_SYM, SOLPAR_SYM, SOL_EPSILON, SOL_SIGMA, TABLE_SOL)
+    IF (LJ_STEPS .GT. 0) THEN
+        WRITE(*,*) "Working on assosiation tables..."
+        CALL ASSOSIATE_DMSO(DMSO_SYM, SYM, Q, EPSILON, SIGMA, TABLE_DMSO)
+        CALL ASSOSIATE_SOLUTE(SOL_SYM, SOLPAR_SYM, SOL_EPSILON, SOL_SIGMA, TABLE_SOL)
+    END IF
 
     ! Initiële berekening interacties
     !================================
@@ -344,6 +398,21 @@ PROGRAM MonteCarlo
 
     ! Roteer de solute
     SOLUTE_OLD = SOLUTE
+
+    IF (PRE_ENG .EQ. 123456.789) THEN
+        WRITE (*,*) "Recalculating previous box..."
+        DO I=1,NCOM
+            CALL calculateGA(I,-1) ! Bereken alle energiën!
+        END DO
+        PRE_ENG = 0.D0
+        PRE_ENG = calcEnergy(ENERGY, SOLVENTSOLVENT)
+        WRITE (*,*) "Previous box recalculated: (kJ/mol) [GA] ", PRE_ENG
+    ELSE
+        WRITE (*,*) "Previous box read: (kJ/mol) [GA] ", PRE_ENG
+    END IF
+
+    ! MC ON ROTSOLV
+    !==============
     IF (DOROTSOLV) SOLUTE = SOLUTE_INIT(SOLUTE, SOL_SYM, DIHOEK, DROTSOLV_ARRAY)
 
     ! Initiële berekening ladingen solute
@@ -362,7 +431,7 @@ PROGRAM MonteCarlo
 
         TOTENG = 0.D0
         TOTENG = calcEnergy(ENERGY, SOLVENTSOLVENT)
-        PRE_ENG = TOTENG
+        !PRE_ENG = TOTENG
 
         WRITE (*,"('Initial energy (LJ): ', ES20.10)") TOTENG
 
@@ -382,14 +451,16 @@ PROGRAM MonteCarlo
 
     !WRITE (*,*) "Dump file opened on ", DUMP_FILE
     !OPEN(UNIT=IOdump, FILE=DUMP_FILE)
-    WRITE (IOdump,*) BOXL
-    CALL DUMP(0, IOdump)
+    IF (doDump) THEN
+        WRITE (IOdump,*) BOXL
+        CALL DUMP(0, IOdump)
+    END IF
     !CLOSE(IOdump)
 
     901 FORMAT(A12, 1X, A20, 1X, A20, 1X, A6, 1X, A6, 1X, A3, 1X, A6, 1X, A6, 1X, A6)
     902 FORMAT(I12.12, 1X, ES20.10, 1X, ES20.10, 1X, F6.4, 1X, F6.4, 1X, I3.3, 1X, F6.4, 1X, F6.4, 1X, F6.5)
-    WRITE (IOout,901) "i", "TotEng", "TotEng_old", "kans", "rv", "rSolv", "pSuc", "ratio","dposmax"
-    IF(LJ_STEPS .GT. 0) WRITE (IOout,902) 0, TOTENG, TOTENG, 0.D0, 0.D0, 0, REAL(0) / real(1), 0.D0, DPOSMAX
+    IF (doOut) WRITE (IOout,901) "i", "TotEng", "TotEng_old", "kans", "rv", "rSolv", "pSuc", "ratio","dposmax"
+    IF(LJ_STEPS .GT. 0 .AND. doOut) WRITE (IOout,902) 0, TOTENG, TOTENG, 0.D0, 0.D0, 0, REAL(0) / real(1), 0.D0, DPOSMAX
 
 !====================================================================
 !====================================================================
@@ -411,17 +482,17 @@ PROGRAM MonteCarlo
         TOTENG = 0.D0
         TOTENG = calcEnergy(ENERGY, SOLVENTSOLVENT)
 
-        IF (MOD(UNICORN, LJ_DUMP) .EQ. 0) THEN
+        IF (MOD(UNICORN, LJ_DUMP) .EQ. 0 .AND. doDump) THEN
             CALL DUMP(UNICORN, IOdump)
         END IF
 
         ! Check for invalid shit
         IF(TOTENG > HUGE(TOTENG)) THEN
-            WRITE (0,*) "TOTENG IS INFINITY @", UNICORN, TOTENG
+            WRITE (IOerr,*) "TOTENG IS INFINITY @", UNICORN, TOTENG
             TOTENG = HUGE(TOTENG)-1
         END IF
         IF(TOTENG .NE. TOTENG) THEN
-            WRITE (0,*) "TOTENG IS NaN @", UNICORN, TOTENG
+            WRITE (IOerr,*) "TOTENG IS NaN @", UNICORN, TOTENG
             TOTENG = HUGE(TOTENG)-1
         END IF
 
@@ -434,10 +505,12 @@ PROGRAM MonteCarlo
     WRITE (*,*) "Exiting Lennard-Jones loop..."
     WRITE (*,*) "Writing data..."
 
+    IF (LJ_STEPS .GT. 0) WRITE (*,"('Final energy (LJ): ', ES20.10)") TOTENG_OLD
     ! Write box
     OPEN(UNIT=IOwork, FILE="backup.txt")
     WRITE(IOwork,*) BOXL
     WRITE(IOwork,*) NCOM
+    WRITE(IOwork,*) TOTENG_OLD
     DO I=1,NCOM
         WRITE(IOwork,*) CoM(I)%x, CoM(I)%y, CoM(I)%z, hoek(I)%x, hoek(I)%y, hoek(I)%z
     END DO
@@ -457,11 +530,11 @@ PROGRAM MonteCarlo
         END DO
         TOTENG = 0.D0
         TOTENG = calcEnergy(ENERGY, SOLVENTSOLVENT)
-        WRITE (IOout,902) 0, TOTENG, TOTENG, 0.D0, 0.D0, 0, 0.D0, 0.D0, DPOSMAX
+        IF (doOut) WRITE (IOout,902) 0, TOTENG, TOTENG, 0.D0, 0.D0, 0, 0.D0, 0.D0, DPOSMAX
         WRITE (*,"('Initial energy (GA): ', ES20.10)") TOTENG
     END IF
     
-    IF(LJ_STEPS .EQ. 0) PRE_ENG = TOTENG
+    !IF(LJ_STEPS .EQ. 0) PRE_ENG = TOTENG
     
     ! Dump energiën
     !tot = 0.0D
@@ -485,7 +558,7 @@ PROGRAM MonteCarlo
         TOTENG = calcEnergy(ENERGY, SOLVENTSOLVENT)
 
         !OPEN(UNIT=IOdump, FILE=dump_file, ACCESS="APPEND")
-        IF (MOD(UNICORN, GA_DUMP) .EQ. 0) THEN
+        IF (MOD(UNICORN, GA_DUMP) .EQ. 0 .AND. doDump) THEN
             CALL DUMP(UNICORN, IOdump)
         END IF
         !CLOSE(IOdump)
@@ -504,7 +577,11 @@ PROGRAM MonteCarlo
         DO K = 1, NDMSO
             DO L = 1, NSOL
                 IF(getDist(MOL1(K), SOLUTE(L)) .LT. 1.8D0) THEN
-                    CALL CalcLJ_SV(MOL1, SOLUTE, DMSO_SYM, TABLE_DMSO, TABLE_SOL, EN, BOXL, BOXL2)
+                    IF (LJ_STEPS .GT. 0) THEN
+                        CALL CalcLJ_SV(MOL1, SOLUTE, DMSO_SYM, TABLE_DMSO, TABLE_SOL, EN, BOXL, BOXL2)
+                    ELSE
+                        EN = 0.D0
+                    END IF
                     WRITE (*,*) I, 0, K, L, getDist(MOL1(K), SOLUTE(L)), EN
                 END IF
             END DO
@@ -515,7 +592,11 @@ PROGRAM MonteCarlo
             DO K = 1, NDMSO
                 DO L = 1, NDMSO
                     IF(getDist(MOL1(K), MOL2(L)) .LT. 1.8D0) THEN
-                        CALL calcLJ(MOL1, MOL2, DMSO_SYM, TABLE_DMSO, EN, BOXL, BOXL2)
+                        IF (LJ_STEPS .GT. 0) THEN
+                            CALL calcLJ(MOL1, MOL2, DMSO_SYM, TABLE_DMSO, EN, BOXL, BOXL2)
+                        ELSE
+                            EN = 0.D0
+                        END IF
                         WRITE (*,*) I, J, K, L, getDist(MOL1(K), MOL2(L)), EN
                     END IF
                 END DO
@@ -535,9 +616,13 @@ PROGRAM MonteCarlo
         POST_ENG = TOTENG
         IF(.NOT. SOLUTE_METROPOLIS(SOLUTE, PRE_ENG, POST_ENG, TEMPERATURE)) THEN
             SOLUTE = SOLUTE_OLD
+            CoM = COM_FIRST
+            HOEK = HOEK_FIRST
         END IF
     END IF
     
+    IF (LJ_STEPS .GT. 0) WRITE (*,"('Final energy (GA): ', ES20.10)") TOTENG_OLD
+
     ! solute.txt: conformatie opgeloste molecule (sol)
     OPEN (UNIT=IOwork, FILE=SOLOUT_FILE)
     WRITE (IOwork, *) NSOL ! Lees aantal atomen
@@ -552,7 +637,7 @@ PROGRAM MonteCarlo
     END DO
     CLOSE(IOwork)
     
-    CALL DUMP(UNICORN+1, IOdump)
+    IF (doDump) CALL DUMP(UNICORN+1, IOdump)
     
     WRITE (*,*) "Fase 2 done!"
     WRITE (*,*) "Fase POST started!"
@@ -563,6 +648,7 @@ PROGRAM MonteCarlo
     OPEN (UNIT=IOwork, FILE=RESULT_FILE)
     WRITE (IOwork, *) BOXL ! Box grootte
     WRITE (IOwork, *) NCOM ! Lees aantal moleculen
+    WRITE (IOwork, *) POST_ENG
     WRITE (IOwork, *) "BOX ", trim(ID_TEMP)
     DO I= 1, NCOM
         WRITE(IOwork,*) CoM(I)%X, CoM(I)%Y, CoM(I)%Z, hoek(I)%X, hoek(I)%Y, hoek(I)%Z
@@ -575,8 +661,6 @@ PROGRAM MonteCarlo
     WRITE (*,*) "Deallocating..."
     DEALLOCATE(DMSO)
     DEALLOCATE(DMSO_SYM)
-    DEALLOCATE(TABLE_DMSO)
-    DEALLOCATE(TABLE_SOL)
     DEALLOCATE (DIHOEK)
     DEALLOCATE(SOLUTE)
     DEALLOCATE (SOLUTE_OLD)
@@ -585,28 +669,33 @@ PROGRAM MonteCarlo
     DEALLOCATE(hoek)
     DEALLOCATE(COM_OLD)
     DEALLOCATE(HOEK_OLD)
-    DEALLOCATE(SYM)
-    DEALLOCATE(Q)
-    DEALLOCATE(EPSILON)
-    DEALLOCATE(SIGMA)
-    DEALLOCATE(SOL_Q)
-    DEALLOCATE(SOLPAR_SYM)
-    DEALLOCATE(SOL_EPSILON)
-    DEALLOCATE(SOL_SIGMA)
     DEALLOCATE(MOL1)
     DEALLOCATE(MOL2)
     DEALLOCATE(SOLVENTSOLVENT)
     DEALLOCATE(SSOLD)
     DEALLOCATE(ENERGY)
     DEALLOCATE(EOLD)
+
+    IF (LJ_STEPS .GT. 0) THEN
+        DEALLOCATE(SYM)
+        DEALLOCATE(Q)
+        DEALLOCATE(EPSILON)
+        DEALLOCATE(SIGMA)
+        DEALLOCATE(SOLPAR_SYM)
+        DEALLOCATE(SOL_EPSILON)
+        DEALLOCATE(SOL_SIGMA)
+        DEALLOCATE(SOL_Q)
+        DEALLOCATE(TABLE_DMSO)
+        DEALLOCATE(TABLE_SOL)
+    END IF
     
     
 !====================================================================
 !====================================================================
     
-    CLOSE(IOout)
+    if (doOut) CLOSE(IOout)
     CLOSE(IOerr)
-    CLOSE(IOdump)
+    if (doDump) CLOSE(IOdump)
     
 !====================================================================
 !====================================================================
@@ -695,7 +784,6 @@ SUBROUTINE METROPOLIS(I, NADJ, NPRINT, REJECTED)
 
         ! Prints every NPRINT times
         IF(mod(I, NPRINT) .EQ. 0) THEN
-            !CALL DUMP(I, IOdump)
             WRITE (IOout,902) I, TOTENG, TOTENG_OLD, KANS, RV, RSOLV, REAL(NSUC) / real(I), RATIO, DPOSMAX
         END IF
 
