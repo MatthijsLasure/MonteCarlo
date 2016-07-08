@@ -5,7 +5,7 @@ program BoxScale
     DOUBLE PRECISION :: factor, en
 
     DOUBLE PRECISION :: CoM1, CoM2, CoM3, h1, h2, h3
-    INTEGER :: nCoM, I
+    INTEGER :: nCoM, I, stat
     DOUBLE PRECISION :: BOXL
 
     WRITE (*,*) "************"
@@ -22,12 +22,12 @@ program BoxScale
     open(11, file=output)
     read (10, *) BOXL
     read (10, *) nCoM
-    read (10, *) en
+    read (10, "(ES20.10)", IOSTAT=stat) en
     read (10, "(A,I10.10)") charfactor, I
 
     write (11, *) BOXL * factor
     write (11, *) nCoM
-    write (11, *) en
+    if (stat .eq. 0) write (11, *) en
     write (11, "(A,I10.10)") trim(charfactor), I
 
     DO I=1,nCoM
