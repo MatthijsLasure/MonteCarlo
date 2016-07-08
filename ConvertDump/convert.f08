@@ -1,13 +1,12 @@
 program convert
     use lib
-    use dihedral
     implicit none
 
     CHARACTER*1000   :: in_file, out_file, sol_file, DMSO_file, temp
     CHARACTER*20     :: what_char, A_char, B_char
     TYPE (vector)    :: CoM, hoek
     TYPE (vector)    :: vecA, vecB
-    DOUBLE PRECISION :: R, RMIN
+    DOUBLE PRECISION :: R, RMIN, En
     INTEGER          :: IMIN, AMIN
     TYPE(vector), DIMENSION(:), ALLOCATABLE :: solute, DMSO, pos, MOL1, UCOM, UHOEK
     CHARACTER*4, DIMENSION(:), ALLOCATABLE      :: DMSO_SYM, SOL_SYM
@@ -92,10 +91,13 @@ IF (what .LE. 1) THEN ! Just dump XYZ
     loop: DO
         READ (10, *, IOSTAT=IOSTATUS) NCOM
         IF (IOSTATUS < 0) exit
+        READ (10, "(E20.10)", IOSTAT=IOSTATUS) En
+        IF (IOSTATUS .NE. 0) En = 0.D0
         READ (10, "(A10,I20.20, F20.20)") TEMP, TIMESTEP
+
         N = NCOM * (NDMSO - NHYDROGEN) + NSOL + 8
         WRITE (11,*) N
-        WRITE (11, *) "Timestep:", TIMESTEP
+        WRITE (11, "('ID ', I6.6, ' Energy: ', F20.16, ' kJ/mol')") TIMESTEP, En
 
         DO I=0,1
             DO J=0,1

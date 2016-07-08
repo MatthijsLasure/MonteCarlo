@@ -81,10 +81,10 @@ MODULE solmod
 
         ! Bepaal if succesvol -> volgende config
         IF(RV .LE. KANS) THEN ! Succes!
-            WRITE (*,*) "New solute accepted!", PRE_EN, POST_EN
+            WRITE (*,*) "New solute accepted! (Prev / Post)", PRE_EN, POST_EN
             ISOK = .TRUE.
         ELSE ! Fail!
-            WRITE (*,*) "New solute rejected!", PRE_EN, POST_EN
+            WRITE (*,*) "New solute rejected! (Prev / Post)", PRE_EN, POST_EN
             ISOK = .FALSE.
         END IF
 
