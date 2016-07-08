@@ -396,8 +396,7 @@ PROGRAM MonteCarlo
     ALLOCATE(energy(NCOM))
     ALLOCATE(eold(NCOM))
 
-    ! Roteer de solute
-    SOLUTE_OLD = SOLUTE
+
 
     IF (PRE_ENG .EQ. 123456.789) THEN
         WRITE (*,*) "Recalculating previous box..."
@@ -413,6 +412,7 @@ PROGRAM MonteCarlo
 
     ! MC ON ROTSOLV
     !==============
+    SOLUTE_OLD = SOLUTE
     IF (DOROTSOLV) SOLUTE = SOLUTE_INIT(SOLUTE, SOL_SYM, DIHOEK, DROTSOLV_ARRAY)
 
     ! Initiële berekening ladingen solute
@@ -614,7 +614,7 @@ PROGRAM MonteCarlo
     
     IF(DOROTSOLV) THEN
         POST_ENG = TOTENG
-        IF(.NOT. SOLUTE_METROPOLIS(SOLUTE, PRE_ENG, POST_ENG, TEMPERATURE)) THEN
+        IF(.NOT. SOLUTE_METROPOLIS(PRE_ENG, POST_ENG, TEMPERATURE)) THEN
             SOLUTE = SOLUTE_OLD
             CoM = COM_FIRST
             HOEK = HOEK_FIRST
@@ -720,7 +720,6 @@ SUBROUTINE MCINIT(I)
         ! Verhuis oude vars naar de _old vars
         COM_OLD = COM
         HOEK_OLD = HOEK
-        SOLUTE_OLD = SOLUTE ! Wordt nog niet gevarieerd
         TOTENG_OLD = TOTENG
         EOLD = ENERGY
         SSOLD = SOLVENTSOLVENT
