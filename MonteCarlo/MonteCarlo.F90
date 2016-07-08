@@ -364,6 +364,8 @@ PROGRAM MonteCarlo
         TOTENG = calcEnergy(ENERGY, SOLVENTSOLVENT)
         PRE_ENG = TOTENG
 
+        WRITE (*,"('Initial energy (LJ): ', ES20.10)") TOTENG
+
 
         ! Dump energiën
         !tot = 0.0D
@@ -456,6 +458,7 @@ PROGRAM MonteCarlo
         TOTENG = 0.D0
         TOTENG = calcEnergy(ENERGY, SOLVENTSOLVENT)
         WRITE (IOout,902) 0, TOTENG, TOTENG, 0.D0, 0.D0, 0, 0.D0, 0.D0, DPOSMAX
+        WRITE (*,"('Initial energy (GA): ', ES20.10)") TOTENG
     END IF
     
     IF(LJ_STEPS .EQ. 0) PRE_ENG = TOTENG
