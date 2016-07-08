@@ -618,6 +618,7 @@ PROGRAM MonteCarlo
             SOLUTE = SOLUTE_OLD
             CoM = COM_FIRST
             HOEK = HOEK_FIRST
+            POST_ENG = PRE_ENG
         END IF
     END IF
     
