@@ -69,7 +69,8 @@ PROGRAM MonteCarlo
     ! Hoek: oriëntatie van de DMSO moleculen -> RotMatrix
 
     ! Array met bindingen die gebruikt mogen worden voor de dihedrale rotatie
-    INTEGER, DIMENSION(:,:), ALLOCATABLE     :: DIHOEK
+    INTEGER, DIMENSION(:,:), ALLOCATABLE        :: DIHOEK
+    DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: DROTSOLV_ARRAY
     INTEGER :: NDIHOEK
 
     ! Tijdelijke vectoren voor mol
@@ -256,8 +257,10 @@ PROGRAM MonteCarlo
     READ (IOwork,*) E_sol
     READ (IOwork,*) NDIHOEK
     ALLOCATE(DIHOEK(NDIHOEK, 2))
+    ALLOCATE(DROTSOLV_ARRAY(NDIHOEK))
     DO I=1, NDIHOEK
-        READ (IOwork,*) DIHOEK(I,1), DIHOEK(I,2)
+        READ (IOwork,"(I3, 1X, I3, 1X, F10.6)") DIHOEK(I,1), DIHOEK(I,2), DROTSOLV_ARRAY(I)
+        IF (DROTSOLV_ARRAY(I) .EQ. 0.D0) DROTSOLV_ARRAY(I) = DROTSOLV
     END DO
     CLOSE(IOwork)
 
@@ -305,7 +308,12 @@ PROGRAM MonteCarlo
 
     WRITE (*,*) "BOXL DPOSMAX DPOSMIN DHOEKMAX DHOEKMIN"
     WRITE (*,*) BOXL, DPOSMAX, DPOSMIN, DHOEKMAX, DHOEKMIN
-    IF (DOROTSOLV) WRITE (*,"(A,F13.10)") "Solvent rotation, max ", DROTSOLV
+    IF (DOROTSOLV) THEN
+        WRITE (*,"(A,F13.10)") "Solvent rotation, max ", DROTSOLV
+        DO I=1,NDIHOEK
+            WRITE (*,"('Bond ', I3, ' - ', I3, ' MAX ', F10.6)") DIHOEK(I,1), DIHOEK(I,2), DROTSOLV_ARRAY(I)
+        END DO
+    END IF
 
     BOXL2 = BOXL * 2.D0
     E_SOL = E_SOL * HARTREE2KJMOL
@@ -336,7 +344,7 @@ PROGRAM MonteCarlo
 
     ! Roteer de solute
     SOLUTE_OLD = SOLUTE
-    IF (DOROTSOLV) SOLUTE = SOLUTE_INIT(SOLUTE, SOL_SYM, DIHOEK, DROTSOLV)
+    IF (DOROTSOLV) SOLUTE = SOLUTE_INIT(SOLUTE, SOL_SYM, DIHOEK, DROTSOLV_ARRAY)
 
     ! Initiële berekening ladingen solute
     !====================================

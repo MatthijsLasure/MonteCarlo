@@ -1,5 +1,6 @@
 MODULE solmod
 
+    USE mcconstants
     USE RANDGEN
     USE DIHEDRAL
     USE VECTOR_CLASS
@@ -18,7 +19,7 @@ MODULE solmod
         DOUBLE PRECISION:: HOEK
         DOUBLE PRECISION:: HOEK_PRE
         DOUBLE PRECISION:: HOEK_POST
-        DOUBLE PRECISION:: DROTSOLV
+        DOUBLE PRECISION, DIMENSION(:)           :: DROTSOLV
         INTEGER:: A1
         INTEGER:: A2
         INTEGER:: A3
@@ -34,14 +35,19 @@ MODULE solmod
         NDIH = SIZE(DIHEDRAL) / 2
 
         I = INT(RAND() * NDIH) + 1 ! Willeukeurige binding selecteren
-        A2 = DIHEDRAL(I,1)
-        A3 = DIHEDRAL(I,2)
+        IF ( RAND() .GT. 0.5D0) THEN ! Willekeurig fragment selecteren
+            A2 = DIHEDRAL(I,1)
+            A3 = DIHEDRAL(I,2)
+        ELSE
+            A2 = DIHEDRAL(I,2)
+            A3 = DIHEDRAL(I,1)
+        END IF
 
         A1 = FIND(A2, A3, SOL, NATOM)
         A4 = FIND(A3, A2, SOL, NATOM)
 
         ! DRAAIEN
-        HOEK = RAND() * 2 * DROTSOLV - DROTSOLV
+        HOEK = RAND() * 2 * DROTSOLV(I) - DROTSOLV(I)
         HOEK_PRE = GETDIHEDRAL(SOL, A1, A2, A3, A4) * 180 / PI
         SOLROT = SETDIHEDRAL(SOL, SYM, A1, A2, A3, A4, HOEK * PI / 180)
         HOEK_POST = GETDIHEDRAL(SOLROT, A1, A2, A3, A4) * 180 / PI
@@ -108,7 +114,7 @@ MODULE solmod
             END IF
         END DO
         IF (A .EQ. 0) THEN
-            WRITE (500,*) "No match find in dihedral-find with", A1, A2
+            WRITE (IOerr,*) "No match find in dihedral-find with", A1, A2
             STOP
         END IF
     END FUNCTION FIND
