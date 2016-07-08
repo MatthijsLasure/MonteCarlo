@@ -35,13 +35,8 @@ MODULE solmod
         NDIH = SIZE(DIHEDRAL) / 2
 
         I = INT(RAND() * NDIH) + 1 ! Willeukeurige binding selecteren
-        IF ( RAND() .GT. 0.5D0) THEN ! Willekeurig fragment selecteren
-            A2 = DIHEDRAL(I,1)
-            A3 = DIHEDRAL(I,2)
-        ELSE
-            A2 = DIHEDRAL(I,2)
-            A3 = DIHEDRAL(I,1)
-        END IF
+        A2 = DIHEDRAL(I,1)
+        A3 = DIHEDRAL(I,2)
 
         A1 = FIND(A2, A3, SOL, NATOM)
         A4 = FIND(A3, A2, SOL, NATOM)

@@ -545,7 +545,7 @@ PROGRAM MonteCarlo
     WRITE (IOwork,*) E_SOL / HARTREE2KJMOL
     WRITE (IOwork,*) NDIHOEK
     DO I=1, NDIHOEK
-        WRITE (IOwork,*) DIHOEK(I,1), DIHOEK(I,2)
+        WRITE (IOwork,"(I3, 1X, I3, 1X, F10.6)") DIHOEK(I,1), DIHOEK(I,2), DROTSOLV_ARRAY(I)
     END DO
     CLOSE(IOwork)
     
