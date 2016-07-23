@@ -5,7 +5,7 @@ MODULE readConfig
 
 SUBROUTINE rConfig(confile, LJ_steps, Ga_steps, iseed, LJ_nadj, LJ_nprint, GA_nadj,&
  GA_nprint, LJ_dump, GA_dump, dposmax, dposmin, dhoekmax, dhoekmin, padj, proc, &
- files, temp, dorotsolu, drotsolu)
+ files, temp, dorotsolu, drotsolu, prod_steps)
 
     INTEGER, PARAMETER          :: strlen = 100
     CHARACTER(LEN=strlen):: fst
@@ -32,6 +32,7 @@ SUBROUTINE rConfig(confile, LJ_steps, Ga_steps, iseed, LJ_nadj, LJ_nprint, GA_na
     DOUBLE PRECISION:: drotsolu
     INTEGER:: LJ_steps
     INTEGER:: Ga_steps
+    INTEGER:: PROD_STEPS
     INTEGER:: LJ_nadj
     INTEGER:: LJ_nprint
     INTEGER:: GA_nadj
@@ -87,6 +88,8 @@ SUBROUTINE rConfig(confile, LJ_steps, Ga_steps, iseed, LJ_nadj, LJ_nprint, GA_na
                 READ(snd,"(I10)") LJ_steps
             CASE ("ga")
                 READ(snd,"(I10)") Ga_steps
+            CASE ("prod")
+                READ(snd,"(I10)") prod_steps
             CASE ("temp")
                 READ(snd,"(F10.10)") temp
             ! Seed voor random generator

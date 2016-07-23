@@ -31,6 +31,7 @@ PROGRAM MonteCarlo
     DOUBLE PRECISION    :: BOXL, BOXL2, TEMPERATURE ! box grootte, halve box
     INTEGER             :: I, J, UNICORN, ISEED, POS
     INTEGER             :: LJ_STEPS, GA_STEPS ! Aantal stappen per loop
+    INTEGER             :: PROD_STEPS = 1, START_PROD ! Aantal stappen voor production run & start nr.
     INTEGER             :: RSOLV ! Geselecteerde molecule voor MC
     INTEGER             :: NSUC = 0 ! Aantal succesvolle MC
     INTEGER             :: LJ_NADJ, LJ_NPRINT, GA_NADJ, GA_NPRINT ! Aanpassen dposMax / printen om de n cycli
@@ -90,6 +91,8 @@ PROGRAM MonteCarlo
 
     ! output calc
     DOUBLE PRECISION                                :: EN ! Energie van een run
+    DOUBLE PRECISION                                :: PRODUCTION = 0! Energy for averaging
+    INTEGER                                         :: PROD_ACC = 0
     DOUBLE PRECISION, DIMENSION(:,:), ALLOCATABLE   :: SOLVENTSOLVENT, SSOLD
     DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE     :: ENERGY, EOLD
     DOUBLE PRECISION                                :: TOTENG = 0.D0, PRE_ENG, POST_ENG ! PRE_ENG: from previous run
@@ -141,7 +144,7 @@ PROGRAM MonteCarlo
     ! Read from config.ini
     CALL rConfig(CONFILE, LJ_STEPS, GA_STEPS, ISEED, LJ_NADJ, LJ_NPRINT, GA_NADJ, &
     GA_NPRINT, LJ_DUMP, GA_DUMP, DPOSMAX, DPOSMIN, DHOEKMAX, DHOEKMIN, PADJ, PROC, &
-    FILES, TEMPERATURE, DOROTSOLU, DROTSOLU)
+    FILES, TEMPERATURE, DOROTSOLU, DROTSOLU, PROD_STEPS)
 
     IF (LJ_DUMP .EQ. 0 .AND. GA_DUMP .EQ. 0) doDump = .FALSE.
     IF (LJ_NPRINT .EQ. 0 .AND. GA_NPRINT .EQ. 0) doOut = .FALSE.
@@ -149,6 +152,8 @@ PROGRAM MonteCarlo
     IF (GA_DUMP .EQ. 0) GA_DUMP = huge(GA_DUMP)
     IF (LJ_NPRINT .EQ. 0) LJ_NPRINT = huge(LJ_NPRINT)
     IF (GA_NPRINT .EQ. 0) GA_NPRINT = huge(GA_NPRINT)
+
+    START_PROD = LJ_STEPS + GA_STEPS - PROD_STEPS + 1
 
     ! Override stuff with command line
     IF (COMMAND_ARGUMENT_COUNT() .GT. 1) THEN ! Seriële modus
@@ -246,115 +251,15 @@ PROGRAM MonteCarlo
 
     WRITE (*,*) "Loading data..."
 
-    ! DMSO.txt: conformatie DMSO
-    OPEN (UNIT=IOwork, FILE=DMSO_FILE, ACTION='READ', STATUS='OLD', IOSTAT=istat)
-    IF (istat .NE. 0) THEN
-        WRITE (*,*) "Error opening DMSO in ", TRIM(DMSO_FILE)
-        STOP
-    END IF
-    READ (IOwork, *) nDMSO ! Lees aantal atomen
-    READ (IOwork, *) ! Comment line
-    ALLOCATE(DMSO(NDMSO)) ! Ken correcte groottes toe aan de arrays
-    ALLOCATE(DMSO_sym(NDMSO))
-    IF (LJ_STEPS .GT. 0) ALLOCATE(TABLE_DMSO(NDMSO, 3))
-    DO I=1, NDMSO
-        READ (IOwork,*) DMSO_sym(I), DMSO(I)%X, DMSO(I)%Y, DMSO(I)%Z
-    END DO
-    READ (IOwork,*) E_DMSO
-    CLOSE(IOwork)
-
-
-
-
-    ! box.txt: plaatsen van de moleculen (CoM, hoek)
-    OPEN (UNIT=IOwork, FILE=BOX_FILE, ACTION='READ', STATUS='OLD', IOSTAT=istat)
-    IF (istat .NE. 0) THEN
-        WRITE (*,*) "Error opening box in ", TRIM(BOX_FILE)
-        STOP
-    END IF
-    READ (IOwork, *) BOXL ! Box grootte
-    READ (IOwork, *) nCoM ! Lees aantal moleculen
-    READ (IOwork,"(E20.10)", IOSTAT=istat) PRE_ENG ! Energy from previous run
-    IF (istat .NE. 0) THEN
-        WRITE (*,*) "No energy detected in input box. Will be calculated."
-        PRE_ENG = 123456.789
-        BACKSPACE(IOwork)
-    END IF
-
-    READ (IOwork, *)      ! Box ID
-    ALLOCATE(CoM(NCOM))
-    ALLOCATE(hoek(NCOM))
-    ALLOCATE(CoM_old(NCOM))
-    ALLOCATE(hoek_old(NCOM))
-    ALLOCATE(COM_FIRST(NCOM))
-    ALLOCATE(HOEK_FIRST(NCOM))
-    DO I= 1, NCOM
-        READ(IOwork,*) CoM(I)%X, CoM(I)%Y, CoM(I)%Z, hoek(I)%X, hoek(I)%Y, hoek(I)%Z
-    END DO
-
-    ! solute.txt: conformatie opgeloste molecule (sol)
-    ! NOW INCORPERATED IN BOX.TXT
-    READ (IOwork, *) ! Line with SOLUTE
-    READ (IOwork, *) nSol ! Lees aantal atomen
-    READ (IOwork, "(A)") SOLNAME ! Comment line
-    ALLOCATE(solute(NSOL)) ! Maak de arrays groot genoeg
-    ALLOCATE(SOLUTE_OLD(NSOL))
-    ALLOCATE(sol_sym(NSOL))
-    IF (LJ_STEPS .GT. 0) ALLOCATE(SOL_Q(NSOL))
-    IF (LJ_STEPS .GT. 0) ALLOCATE(TABLE_SOL(NSOL, 3))
-    DO I=1, NSOL ! Lees de coördinaten uit
-        READ (IOwork,*) sol_sym(I), solute(I)%X, solute(I)%Y, solute(I)%Z
-    END DO
-    READ (IOwork,*) E_sol
-    READ (IOwork,*) NDIHOEK
-    ALLOCATE(DIHOEK(NDIHOEK, 2))
-    ALLOCATE(DROTSOLU_ARRAY(NDIHOEK))
-    DO I=1, NDIHOEK
-        READ (IOwork,"(I3, 1X, I3, 1X, F10.6)") DIHOEK(I,1), DIHOEK(I,2), DROTSOLU_ARRAY(I)
-        IF (DROTSOLU_ARRAY(I) .EQ. 0.D0) DROTSOLU_ARRAY(I) = DROTSOLU
-    END DO
-
+    CALL read_norm()
 
     ! Save for solute MC
     COM_FIRST = CoM
     HOEK_FIRST = HOEK
 
-    IF ( LJ_STEPS .GT. 0) THEN
-        ! param.txt: parameters voor LJ etc
-        OPEN (UNIT=IOwork, FILE=PARAM_FILE, ACTION='READ', STATUS='OLD', IOSTAT=istat)
-        IF (istat .NE. 0) THEN
-            WRITE (*,*) "Error opening param in ", TRIM(PARAM_FILE)
-            STOP
-        END IF
-        READ (IOwork, *) nParam ! Aantal beschikbare parameters
-        READ (IOwork, *) ! skip comment line
-        ALLOCATE(sym(NPARAM))
-        ALLOCATE(Q(NPARAM))
-        ALLOCATE(epsilon(NPARAM))
-        ALLOCATE(sigma(NPARAM))
-        DO I= 1,NPARAM
-            READ (IOwork,*) sym(I), Q(I), epsilon(I), sigma(I)
-        END DO
-        CLOSE(IOwork)
-
-        ! par_solute.txt: parameters voor LJ van het solute
-        OPEN (UNIT=IOwork, FILE=PARSOL_FILE, ACTION='READ', STATUS='OLD', IOSTAT=istat)
-        IF (istat .NE. 0) THEN
-            WRITE (*,*) "Error opening parsol in ", TRIM(PARSOL_FILE)
-            STOP
-        END IF
-        READ (IOwork, *) NPARSOL
-        READ (IOwork, *) ! Comment line
-        ALLOCATE(SOLPAR_SYM(NPARSOL))
-        ALLOCATE(SOL_EPSILON(NPARSOL))
-        ALLOCATE(SOL_SIGMA(NPARSOL))
-        DO I= 1,NPARSOL
-            READ (IOwork,*) SOLPAR_SYM(I), SOL_EPSILON(I), SOL_SIGMA(I)
-        END DO
-        CLOSE(IOwork)
-    END IF
-
     WRITE (*,*) "Done loading data!"
+
+    WRITE (*,"('Will use ', I10, ' steps for production.')") PROD_STEPS
 
     WRITE (*,*) "BOXL DPOSMAX DPOSMIN DHOEKMAX DHOEKMIN"
     WRITE (*,*) BOXL, DPOSMAX, DPOSMIN, DHOEKMAX, DHOEKMIN
@@ -608,10 +513,21 @@ PROGRAM MonteCarlo
 
 !====================================================================
 !====================================================================
+! Production run evaluation
+
+PRODUCTION = PRODUCTION / PROD_ACC
+
+WRITE (*,*) "PRODUCTION RUN RESULTS"
+WRITE (*,*) "----------------------"
+WRITE (*,*) "Energy:    ", PRODUCTION
+WRITE (*,*) "Steps acc: ", PROD_ACC, " / ", PROD_STEPS, " (", FLOAT(PROD_ACC) / FLOAT(PROD_STEPS) * 100, " %)"
+
+!====================================================================
+!====================================================================
     ! Wegschrijven resultaten
     
     IF(DOROTSOLU) THEN
-        POST_ENG = TOTENG
+        POST_ENG = PRODUCTION
         IF(.NOT. SOLUTE_METROPOLIS(PRE_ENG, POST_ENG, TEMPERATURE)) THEN
             SOLUTE = SOLUTE_OLD
             CoM = COM_FIRST
@@ -693,13 +609,15 @@ PROGRAM MonteCarlo
     if (doOut) CLOSE(IOout)
 
     ! Check if IOerr has been written to
-    CALL FTELL(IOerr, POS)
+    INQUIRE(IOerr, NEXTREC=POS)
     WRITE (*,*) "POS ERR: ", POS
-    IF (POS .EQ. 0) THEN
+    IF (POS .EQ. 1) THEN
         ! Delete err if no errors occured
+        WRITE (*,*) "The error file is empty, and will be deleted."
         CLOSE(IOerr, STATUS='DELETE')
     ELSE
         ! Errors occured, do not delete
+        WRITE (*,"('The error file is not empty (POS=',I10, '). Please check ', A, '.')") POS, ERR_FILE
         CLOSE(IOerr)
     END IF
 
@@ -782,6 +700,12 @@ SUBROUTINE METROPOLIS(I, NADJ, NPRINT, REJECTED)
         IF(RV .LE. KANS) THEN ! Succes!
             NSUC = NSUC + 1
             NACCEPT = NACCEPT + 1
+
+            ! Production run
+            IF (I .GE. START_PROD) THEN
+                PRODUCTION = PRODUCTION + TOTENG
+                PROD_ACC = PROD_ACC + 1
+            END IF
             REJECTED = .FALSE.
         ELSE ! Fail!
             REJECTED = .TRUE.
@@ -1053,5 +977,127 @@ END SUBROUTINE dump
 !====================================================================
 !====================================================================
 
+! Read input files as normal files
+SUBROUTINE read_norm
+
+! DMSO.txt: conformatie DMSO
+    OPEN (UNIT=IOwork, FILE=DMSO_FILE, ACTION='READ', STATUS='OLD', IOSTAT=istat)
+    IF (istat .NE. 0) THEN
+        WRITE (*,*) "Error opening DMSO in ", TRIM(DMSO_FILE)
+        STOP
+    END IF
+    READ (IOwork, *) nDMSO ! Lees aantal atomen
+    READ (IOwork, *) ! Comment line
+    ALLOCATE(DMSO(NDMSO)) ! Ken correcte groottes toe aan de arrays
+    ALLOCATE(DMSO_sym(NDMSO))
+    IF (LJ_STEPS .GT. 0) ALLOCATE(TABLE_DMSO(NDMSO, 3))
+    DO I=1, NDMSO
+        READ (IOwork,*) DMSO_sym(I), DMSO(I)%X, DMSO(I)%Y, DMSO(I)%Z
+    END DO
+    READ (IOwork,*) E_DMSO
+    CLOSE(IOwork)
+
+
+
+
+    ! box.txt: plaatsen van de moleculen (CoM, hoek)
+    OPEN (UNIT=IOwork, FILE=BOX_FILE, ACTION='READ', STATUS='OLD', IOSTAT=istat)
+    IF (istat .NE. 0) THEN
+        WRITE (*,*) "Error opening box in ", TRIM(BOX_FILE)
+        STOP
+    END IF
+    READ (IOwork, *) BOXL ! Box grootte
+    READ (IOwork, *) nCoM ! Lees aantal moleculen
+    READ (IOwork,"(E20.10)", IOSTAT=istat) PRE_ENG ! Energy from previous run
+    IF (istat .NE. 0) THEN
+        WRITE (*,*) "No energy detected in input box. Will be calculated."
+        PRE_ENG = 123456.789
+        BACKSPACE(IOwork)
+    END IF
+
+    READ (IOwork, *)      ! Box ID
+    ALLOCATE(CoM(NCOM))
+    ALLOCATE(hoek(NCOM))
+    ALLOCATE(CoM_old(NCOM))
+    ALLOCATE(hoek_old(NCOM))
+    ALLOCATE(COM_FIRST(NCOM))
+    ALLOCATE(HOEK_FIRST(NCOM))
+    DO I= 1, NCOM
+        READ(IOwork,*) CoM(I)%X, CoM(I)%Y, CoM(I)%Z, hoek(I)%X, hoek(I)%Y, hoek(I)%Z
+    END DO
+
+    ! solute.txt: conformatie opgeloste molecule (sol)
+    ! NOW INCORPERATED IN BOX.TXT
+    READ (IOwork, *) ! Line with SOLUTE
+    READ (IOwork, *) nSol ! Lees aantal atomen
+    READ (IOwork, "(A)") SOLNAME ! Comment line
+    ALLOCATE(solute(NSOL)) ! Maak de arrays groot genoeg
+    ALLOCATE(SOLUTE_OLD(NSOL))
+    ALLOCATE(sol_sym(NSOL))
+    IF (LJ_STEPS .GT. 0) ALLOCATE(SOL_Q(NSOL))
+    IF (LJ_STEPS .GT. 0) ALLOCATE(TABLE_SOL(NSOL, 3))
+    DO I=1, NSOL ! Lees de coördinaten uit
+        READ (IOwork,*) sol_sym(I), solute(I)%X, solute(I)%Y, solute(I)%Z
+    END DO
+    READ (IOwork,*) E_sol
+    READ (IOwork,*) NDIHOEK
+    ALLOCATE(DIHOEK(NDIHOEK, 2))
+    ALLOCATE(DROTSOLU_ARRAY(NDIHOEK))
+    DO I=1, NDIHOEK
+        READ (IOwork,"(I3, 1X, I3, 1X, F10.6)") DIHOEK(I,1), DIHOEK(I,2), DROTSOLU_ARRAY(I)
+        IF (DROTSOLU_ARRAY(I) .EQ. 0.D0) DROTSOLU_ARRAY(I) = DROTSOLU
+    END DO
+
+    CLOSE (IOwork)
+
+
+    IF ( LJ_STEPS .GT. 0) THEN
+        ! param.txt: parameters voor LJ etc
+        OPEN (UNIT=IOwork, FILE=PARAM_FILE, ACTION='READ', STATUS='OLD', IOSTAT=istat)
+        IF (istat .NE. 0) THEN
+            WRITE (*,*) "Error opening param in ", TRIM(PARAM_FILE)
+            STOP
+        END IF
+        READ (IOwork, *) nParam ! Aantal beschikbare parameters
+        READ (IOwork, *) ! skip comment line
+        ALLOCATE(sym(NPARAM))
+        ALLOCATE(Q(NPARAM))
+        ALLOCATE(epsilon(NPARAM))
+        ALLOCATE(sigma(NPARAM))
+        DO I= 1,NPARAM
+            READ (IOwork,*) sym(I), Q(I), epsilon(I), sigma(I)
+        END DO
+        CLOSE(IOwork)
+
+        ! par_solute.txt: parameters voor LJ van het solute
+        OPEN (UNIT=IOwork, FILE=PARSOL_FILE, ACTION='READ', STATUS='OLD', IOSTAT=istat)
+        IF (istat .NE. 0) THEN
+            WRITE (*,*) "Error opening parsol in ", TRIM(PARSOL_FILE)
+            STOP
+        END IF
+        READ (IOwork, *) NPARSOL
+        READ (IOwork, *) ! Comment line
+        ALLOCATE(SOLPAR_SYM(NPARSOL))
+        ALLOCATE(SOL_EPSILON(NPARSOL))
+        ALLOCATE(SOL_SIGMA(NPARSOL))
+        DO I= 1,NPARSOL
+            READ (IOwork,*) SOLPAR_SYM(I), SOL_EPSILON(I), SOL_SIGMA(I)
+        END DO
+        CLOSE(IOwork)
+    END IF
+
+END SUBROUTINE read_norm
+
+!====================================================================
+!====================================================================
+
+! Read input files as binary
+SUBROUTINE read_bin
+
+
+END SUBROUTINE read_bin
+
+!====================================================================
+!====================================================================
 ! The end :)
 END PROGRAM MonteCarlo
