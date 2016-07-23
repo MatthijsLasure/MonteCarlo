@@ -5,7 +5,7 @@ MODULE readConfig
 
 SUBROUTINE rConfig(confile, LJ_steps, Ga_steps, iseed, LJ_nadj, LJ_nprint, GA_nadj,&
  GA_nprint, LJ_dump, GA_dump, dposmax, dposmin, dhoekmax, dhoekmin, padj, proc, &
- files, temp, dorotsolv, drotsolv)
+ files, temp, dorotsolu, drotsolu)
 
     INTEGER, PARAMETER          :: strlen = 100
     CHARACTER(LEN=strlen):: fst
@@ -20,7 +20,7 @@ SUBROUTINE rConfig(confile, LJ_steps, Ga_steps, iseed, LJ_nadj, LJ_nprint, GA_na
     INTEGER, PARAMETER          :: state_begin=1
     INTEGER, PARAMETER          :: state_in_fst=2
     INTEGER, PARAMETER          :: state_in_sep=3
-    LOGICAL:: dorotsolv
+    LOGICAL:: dorotsolu
 
     ! Shit to read
     DOUBLE PRECISION:: dposmax
@@ -29,7 +29,7 @@ SUBROUTINE rConfig(confile, LJ_steps, Ga_steps, iseed, LJ_nadj, LJ_nprint, GA_na
     DOUBLE PRECISION:: dhoekmin
     DOUBLE PRECISION:: padj
     DOUBLE PRECISION:: temp
-    DOUBLE PRECISION:: drotsolv
+    DOUBLE PRECISION:: drotsolu
     INTEGER:: LJ_steps
     INTEGER:: Ga_steps
     INTEGER:: LJ_nadj
@@ -41,7 +41,7 @@ SUBROUTINE rConfig(confile, LJ_steps, Ga_steps, iseed, LJ_nadj, LJ_nprint, GA_na
     INTEGER:: LJ_dump
     INTEGER:: GA_dump
 
-    dorotsolv = .FALSE.
+    dorotsolu = .FALSE.
 
     OPEN(UNIT=10, FILE=confile)
 
@@ -121,9 +121,9 @@ SUBROUTINE rConfig(confile, LJ_steps, Ga_steps, iseed, LJ_nadj, LJ_nprint, GA_na
             CASE ("proc")
                 READ(snd,"(I10)") proc
             CASE ("rotsolv")
-                dorotsolv = .TRUE.
+                dorotsolu = .TRUE.
             CASE ("drotsolv")
-                READ(snd,"(F13.10)") drotsolv
+                READ(snd,"(F13.10)") drotsolu
 
             ! Files
             CASE ("box")

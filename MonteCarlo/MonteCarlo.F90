@@ -29,7 +29,7 @@ PROGRAM MonteCarlo
     !===========
     INTEGER             :: RUN_ID = 0 ! Welke run
     DOUBLE PRECISION    :: BOXL, BOXL2, TEMPERATURE ! box grootte, halve box
-    INTEGER             :: I, J, UNICORN, ISEED
+    INTEGER             :: I, J, UNICORN, ISEED, POS
     INTEGER             :: LJ_STEPS, GA_STEPS ! Aantal stappen per loop
     INTEGER             :: RSOLV ! Geselecteerde molecule voor MC
     INTEGER             :: NSUC = 0 ! Aantal succesvolle MC
@@ -39,10 +39,9 @@ PROGRAM MonteCarlo
     DOUBLE PRECISION    :: RV, KANS,DELTA = 0, EXPONENT ! Random variabele en toebehoren voor Metropolis
     DOUBLE PRECISION    :: RATIO ! Percentage succes in NADJ trials
     DOUBLE PRECISION    :: PADJ ! Hoeveel de dposmax aangepast mag worden
-    LOGICAL             :: REJECTED, DOROTSOLV
+    LOGICAL             :: REJECTED, DOROTSOLU
     INTEGER             :: PROC ! Aantal processoren voor gaussian
-    DOUBLE PRECISION    :: BOXSCALE = 0.9D0 ! Schalen van de box
-    DOUBLE PRECISION    :: DROTSOLV
+    DOUBLE PRECISION    :: DROTSOLU
     CHARACTER(LEN=30)   :: DATE
     INTEGER             :: STATUS
     INTEGER             :: ISTAT
@@ -75,7 +74,7 @@ PROGRAM MonteCarlo
 
     ! Array met bindingen die gebruikt mogen worden voor de dihedrale rotatie
     INTEGER, DIMENSION(:,:), ALLOCATABLE        :: DIHOEK
-    DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: DROTSOLV_ARRAY
+    DOUBLE PRECISION, DIMENSION(:), ALLOCATABLE :: DROTSOLU_ARRAY
     INTEGER :: NDIHOEK
 
     ! Tijdelijke vectoren voor mol
@@ -142,7 +141,7 @@ PROGRAM MonteCarlo
     ! Read from config.ini
     CALL rConfig(CONFILE, LJ_STEPS, GA_STEPS, ISEED, LJ_NADJ, LJ_NPRINT, GA_NADJ, &
     GA_NPRINT, LJ_DUMP, GA_DUMP, DPOSMAX, DPOSMIN, DHOEKMAX, DHOEKMIN, PADJ, PROC, &
-    FILES, TEMPERATURE, DOROTSOLV, DROTSOLV)
+    FILES, TEMPERATURE, DOROTSOLU, DROTSOLU)
 
     IF (LJ_DUMP .EQ. 0 .AND. GA_DUMP .EQ. 0) doDump = .FALSE.
     IF (LJ_NPRINT .EQ. 0 .AND. GA_NPRINT .EQ. 0) doOut = .FALSE.
@@ -264,31 +263,7 @@ PROGRAM MonteCarlo
     READ (IOwork,*) E_DMSO
     CLOSE(IOwork)
 
-    ! solute.txt: conformatie opgeloste molecule (sol)
-    OPEN (UNIT=IOwork, FILE=SOL_FILE, ACTION='READ', STATUS='OLD', IOSTAT=istat)
-    IF (istat .NE. 0) THEN
-        WRITE (*,*) "Error opening solute in ", TRIM(SOL_FILE)
-        STOP
-    END IF
-    READ (IOwork, *) nSol ! Lees aantal atomen
-    READ (IOwork, "(A)") SOLNAME ! Comment line
-    ALLOCATE(solute(NSOL)) ! Maak de arrays groot genoeg
-    ALLOCATE(SOLUTE_OLD(NSOL))
-    ALLOCATE(sol_sym(NSOL))
-    IF (LJ_STEPS .GT. 0) ALLOCATE(SOL_Q(NSOL))
-    IF (LJ_STEPS .GT. 0) ALLOCATE(TABLE_SOL(NSOL, 3))
-    DO I=1, NSOL ! Lees de coördinaten uit
-        READ (IOwork,*) sol_sym(I), solute(I)%X, solute(I)%Y, solute(I)%Z
-    END DO
-    READ (IOwork,*) E_sol
-    READ (IOwork,*) NDIHOEK
-    ALLOCATE(DIHOEK(NDIHOEK, 2))
-    ALLOCATE(DROTSOLV_ARRAY(NDIHOEK))
-    DO I=1, NDIHOEK
-        READ (IOwork,"(I3, 1X, I3, 1X, F10.6)") DIHOEK(I,1), DIHOEK(I,2), DROTSOLV_ARRAY(I)
-        IF (DROTSOLV_ARRAY(I) .EQ. 0.D0) DROTSOLV_ARRAY(I) = DROTSOLV
-    END DO
-    CLOSE(IOwork)
+
 
 
     ! box.txt: plaatsen van de moleculen (CoM, hoek)
@@ -316,7 +291,30 @@ PROGRAM MonteCarlo
     DO I= 1, NCOM
         READ(IOwork,*) CoM(I)%X, CoM(I)%Y, CoM(I)%Z, hoek(I)%X, hoek(I)%Y, hoek(I)%Z
     END DO
-    CLOSE(IOwork)
+
+    ! solute.txt: conformatie opgeloste molecule (sol)
+    ! NOW INCORPERATED IN BOX.TXT
+    READ (IOwork, *) ! Line with SOLUTE
+    READ (IOwork, *) nSol ! Lees aantal atomen
+    READ (IOwork, "(A)") SOLNAME ! Comment line
+    ALLOCATE(solute(NSOL)) ! Maak de arrays groot genoeg
+    ALLOCATE(SOLUTE_OLD(NSOL))
+    ALLOCATE(sol_sym(NSOL))
+    IF (LJ_STEPS .GT. 0) ALLOCATE(SOL_Q(NSOL))
+    IF (LJ_STEPS .GT. 0) ALLOCATE(TABLE_SOL(NSOL, 3))
+    DO I=1, NSOL ! Lees de coördinaten uit
+        READ (IOwork,*) sol_sym(I), solute(I)%X, solute(I)%Y, solute(I)%Z
+    END DO
+    READ (IOwork,*) E_sol
+    READ (IOwork,*) NDIHOEK
+    ALLOCATE(DIHOEK(NDIHOEK, 2))
+    ALLOCATE(DROTSOLU_ARRAY(NDIHOEK))
+    DO I=1, NDIHOEK
+        READ (IOwork,"(I3, 1X, I3, 1X, F10.6)") DIHOEK(I,1), DIHOEK(I,2), DROTSOLU_ARRAY(I)
+        IF (DROTSOLU_ARRAY(I) .EQ. 0.D0) DROTSOLU_ARRAY(I) = DROTSOLU
+    END DO
+
+
     ! Save for solute MC
     COM_FIRST = CoM
     HOEK_FIRST = HOEK
@@ -360,10 +358,10 @@ PROGRAM MonteCarlo
 
     WRITE (*,*) "BOXL DPOSMAX DPOSMIN DHOEKMAX DHOEKMIN"
     WRITE (*,*) BOXL, DPOSMAX, DPOSMIN, DHOEKMAX, DHOEKMIN
-    IF (DOROTSOLV) THEN
-        WRITE (*,"(A,F13.10)") "Solvent rotation, max ", DROTSOLV
+    IF (DOROTSOLU) THEN
+        WRITE (*,"(A,F13.10)") "Solvent rotation, max ", DROTSOLU
         DO I=1,NDIHOEK
-            WRITE (*,"('Bond ', I3, ' - ', I3, ' MAX ', F10.6)") DIHOEK(I,1), DIHOEK(I,2), DROTSOLV_ARRAY(I)
+            WRITE (*,"('Bond ', I3, ' - ', I3, ' MAX ', F10.6)") DIHOEK(I,1), DIHOEK(I,2), DROTSOLU_ARRAY(I)
         END DO
     END IF
 
@@ -413,7 +411,7 @@ PROGRAM MonteCarlo
     ! MC ON ROTSOLV
     !==============
     SOLUTE_OLD = SOLUTE
-    IF (DOROTSOLV) SOLUTE = SOLUTE_INIT(SOLUTE, SOL_SYM, DIHOEK, DROTSOLV_ARRAY)
+    IF (DOROTSOLU) SOLUTE = SOLUTE_INIT(SOLUTE, SOL_SYM, DIHOEK, DROTSOLU_ARRAY)
 
     ! Initiële berekening ladingen solute
     !====================================
@@ -612,7 +610,7 @@ PROGRAM MonteCarlo
 !====================================================================
     ! Wegschrijven resultaten
     
-    IF(DOROTSOLV) THEN
+    IF(DOROTSOLU) THEN
         POST_ENG = TOTENG
         IF(.NOT. SOLUTE_METROPOLIS(PRE_ENG, POST_ENG, TEMPERATURE)) THEN
             SOLUTE = SOLUTE_OLD
@@ -623,20 +621,6 @@ PROGRAM MonteCarlo
     END IF
     
     IF (LJ_STEPS .GT. 0) WRITE (*,"('Final energy (GA): ', ES20.10)") TOTENG_OLD
-
-    ! solute.txt: conformatie opgeloste molecule (sol)
-    OPEN (UNIT=IOwork, FILE=SOLOUT_FILE)
-    WRITE (IOwork, *) NSOL ! Lees aantal atomen
-    WRITE (IOwork, *) trim(SOLNAME) ! Comment line
-    DO I=1, NSOL ! Lees de co�rdinaten uit
-        WRITE (IOwork,*) sol_sym(I), solute(I)%X, solute(I)%Y, solute(I)%Z
-    END DO
-    WRITE (IOwork,*) E_SOL / HARTREE2KJMOL
-    WRITE (IOwork,*) NDIHOEK
-    DO I=1, NDIHOEK
-        WRITE (IOwork,"(I3, 1X, I3, 1X, F10.6)") DIHOEK(I,1), DIHOEK(I,2), DROTSOLV_ARRAY(I)
-    END DO
-    CLOSE(IOwork)
     
     IF (doDump) CALL DUMP(UNICORN+1, IOdump)
     
@@ -653,6 +637,18 @@ PROGRAM MonteCarlo
     WRITE (IOwork, *) "BOX ", trim(ID_TEMP)
     DO I= 1, NCOM
         WRITE(IOwork,*) CoM(I)%X, CoM(I)%Y, CoM(I)%Z, hoek(I)%X, hoek(I)%Y, hoek(I)%Z
+    END DO
+    WRITE (IOwork, *) "SOLUTE"
+    ! solute.txt: conformatie opgeloste molecule (sol)
+    WRITE (IOwork, *) NSOL ! Schrijf aantal atomen
+    WRITE (IOwork, *) trim(SOLNAME) ! Comment line
+    DO I=1, NSOL ! Schrijf de co�rdinaten uit
+        WRITE (IOwork,*) sol_sym(I), solute(I)%X, solute(I)%Y, solute(I)%Z
+    END DO
+    WRITE (IOwork,*) E_SOL / HARTREE2KJMOL ! Schrijf energie in HARTREE
+    WRITE (IOwork,*) NDIHOEK ! Schrijf aantal hoeken
+    DO I=1, NDIHOEK
+        WRITE (IOwork,"(I3, 1X, I3, 1X, F10.6)") DIHOEK(I,1), DIHOEK(I,2), DROTSOLU_ARRAY(I)
     END DO
     CLOSE(IOwork)
     
@@ -695,7 +691,18 @@ PROGRAM MonteCarlo
 !====================================================================
     
     if (doOut) CLOSE(IOout)
-    CLOSE(IOerr)
+
+    ! Check if IOerr has been written to
+    CALL FTELL(IOerr, POS)
+    WRITE (*,*) "POS ERR: ", POS
+    IF (POS .EQ. 0) THEN
+        ! Delete err if no errors occured
+        CLOSE(IOerr, STATUS='DELETE')
+    ELSE
+        ! Errors occured, do not delete
+        CLOSE(IOerr)
+    END IF
+
     if (doDump) CLOSE(IOdump)
     
 !====================================================================
