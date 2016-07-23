@@ -123,9 +123,9 @@ SUBROUTINE rConfig(confile, LJ_steps, Ga_steps, iseed, LJ_nadj, LJ_nprint, GA_na
             ! Aantal processoren, te gebruiken door Gaussian
             CASE ("proc")
                 READ(snd,"(I10)") proc
-            CASE ("rotsolv")
+            CASE ("rotsolu")
                 dorotsolu = .TRUE.
-            CASE ("drotsolv")
+            CASE ("drotsolu")
                 READ(snd,"(F13.10)") drotsolu
 
             ! Files

@@ -452,6 +452,8 @@ PROGRAM MonteCarlo
     ! Loop 2: Gaussian
     loop_Ga: DO UNICORN=1+LJ_STEPS,GA_STEPS+LJ_STEPS
 
+        IF (UNICORN .EQ. START_PROD) WRITE (*,*) "Production phase started!"
+
         ! Doe MC
         CALL MCINIT(UNICORN)
 

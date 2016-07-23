@@ -338,7 +338,7 @@ SUBROUTINE DO_SOLUTE(SOL_SYM, SOL, SOL_Q, WORKDIR)
     WRITE(*,"(A)") "DEBUG: DO_SOLUTE: END DEBUG INFO input file for Gaussian"
 #endif
 
-CALL SYSTEM( TRIM(COMMAND) // " &" )
+CALL SYSTEM( TRIM(COMMAND))! // " &" )
 
 #if !defined(USE_PIPES)
     ! Not using pipes: We now run Gaussian.
@@ -371,7 +371,7 @@ CALL SYSTEM( TRIM(COMMAND) // " &" )
             WRITE(IOerr,"(A)") "END INPUT above this line"
             WRITE(IOerr,"(A)") "========================================"
 !$OMP END CRITICAL (CS_IOERR)
-            !CALL ABORT()
+            CALL ABORT()
         END IF
 #if defined(DEBUG) && defined(USE_PIPES)
         WRITE(*,'(A, A12, F10.7)') "DEBUG: DO_SOLUTE: Read from pipe: ", NCHAR, SOL_Q(I)
