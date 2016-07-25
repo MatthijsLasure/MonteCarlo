@@ -987,19 +987,25 @@ SUBROUTINE read_norm
 ! DMSO.txt: conformatie DMSO
     OPEN (UNIT=IOwork, FILE=DMSO_FILE, ACTION='READ', STATUS='OLD', IOSTAT=istat)
     IF (istat .NE. 0) THEN
-        WRITE (*,*) "Error opening DMSO in ", TRIM(DMSO_FILE)
-        STOP
+        WRITE (*,*) "Error opening DMSO in ", TRIM(DMSO_FILE), " Code ", istat
+        WRITE (*,*) "Using internal coordinates."
+
+        ALLOCATE(DMSO(10))
+        ALLOCATE(DMSO_SYM(10))
+        CALL DMSO_init(nDMSO, DMSO_sym, DMSO, E_DMSO)
+        !STOP
+    ELSE
+        READ (IOwork, *) nDMSO ! Lees aantal atomen
+        READ (IOwork, *) ! Comment line
+        ALLOCATE(DMSO(NDMSO)) ! Ken correcte groottes toe aan de arrays
+        ALLOCATE(DMSO_sym(NDMSO))
+        IF (LJ_STEPS .GT. 0) ALLOCATE(TABLE_DMSO(NDMSO, 3))
+        DO I=1, NDMSO
+            READ (IOwork,*) DMSO_sym(I), DMSO(I)%X, DMSO(I)%Y, DMSO(I)%Z
+        END DO
+        READ (IOwork,*) E_DMSO
+        CLOSE(IOwork)
     END IF
-    READ (IOwork, *) nDMSO ! Lees aantal atomen
-    READ (IOwork, *) ! Comment line
-    ALLOCATE(DMSO(NDMSO)) ! Ken correcte groottes toe aan de arrays
-    ALLOCATE(DMSO_sym(NDMSO))
-    IF (LJ_STEPS .GT. 0) ALLOCATE(TABLE_DMSO(NDMSO, 3))
-    DO I=1, NDMSO
-        READ (IOwork,*) DMSO_sym(I), DMSO(I)%X, DMSO(I)%Y, DMSO(I)%Z
-    END DO
-    READ (IOwork,*) E_DMSO
-    CLOSE(IOwork)
 
 
 
