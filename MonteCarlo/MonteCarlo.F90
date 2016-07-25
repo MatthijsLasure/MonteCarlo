@@ -87,6 +87,7 @@ PROGRAM MonteCarlo
     TYPE (vector), DIMENSION(10) :: ABSPOS                          !
     INTEGER:: START                                                 !
     LOGICAL:: DODEBUG = .FALSE.                                     !
+    CHARACTER*500 :: TMP                                            !
 !====================================================================
 
     ! output calc
@@ -611,11 +612,12 @@ WRITE (*,*) "Steps acc: ", PROD_ACC, " / ", PROD_STEPS, " (", FLOAT(PROD_ACC) / 
     if (doOut) CLOSE(IOout)
 
     ! Check if IOerr has been written to
-    INQUIRE(IOerr, NEXTREC=POS)
-    WRITE (*,*) "POS ERR: ", POS
-    IF (POS .EQ. 1) THEN
+    !INQUIRE(IOerr, NEXTREC=POS)
+    CALL FTELL(IOerr, POS)
+    !WRITE (*,*) "POS ERR: ", POS
+    IF (POS .EQ. 0) THEN
         ! Delete err if no errors occured
-        WRITE (*,*) "The error file is empty, and will be deleted."
+        WRITE (*,*) "The error file is empty (POS = 0), and will be deleted."
         CLOSE(IOerr, STATUS='DELETE')
     ELSE
         ! Errors occured, do not delete
@@ -1013,6 +1015,7 @@ SUBROUTINE read_norm
     READ (IOwork,"(E20.10)", IOSTAT=istat) PRE_ENG ! Energy from previous run
     IF (istat .NE. 0) THEN
         WRITE (*,*) "No energy detected in input box. Will be calculated."
+        WRITE (*,*) istat
         PRE_ENG = 123456.789
         BACKSPACE(IOwork)
     END IF
