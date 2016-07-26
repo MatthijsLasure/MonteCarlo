@@ -81,53 +81,76 @@ MODULE lib
 
     END FUNCTION RotMatrix
 
-    ! findSym
-    !========
-    FUNCTION findSym(TYPE, SYM) RESULT(POS)
-        CHARACTER*4:: TYPE
-        INTEGER:: POS
-        INTEGER:: I
-        INTEGER:: N
-        CHARACTER*4, DIMENSION(:) :: SYM
+    SUBROUTINE HELP()
 
-        POS = 0
+        WRITE (*,*) "Converter program for the Monte Carlo simulation files.                       "
+        WRITE (*,*) "Use: ./ConvertDump [FLAGS] [ < INPUT] [> OUTPUT]                              "
+        WRITE (*,*) "                                                                              "
+        WRITE (*,*) "Flag -m / --mode                                                              "
+        WRITE (*,*) "0: Convert dump file to XYZ                                                   "
+        WRITE (*,*) "1: Convert Box to XYZ                                                         "
+        WRITE (*,*) "2: Convert Dump to dist (minimal distance solu - solv per iteration)          "
+        WRITE (*,*) "3: Convert Box to XYZ + sort (minimal distance solu - solv per molecule)      "
+        WRITE (*,*) "                                                                              "
+        WRITE (*,*) "Flag -b file / --box file                                                     "
+        WRITE (*,*) "BoxSol file following latest conventions. Omit for STDIN.                     "
+        WRITE (*,*) "                                                                              "
+        WRITE (*,*) "Flag -o file / --output file                                                  "
+        WRITE (*,*) "Output of the command. Omit for STDOUT.                                       "
+        WRITE (*,*) "                                                                              "
+        WRITE (*,*) "Flag -d file / --dmso file                                                    "
+        WRITE (*,*) "DMSO file. Internal is used if omitted.                                       "
+        WRITE (*,*) "                                                                              "
+        WRITE (*,*) "Flag -s file / --solute file                                                  "
+        WRITE (*,*) "Solute file. For use with the dump commands.                                  "
+        WRITE (*,*) "                                                                              "
+        WRITE (*,*) "Flag -D file / --dump file                                                    "
+        WRITE (*,*) "Dump file. Omit for STDIN.                                                    "
+        WRITE (*,*) "                                                                              "
+        WRITE (*,*) "Flag -q / --quiet                                                             "
+        WRITE (*,*) "Do not print output. (except when requested by omitting -o)                   "
+        WRITE (*,*) "                                                                              "
+        WRITE (*,*) "Flag -n 1 2 / --atoms 1 2                                                     "
+        WRITE (*,*) "Atoms for distance calculations. -n Solute Solvent                            "
+        WRITE (*,*) "                                                                              "
+        WRITE (*,*) "Flag -h / --hydrogen                                                          "
+        WRITE (*,*) "Print hydrogens in XYZ output                                                 "
 
-        N = size(SYM)
-        DO I=1,N
-            IF( sym(I) .EQ. TYPE) THEN
-                POS = I
-                RETURN
-            END IF
-        END DO
-        IF (POS .EQ. 0) THEN
-            POS = 1
-            write (500, *) "Error in findSym: did not find", TYPE
-        END IF
-    END FUNCTION findSym
+    END SUBROUTINE HELP
 
-    ! RandVec: random vector with max total length of MAX
-    !====================================================
-    FUNCTION randVec(MAX) RESULT(rv)
-        DOUBLE PRECISION, INTENT(IN) :: MAX
-        TYPE (vector):: RV
+    ! DMSO: return DMSO molecule
+    !===========================
+    SUBROUTINE DMSO_init(NDMSO, SYM, LOC, E)
+        INTEGER             :: NDMSO
+        DOUBLE PRECISION    :: E
+        CHARACTER*4 , DIMENSION(:)      :: SYM
+        TYPE (vector), DIMENSION(:)     :: LOC
 
-        RV%x = (RAND() - 0.5D0) * 2
-        RV%y = (RAND() - 0.5D0) * 2
-        RV%z = (RAND() - 0.5D0) * 2
-        RV = RV / sqrt(3.D0)
-        RV = RV * MAX
-    END FUNCTION randVec
+        NDMSO = 10
+        E =  -.0499674791107
 
-    ! RandVecHoek: maakt vector met willekeurige getallen tussen -max en +max
-    !========================================================================
-    FUNCTION randVecHoek(MAX) RESULT(rv)
-        DOUBLE PRECISION, INTENT(IN) :: MAX
-        TYPE (vector):: RV
+        LOC(01) = VECTOR(-0.000001,  0.243032, -0.439459)
+        LOC(02) = VECTOR(-1.363478, -0.822308,  0.180148)
+        LOC(03) = VECTOR(-1.275543, -0.934699,  1.264845)
+        LOC(04) = VECTOR(-2.300201, -0.313459, -0.059709)
+        LOC(05) = VECTOR(-1.332307, -1.796078, -0.318322)
+        LOC(06) = VECTOR( 1.363477, -0.822310,  0.180148)
+        LOC(07) = VECTOR( 1.332384, -1.796034, -0.318417)
+        LOC(08) = VECTOR( 2.300186, -0.313388, -0.059610)
+        LOC(09) = VECTOR( 1.275493, -0.934809,  1.264829)
+        LOC(10) = VECTOR( 0.000001,  1.508457,  0.386993)
 
-        RV%x = (RAND() - 0.5D0) * 2 * MAX
-        RV%y = (RAND() - 0.5D0) * 2 * MAX
-        RV%z = (RAND() - 0.5D0) * 2 * MAX
-    END FUNCTION randVecHoek
+        SYM(01) = "S"
+        SYM(02) = "C"
+        SYM(03) = "H"
+        SYM(04) = "H"
+        SYM(05) = "H"
+        SYM(06) = "C"
+        SYM(07) = "H"
+        SYM(08) = "H"
+        SYM(09) = "H"
+        SYM(10) = "O"
 
+    END SUBROUTINE DMSO_init
 
 END MODULE lib
