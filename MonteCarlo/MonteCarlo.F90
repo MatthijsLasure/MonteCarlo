@@ -226,6 +226,7 @@ PROGRAM MonteCarlo
     IF (doOut) THEN
         OPEN(UNIT=IOout, FILE=OUT_FILE)
         WRITE (*,*) "Outputstream started in ", TRIM(OUT_FILE)
+        WRITE (*,"('LJ: ', I5, ' | GA: ', I5)") LJ_NPRINT, GA_NPRINT
     ELSE
         WRITE (*,*) "No outputstream requested!"
     END IF
@@ -236,6 +237,7 @@ PROGRAM MonteCarlo
     IF (doDump) THEN
         OPEN(UNIT=IOdump, FILE=DUMP_FILE)
         WRITE (*,*) "Dump file opened on ", TRIM(DUMP_FILE)
+        WRITE (*,"('LJ: ', I5, ' | GA: ', I5)") LJ_DUMP, GA_DUMP
     ELSE
         WRITE (*,*) "No Dumpfile requested!"
     END IF
@@ -260,7 +262,7 @@ PROGRAM MonteCarlo
 
     WRITE (*,*) "Done loading data!"
 
-    WRITE (*,"('Will use ', I10, ' steps for production.')") PROD_STEPS
+    WRITE (*,"('Will use ', I10, ' steps for production. (Start = ', I10, ')')") PROD_STEPS, START_PROD
 
     WRITE (*,*) "BOXL DPOSMAX DPOSMIN DHOEKMAX DHOEKMIN"
     WRITE (*,*) BOXL, DPOSMAX, DPOSMIN, DHOEKMAX, DHOEKMIN
@@ -469,8 +471,12 @@ PROGRAM MonteCarlo
         END IF
         !CLOSE(IOdump)
 
+
         ! Doe Metropolis
         CALL METROPOLIS(UNICORN, GA_NADJ, GA_NPRINT, REJECTED)
+
+        ! Make a backup every 500 steps
+        IF (MOD(UNICORN, 500) .EQ. 0) CALL backup(UNICORN)
 
     END DO loop_Ga
 
@@ -977,6 +983,34 @@ SUBROUTINE dump(I,IOunit)
         END DO
 
 END SUBROUTINE dump
+
+SUBROUTINE backup(LOOPNR)
+        INTEGER :: LOOPNR
+
+    OPEN (UNIT=IOwork, FILE="backup.txt")
+    WRITE (IOwork, *) BOXL ! Box grootte
+    WRITE (IOwork, *) NCOM ! Lees aantal moleculen
+    WRITE (IOwork, *) POST_ENG
+    WRITE (IOwork, *) "BACKUP ", LOOPNR
+    DO I= 1, NCOM
+        WRITE(IOwork,*) CoM(I)%X, CoM(I)%Y, CoM(I)%Z, hoek(I)%X, hoek(I)%Y, hoek(I)%Z
+    END DO
+    WRITE (IOwork, *) "SOLUTE"
+    ! solute.txt: conformatie opgeloste molecule (sol)
+    WRITE (IOwork, *) NSOL ! Schrijf aantal atomen
+    WRITE (IOwork, *) trim(SOLNAME) ! Comment line
+    DO I=1, NSOL ! Schrijf de coördinaten uit
+        WRITE (IOwork,*) sol_sym(I), solute(I)%X, solute(I)%Y, solute(I)%Z
+    END DO
+    WRITE (IOwork,*) E_SOL / HARTREE2KJMOL ! Schrijf energie in HARTREE
+    WRITE (IOwork,*) NDIHOEK ! Schrijf aantal hoeken
+    DO I=1, NDIHOEK
+        WRITE (IOwork,"(I3, 1X, I3, 1X, F10.6)") DIHOEK(I,1), DIHOEK(I,2), DROTSOLU_ARRAY(I)
+    END DO
+    CLOSE(IOwork)
+
+END SUBROUTINE backup
+
 
 !====================================================================
 !====================================================================
