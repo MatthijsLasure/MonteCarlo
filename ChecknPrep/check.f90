@@ -66,6 +66,14 @@ PROGRAM CHECKNPREP
         WRITE (*,"(I4.4, A)") NERR, " errors have occured. Please check the file."
         CALL EXIT(2)
     END IF
+    IF (NWAR .EQ. 0) THEN
+        WRITE (*,*) "No warnings occured!"
+    ELSEIF (NWAR .EQ. 1) THEN
+        WRITE (*,"(A)") "One warning has occured. Please doublecheck."
+    ELSE
+        WRITE (*,"(I4.4, A)") NERR, " warning have occured. Please doublecheck."
+        CALL EXIT(2)
+    END IF
 
     CLOSE(IOwork)
 
