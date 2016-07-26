@@ -24,9 +24,20 @@ program calcdih
     READ (I3C, "(I4.4)") I3
     READ (I4C, "(I4.4)") I4
 
+    OPEN (UNIT=10, FILE=trim(sol_file))
+
+    ! Wade through the box stuff
+    READ (*,*) ! BOXL
+    READ (*,*) NSOL
+    READ (*,*) ! En
+    READ (*,*) ! BOXNAME
+    DO I=1,NSOL
+        READ (*,*) ! CoM, HOEK
+    END DO
+    READ (*,*) ! SOLUTE
 
     ! solute.txt: conformatie opgeloste molecule (sol)
-    OPEN (UNIT=10, FILE=trim(sol_file))
+
     READ (10, *) nSol ! Lees aantal atomen
     READ (10, *) ! Comment
     ALLOCATE(solute(NSOL)) ! Maak de arrays groot genoeg
