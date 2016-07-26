@@ -267,7 +267,7 @@ PROGRAM MonteCarlo
     WRITE (*,*) "BOXL DPOSMAX DPOSMIN DHOEKMAX DHOEKMIN"
     WRITE (*,*) BOXL, DPOSMAX, DPOSMIN, DHOEKMAX, DHOEKMIN
     IF (DOROTSOLU) THEN
-        WRITE (*,"(A,F13.10)") "Solvent rotation, max ", DROTSOLU
+        WRITE (*,"(A,F8.2)") "Solvent rotation, max ", DROTSOLU
         DO I=1,NDIHOEK
             WRITE (*,"('Bond ', I3, ' - ', I3, ' MAX ', F10.6)") DIHOEK(I,1), DIHOEK(I,2), DROTSOLU_ARRAY(I)
         END DO
@@ -484,6 +484,7 @@ PROGRAM MonteCarlo
     WRITE (*,*) "Exiting Gaussian loop..."
 
     !TEMPDUMP
+    IF (.FALSE.) THEN
     DO I=1,NCOM
     MOL1 = RotMatrix(COM(I), DMSO, HOEK(I))
         DO K = 1, NDMSO
@@ -516,6 +517,7 @@ PROGRAM MonteCarlo
         END IF
         END DO
     END DO
+    END IF
 
     CALL system_clock(START)
     !write (IOerr,*) START

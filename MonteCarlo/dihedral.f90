@@ -168,9 +168,9 @@ MODULE dihedral
                 IF (FRAG(I) .EQ. 99) mayGo = .TRUE.
             END DO
         END DO findAtoms
-        DO I = 1,NATOM
-            WRITE (*,*) I, FRAG(I)
-        END DO
+!        DO I = 1,NATOM
+!            WRITE (*,*) I, FRAG(I)
+!        END DO
 
         WRITE (*,*) "rotlus"
         ! Alleen fragment 2 wordt geroteerd
