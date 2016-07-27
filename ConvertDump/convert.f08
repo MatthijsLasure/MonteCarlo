@@ -223,7 +223,7 @@ SUBROUTINE doDump()
     IF (.NOT. SILENT) WRITE (*,*) "Processing dump. This may take a while..."
 
     NHYDROGEN = 0
-    IF (doH) THEN
+    IF (.NOT. doH) THEN
         DO I=1, NDMSO
             IF (DMSO_SYM(I) .EQ. "H") NHYDROGEN = NHYDROGEN + 1
         END DO
@@ -391,7 +391,7 @@ SUBROUTINE doBox(CoM, HOEK)
 
     ! Printing time!
     NHYDROGEN = 0
-    IF (doH) THEN
+    IF (.NOT. doH) THEN
         DO I=1, NDMSO
             IF (DMSO_SYM(I) .EQ. "H") NHYDROGEN = NHYDROGEN + 1
         END DO
