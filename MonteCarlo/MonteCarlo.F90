@@ -319,7 +319,7 @@ PROGRAM MonteCarlo
     ! MC ON ROTSOLV
     !==============
     SOLUTE_OLD = SOLUTE
-    IF (DOROTSOLU) SOLUTE = SOLUTE_INIT(SOLUTE, SOL_SYM, DIHOEK, DROTSOLU_ARRAY)
+    IF (DOROTSOLU) SOLUTE = SOLUTE_INIT(SOLUTE, SOL_SYM, DIHOEK, DROTSOLU_ARRAY, DROTSOLU)
 
     ! Initiële berekening ladingen solute
     !====================================
@@ -575,7 +575,11 @@ WRITE (*,*) "Steps acc: ", PROD_ACC, " / ", PROD_STEPS, " (", FLOAT(PROD_ACC) / 
     WRITE (IOwork,*) E_SOL / HARTREE2KJMOL ! Schrijf energie in HARTREE
     WRITE (IOwork,*) NDIHOEK ! Schrijf aantal hoeken
     DO I=1, NDIHOEK
-        WRITE (IOwork,"(I3, 1X, I3, 1X, F10.6)") DIHOEK(I,1), DIHOEK(I,2), DROTSOLU_ARRAY(I)
+        IF ( DROTSOLU_ARRAY(I) .EQ. -1.D0) THEN
+            WRITE (IOwork,"(I3, 1X, I3)") DIHOEK(I,1), DIHOEK(I,2)
+        ELSE
+            WRITE (IOwork,"(I3, 1X, I3, 1X, F10.6)") DIHOEK(I,1), DIHOEK(I,2), DROTSOLU_ARRAY(I)
+        END IF
     END DO
     CLOSE(IOwork)
     
@@ -1092,7 +1096,7 @@ SUBROUTINE read_norm
     ALLOCATE(DROTSOLU_ARRAY(NDIHOEK))
     DO I=1, NDIHOEK
         READ (IOwork,"(I3, 1X, I3, 1X, F10.6)") DIHOEK(I,1), DIHOEK(I,2), DROTSOLU_ARRAY(I)
-        IF (DROTSOLU_ARRAY(I) .EQ. 0.D0) DROTSOLU_ARRAY(I) = DROTSOLU
+        IF (DROTSOLU_ARRAY(I) .EQ. 0.D0) DROTSOLU_ARRAY(I) = -1.D0
     END DO
 
     CLOSE (IOwork)
