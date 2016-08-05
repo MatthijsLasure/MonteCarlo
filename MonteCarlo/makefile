@@ -16,9 +16,10 @@ hopper :
 # Intel compile
 #
 ITMP=tmp-intel
-IOPT=-O2 -openmp -DUSE_PIPES -module $(ITMP)
-#IOPT=-O0 -g -openmp -DDEBUG -DUSE_PIPES -module $(ITMP)
-#IOPT=-O0 -g -openmp -DDEBUG -module $(ITMP)
+#IOPT=-O2 -qopenmp -DUSE_PIPES -module $(ITMP)
+IOPT=-O0 -g -qopenmp -DUSE_PIPES -module $(ITMP)
+#IOPT=-O0 -g -qopenmp -DDEBUG -DUSE_PIPES -module $(ITMP)
+#IOPT=-O0 -g -qopenmp -DDEBUG -module $(ITMP)
 
 MonteCarloOpenMP : $(ITMP)/MCconstants.o $(ITMP)/randgen.o      $(ITMP)/vector_class.o \
                    $(ITMP)/dihedral.o    $(ITMP)/readConfig.o   $(ITMP)/lib.o \

@@ -21,6 +21,7 @@ PROGRAM MonteCarlo
     USE readconfig
     USE solmod
     USE iso_fortran_env
+    USE OMP_LIB
 
     IMPLICIT NONE
 
@@ -130,6 +131,8 @@ PROGRAM MonteCarlo
           &          "to point ot the work directory for Gaussian"
     END IF
     WRITE (*,*) "Using the work directory " // TRIM(WORKDIR)
+
+    WRITE (*,"('Using ', I2.2, ' threads.')") OMP_GET_NUM_THREADS()
 
     CALL prepGaussian( WORKDIR )
     WRITE (*,*) "Work directory initialized"
@@ -647,6 +650,7 @@ WRITE (*,*) "Steps acc: ", PROD_ACC, " / ", PROD_STEPS, " (", FLOAT(PROD_ACC) / 
     
     WRITE (*,*) "Fase POST done!"
     WRITE (*,*) "We're done here. Signing off!"
+    WRITE (*,*) "Walltime: ", OMP_GET_WTIME(), " seconds."
     WRITE (*,*) "Program finished @ ", DATE
 
 CONTAINS
@@ -828,7 +832,7 @@ SUBROUTINE calculateGA(I, LOOPNR)
 OPEN (5414, FILE="debug.xyz", access='append')
     !$OMP PARALLEL default(none) PRIVATE(EN,MOL2, RMIN, KMIN, LMIN, MMIN, R, K, L, M, TEMPJ, TOOFAR, CLIPPED) &
     !$OMP SHARED(NCOM, SOLVENTSOLVENT, I, COM, BOXL2, DMSO, HOEK, NDMSO, MOL1, LOOPNR, WORKDIR, PROC, DMSO_SYM, E_DMSO, E_SOL)
-    !$OMP DO
+    !$OMP DO SCHEDULE(RUNTIME)
     EXEC: DO J = 1, NCOM
         SOLVENTSOLVENT(I,J) = 0.D0
         SOLVENTSOLVENT(J,I) = 0.D0
