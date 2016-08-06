@@ -16,8 +16,8 @@ hopper :
 # Intel compile
 #
 ITMP=tmp-intel
-#IOPT=-O2 -qopenmp -DUSE_PIPES -module $(ITMP)
-IOPT=-O0 -g -qopenmp -DUSE_PIPES -module $(ITMP)
+IOPT=-O2 -qopenmp -DUSE_PIPES -module $(ITMP)
+#IOPT=-O0 -g -qopenmp -DUSE_PIPES -module $(ITMP)
 #IOPT=-O0 -g -qopenmp -DDEBUG -DUSE_PIPES -module $(ITMP)
 #IOPT=-O0 -g -qopenmp -DDEBUG -module $(ITMP)
 
