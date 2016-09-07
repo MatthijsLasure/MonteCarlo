@@ -115,6 +115,9 @@ MODULE lib
         WRITE (*,*) "                                                                              "
         WRITE (*,*) "Flag -h / --hydrogen                                                          "
         WRITE (*,*) "Print hydrogens in XYZ output                                                 "
+        WRITE (*,*) "                                                                              "
+        WRITE (*,*) "Flag -e / --empty                                                             "
+        WRITE (*,*) "Do not print Xe on the corners of the box                                     "
 
     END SUBROUTINE HELP
 
