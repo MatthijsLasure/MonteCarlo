@@ -179,16 +179,16 @@ PROGRAM MonteCarlo
         ! Files
 
         ! INPUT
-        BOX_FILE= trim(files(1)) // "." // trim(ID_TEMP) // ".in"
-        SOL_FILE = trim(files(3)) // "." // trim(ID_TEMP) // ".in"
+        BOX_FILE= trim(files(1)) // "_" // trim(ID_TEMP) // ".in"
+        SOL_FILE = trim(files(3)) // "_" // trim(ID_TEMP) // ".in"
 
         ! OUTPUT
-        OUT_FILE = trim(files(5)) // "." // trim(ID_TEMP) // ".txt"
-        ERR_FILE = trim(files(6)) // "." // trim(ID_TEMP) // ".txt"
-        DUMP_FILE = trim(files(7)) // "." // trim(ID_TEMP) // ".txt"
-        SOLVSOLV_FILE = trim(files(8)) // "." // trim(ID_TEMP) // ".txt"
-        RESULT_FILE = trim(files(9)) // "." // trim(ID_TEMP) // ".out"
-        SOLOUT_FILE = trim(files(11)) // "." // trim(ID_TEMP) // ".out"
+        OUT_FILE = trim(files(5)) // "_" // trim(ID_TEMP) // ".txt"
+        ERR_FILE = trim(files(6)) // "_" // trim(ID_TEMP) // ".txt"
+        DUMP_FILE = trim(files(7)) // "_" // trim(ID_TEMP) // ".txt"
+        SOLVSOLV_FILE = trim(files(8)) // "_" // trim(ID_TEMP) // ".txt"
+        RESULT_FILE = trim(files(9)) // "_" // trim(ID_TEMP) // ".out"
+        SOLOUT_FILE = trim(files(11)) // "_" // trim(ID_TEMP) // ".out"
 
     ELSE ! No command line given
         ! INPUT
