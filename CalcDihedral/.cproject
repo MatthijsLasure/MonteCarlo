@@ -18,7 +18,7 @@
 					<folderInfo id="photran.managedbuild.config.gnu.fortran.win32.exe.debug.1050602736." name="/" resourcePath="">
 						<toolChain id="photran.managedbuild.toolchain.gnu.fortran.win32.exe.debug.196933236" name="GCC Fortran" superClass="photran.managedbuild.toolchain.gnu.fortran.win32.exe.debug">
 							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.PE" id="photran.managedbuild.target.gnu.platform.win32.exe.debug.1603130510" name="Debug Platform" osList="win32" superClass="photran.managedbuild.target.gnu.platform.win32.exe.debug"/>
-							<builder buildPath="${workspace_loc:/CalcDihedral}/Debug" id="org.eclipse.ptp.rdt.sync.cdt.core.SyncBuilder" name="Sync Builder" superClass="org.eclipse.ptp.rdt.sync.cdt.core.SyncBuilder"/>
+							<builder buildPath="${workspace_loc:/CalcDihedral}/Debug" id="org.eclipse.ptp.rdt.sync.cdt.core.SyncBuilder" keepEnvironmentInBuildfile="false" name="Sync Builder" superClass="org.eclipse.ptp.rdt.sync.cdt.core.SyncBuilder"/>
 							<tool id="photran.managedbuild.tool.gnu.c.compiler.win32.exe.debug.525963769" name="GCC C Compiler" superClass="photran.managedbuild.tool.gnu.c.compiler.win32.exe.debug">
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.844835073" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
 							</tool>
@@ -57,7 +57,7 @@
 					<folderInfo id="photran.managedbuild.config.gnu.fortran.win32.exe.release.2039443613." name="/" resourcePath="">
 						<toolChain id="photran.managedbuild.toolchain.gnu.fortran.win32.exe.release.1564856424" name="GCC Fortran" superClass="photran.managedbuild.toolchain.gnu.fortran.win32.exe.release">
 							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.PE" id="photran.managedbuild.target.gnu.platform.fortran.win32.exe.release.341305291" name="Release Platform" osList="win32" superClass="photran.managedbuild.target.gnu.platform.fortran.win32.exe.release"/>
-							<builder buildPath="${workspace_loc:/CalcDihedral}/Release" id="org.eclipse.ptp.rdt.sync.cdt.core.SyncBuilder" name="Sync Builder" superClass="org.eclipse.ptp.rdt.sync.cdt.core.SyncBuilder"/>
+							<builder buildPath="${workspace_loc:/CalcDihedral}/Release" id="org.eclipse.ptp.rdt.sync.cdt.core.SyncBuilder" keepEnvironmentInBuildfile="false" name="Sync Builder" superClass="org.eclipse.ptp.rdt.sync.cdt.core.SyncBuilder"/>
 							<tool id="photran.managedbuild.tool.gnu.c.compiler.win32.exe.release.88767038" name="GCC C Compiler" superClass="photran.managedbuild.tool.gnu.c.compiler.win32.exe.release">
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.1314660712" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
 							</tool>
@@ -83,8 +83,22 @@
 	<storageModule moduleId="cdtBuildSystem" version="4.0.0">
 		<project id="CalcDihedral.photran.managedbuild.target.gnu.fortran.win32.exe.271394441" name="Executable (Gnu Fortran on Windows)" projectType="photran.managedbuild.target.gnu.fortran.win32.exe"/>
 	</storageModule>
+	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
+	<storageModule moduleId="refreshScope" versionNumber="2">
+		<configuration configurationName="Debug">
+			<resource resourceType="PROJECT" workspacePath="/CalcDihedral"/>
+		</configuration>
+		<configuration configurationName="Release">
+			<resource resourceType="PROJECT" workspacePath="/CalcDihedral"/>
+		</configuration>
+	</storageModule>
 	<storageModule moduleId="scannerConfiguration">
 		<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId=""/>
+		<scannerConfigBuildInfo instanceId="photran.managedbuild.config.gnu.fortran.win32.exe.debug.1050602736;photran.managedbuild.config.gnu.fortran.win32.exe.debug.1050602736.;photran.managedbuild.tool.gnu.c.compiler.win32.exe.debug.525963769;cdt.managedbuild.tool.gnu.c.compiler.input.844835073">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfileC"/>
+		</scannerConfigBuildInfo>
+		<scannerConfigBuildInfo instanceId="photran.managedbuild.config.gnu.fortran.win32.exe.debug.1050602736;photran.managedbuild.config.gnu.fortran.win32.exe.debug.1050602736.">
+			<autodiscovery enabled="true" problemReportingEnabled="true" selectedProfileId="org.eclipse.cdt.managedbuilder.core.GCCManagedMakePerProjectProfile"/>
+		</scannerConfigBuildInfo>
 	</storageModule>
-	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
 </cproject>

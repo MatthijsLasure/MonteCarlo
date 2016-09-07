@@ -1,6 +1,6 @@
-GOPT=-ggdb -fopenmp
+GOPT=-ggdb
 
-calcDihedral: vector_class.o lib.o dihedral.o calcdih.o
+all: vector_class.o lib.o dihedral.o changeDih.o
 	gfortran $(GOPT) -o $@ $^
 
 vector_class.o: vector_class.f90        makefile
@@ -12,7 +12,7 @@ lib.o: lib.f90  makefile
 dihedral.o: dihedral.f90        makefile
 	gfortran -c $(GOPT) -o $@ $<
 
-calcdih.o: calcdih.f90  makefile
+changeDih.o: changeDih.f90  makefile
 	gfortran -c $(GOPT) -o $@ $<
         
 clean:
