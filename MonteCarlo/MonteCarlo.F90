@@ -366,10 +366,10 @@ PROGRAM MonteCarlo
     END IF
     !CLOSE(IOdump)
 
-    901 FORMAT(A12, 1X, A20, 1X, A20, 1X, A6, 1X, A6, 1X, A3, 1X, A6, 1X, A6, 1X, A6)
-    902 FORMAT(I12.12, 1X, ES20.10, 1X, ES20.10, 1X, F6.4, 1X, F6.4, 1X, I3.3, 1X, F6.4, 1X, F6.4, 1X, F6.5)
-    IF (doOut) WRITE (IOout,901) "i", "TotEng", "TotEng_old", "kans", "rv", "rSolv", "pSuc", "ratio","dposmax"
-    IF(LJ_STEPS .GT. 0 .AND. doOut) WRITE (IOout,902) 0, TOTENG, TOTENG, 0.D0, 0.D0, 0, REAL(0) / real(1), 0.D0, DPOSMAX
+    901 FORMAT(A12, 1X, A20, 1X, A20, 1X, A6, 1X, A6, 1X, A3, 1X, A6, 1X, A6, 1X, A6, A6)
+    902 FORMAT(I12.12, 1X, ES20.10, 1X, ES20.10, 1X, F6.4, 1X, F6.4, 1X, I3.3, 1X, F6.4, 1X, F6.4, 1X, F6.5, 1X, F6.5)
+    IF (doOut) WRITE (IOout,901) "i", "TotEng", "TotEng_old", "kans", "rv", "rSolv", "pSuc", "ratio","dposmax", 'dhoekm'
+    IF(LJ_STEPS .GT. 0 .AND. doOut) WRITE (IOout,902) 0, TOTENG, TOTENG, 0.D0, 0.D0, 0, REAL(0) / real(1), 0.D0, DPOSMAX, DHOEKMAX
 
 !====================================================================
 !====================================================================
@@ -439,7 +439,7 @@ PROGRAM MonteCarlo
         END DO
         TOTENG = 0.D0
         TOTENG = calcEnergy(ENERGY, SOLVENTSOLVENT)
-        IF (doOut) WRITE (IOout,902) 0, TOTENG, TOTENG, 0.D0, 0.D0, 0, 0.D0, 0.D0, DPOSMAX
+        IF (doOut) WRITE (IOout,902) 0, TOTENG, TOTENG, 0.D0, 0.D0, 0, 0.D0, 0.D0, DPOSMAX, DHOEKMAX
         WRITE (*,"('Initial energy (GA): ', ES20.10)") TOTENG
     END IF
     
