@@ -41,11 +41,15 @@ SUBROUTINE rConfig(confile, LJ_steps, Ga_steps, iseed, LJ_nadj, LJ_nprint, GA_na
     INTEGER:: proc
     INTEGER:: LJ_dump
     INTEGER:: GA_dump
+    INTEGER:: ISTAT
 
     dorotsolu = .FALSE.
 
-    OPEN(UNIT=10, FILE=confile)
-
+    OPEN(UNIT=10, FILE=confile, ACTION='READ', STATUS='OLD', IOSTAT=istat)
+    IF (ISTAT .NE. 0) THEN
+        WRITE (0,"(A,A,A,I6.6)") "Cannot open the config file ", TRIM(confile), ", Error ", ISTAT
+        STOP 1
+    END IF
     inread: DO
         READ(10, "(a)", IOSTAT=stat) line
         IF(stat<0) EXIT
