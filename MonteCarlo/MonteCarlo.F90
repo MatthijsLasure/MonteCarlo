@@ -132,10 +132,7 @@ PROGRAM MonteCarlo
     END IF
     WRITE (*,*) "Using the work directory " // TRIM(WORKDIR)
 
-    WRITE (*,"('Using ', I2.2, ' threads.')") OMP_GET_NUM_THREADS()
 
-    CALL prepGaussian( WORKDIR )
-    WRITE (*,*) "Work directory initialized"
 
     ! Start reading the config file procedure.
     WRITE (*,*) "Fase 0 started!"
@@ -149,6 +146,15 @@ PROGRAM MonteCarlo
     CALL rConfig(CONFILE, LJ_STEPS, GA_STEPS, ISEED, LJ_NADJ, LJ_NPRINT, GA_NADJ, &
     GA_NPRINT, LJ_DUMP, GA_DUMP, DPOSMAX, DPOSMIN, DHOEKMAX, DHOEKMIN, PADJ, PROC, &
     FILES, TEMPERATURE, DOROTSOLU, DROTSOLU, PROD_STEPS)
+
+    IF (PROC .NE. 0) THEN
+        CALL OMP_SET_NUM_THREADS(PROC)
+        WRITE (*,"(A,I2.2,A)") "Config says ", PROC, " threads."
+    END IF
+    WRITE (*,"('Using ', I2.2, ' threads.')") OMP_GET_NUM_THREADS()
+
+    CALL prepGaussian( WORKDIR )
+    WRITE (*,*) "Work directory initialized"
 
     IF (LJ_DUMP .EQ. 0 .AND. GA_DUMP .EQ. 0) doDump = .FALSE.
     IF (LJ_NPRINT .EQ. 0 .AND. GA_NPRINT .EQ. 0) doOut = .FALSE.
@@ -1101,6 +1107,7 @@ SUBROUTINE read_norm
     DO I=1, NDIHOEK
         READ (IOwork,"(I3, 1X, I3, 1X, F10.6)") DIHOEK(I,1), DIHOEK(I,2), DROTSOLU_ARRAY(I)
         IF (DROTSOLU_ARRAY(I) .EQ. 0.D0) DROTSOLU_ARRAY(I) = -1.D0
+        IF (DROTSOLU_ARRAY(I) .GT. DROTSOLU) DROTSOLU_ARRAY(I) = DROTSOLU
     END DO
 
     CLOSE (IOwork)
