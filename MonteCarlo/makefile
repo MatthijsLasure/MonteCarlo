@@ -53,7 +53,7 @@ $(ITMP)/vector_class.o : vector_class.f90       makefile
 $(ITMP)/randgen.o      : randgen.f90            makefile
 	ifort -c $(IOPT) -o $@ $< 
 
-$(ITMP)/solmod.o       : solmod.f90             $(ITMP)/MCconstants.o  $(ITMP)/randgen.o \
+$(ITMP)/solmod.o       : solmod.F90             $(ITMP)/MCconstants.o  $(ITMP)/randgen.o \
                          $(ITMP)/dihedral.o     $(ITMP)/lib.o          $(ITMP)/vector_class.o  makefile
 	ifort -c $(IOPT) -o $@ $< 
 

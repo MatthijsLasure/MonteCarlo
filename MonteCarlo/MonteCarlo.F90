@@ -60,7 +60,7 @@ PROGRAM MonteCarlo
     LOGICAL             :: doDump = .TRUE., doOut = .TRUE.
 
     ! Energiën van de moleculen, bekomen via extern programma
-    DOUBLE PRECISION                :: E_DMSO, E_SOL
+    DOUBLE PRECISION                :: E_DMSO, E_SOL, E_SOL_OLD
 
     ! Vectoren voor moleculen & atoomtypes
     TYPE (vector), DIMENSION(:), ALLOCATABLE    :: DMSO, COM, SOLUTE, HOEK
@@ -131,7 +131,9 @@ PROGRAM MonteCarlo
           &          "to point ot the work directory for Gaussian"
     END IF
     WRITE (*,*) "Using the work directory " // TRIM(WORKDIR)
-
+    WRITE (*,"('Using ', I2.2, ' threads.')") OMP_GET_NUM_THREADS()
+    CALL prepGaussian( WORKDIR )
+    WRITE (*,*) "Work directory initialized"
 
 
     ! Start reading the config file procedure.
@@ -147,14 +149,6 @@ PROGRAM MonteCarlo
     GA_NPRINT, LJ_DUMP, GA_DUMP, DPOSMAX, DPOSMIN, DHOEKMAX, DHOEKMIN, PADJ, PROC, &
     FILES, TEMPERATURE, DOROTSOLU, DROTSOLU, PROD_STEPS)
 
-    IF (PROC .NE. 0) THEN
-        CALL OMP_SET_NUM_THREADS(PROC)
-        WRITE (*,"(A,I2.2,A)") "Config says ", PROC, " threads."
-    END IF
-    WRITE (*,"('Using ', I2.2, ' threads.')") OMP_GET_NUM_THREADS()
-
-    CALL prepGaussian( WORKDIR )
-    WRITE (*,*) "Work directory initialized"
 
     IF (LJ_DUMP .EQ. 0 .AND. GA_DUMP .EQ. 0) doDump = .FALSE.
     IF (LJ_NPRINT .EQ. 0 .AND. GA_NPRINT .EQ. 0) doOut = .FALSE.
@@ -328,7 +322,12 @@ PROGRAM MonteCarlo
     ! MC ON ROTSOLV
     !==============
     SOLUTE_OLD = SOLUTE
-    IF (DOROTSOLU) SOLUTE = SOLUTE_INIT(SOLUTE, SOL_SYM, DIHOEK, DROTSOLU_ARRAY, DROTSOLU)
+    IF (DOROTSOLU) THEN
+        E_SOL_OLD = E_SOL
+        SOLUTE = SOLUTE_INIT(SOLUTE, SOL_SYM, DIHOEK, DROTSOLU_ARRAY, DROTSOLU)
+        E_SOL = calcSol(SOL_SYM, SOLUTE, WORKDIR)
+        WRITE (*,"('Solute old E / new E (kJ/mol): ', F8.2, ' / ', F8.2)") E_SOL_OLD, E_SOL
+    END IF
 
     ! Initiële berekening ladingen solute
     !====================================
@@ -372,9 +371,9 @@ PROGRAM MonteCarlo
     END IF
     !CLOSE(IOdump)
 
-    901 FORMAT(A12, 1X, A20, 1X, A20, 1X, A6, 1X, A6, 1X, A3, 1X, A6, 1X, A6, 1X, A6, A6)
+    901 FORMAT(A12, 1X, A20, 1X, A20, 1X, A6, 1X, A6, 1X, A3, 1X, A6, 1X, A6, 1X, A6, 1X, A6)
     902 FORMAT(I12.12, 1X, ES20.10, 1X, ES20.10, 1X, F6.4, 1X, F6.4, 1X, I3.3, 1X, F6.4, 1X, F6.4, 1X, F6.5, 1X, F6.5)
-    IF (doOut) WRITE (IOout,901) "i", "TotEng", "TotEng_old", "kans", "rv", "rSolv", "pSuc", "ratio","dposmax", 'dhoekm'
+    IF (doOut) WRITE (IOout,901) "i", "TotEng", "TotEng_old", "kans", "rv", "rSolv", "pSuc", "ratio","dposmax", "dhoekm"
     IF(LJ_STEPS .GT. 0 .AND. doOut) WRITE (IOout,902) 0, TOTENG, TOTENG, 0.D0, 0.D0, 0, REAL(0) / real(1), 0.D0, DPOSMAX, DHOEKMAX
 
 !====================================================================
@@ -546,13 +545,16 @@ WRITE (*,*) "Steps acc: ", PROD_ACC, " / ", PROD_STEPS, " (", FLOAT(PROD_ACC) / 
 !====================================================================
     ! Wegschrijven resultaten
     
+    ! Solvent MC
     IF(DOROTSOLU) THEN
-        POST_ENG = PRODUCTION
+        POST_ENG = PRODUCTION ! Energie
         IF(.NOT. SOLUTE_METROPOLIS(PRE_ENG, POST_ENG, TEMPERATURE)) THEN
+            ! Not accepted
             SOLUTE = SOLUTE_OLD
             CoM = COM_FIRST
             HOEK = HOEK_FIRST
             POST_ENG = PRE_ENG
+            E_SOL = E_SOL_OLD
         END IF
     END IF
     
