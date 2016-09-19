@@ -98,7 +98,7 @@ $(GTMP)/vector_class.o : vector_class.f90       makefile
 $(GTMP)/randgen.o      : randgen.f90            makefile
 	gfortran -c $(GOPT) -o $@ $< 
 
-$(GTMP)/solmod.o       : solmod.f90             $(GTMP)/MCconstants.o  $(GTMP)/randgen.o \
+$(GTMP)/solmod.o       : solmod.F90             $(GTMP)/MCconstants.o  $(GTMP)/randgen.o \
                          $(GTMP)/dihedral.o     $(GTMP)/lib.o          $(GTMP)/vector_class.o  makefile
 	gfortran -c $(GOPT) -o $@ $< 
 

@@ -86,11 +86,12 @@ MODULE solmod
         END IF
 
         ! Bepaal if succesvol -> volgende config
+        906 FORMAT(A, E20.10, ' / ', ES20.10)
         IF(RV .LE. KANS) THEN ! Succes!
-            WRITE (*,*) "New solute accepted! (Prev / Post)", PRE_EN, POST_EN
+            WRITE (*,906) "New solute accepted! (Prev / Post)", PRE_EN, POST_EN
             ISOK = .TRUE.
         ELSE ! Fail!
-            WRITE (*,*) "New solute rejected! (Prev / Post)", PRE_EN, POST_EN
+            WRITE (*,906) "New solute rejected! (Prev / Post)", PRE_EN, POST_EN
             ISOK = .FALSE.
         END IF
 

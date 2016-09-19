@@ -58,6 +58,7 @@ ELSE
       SEED(I) = lcg(T)
    END DO
 END IF
+WRITE (*,*) SEED
 CALL random_seed(put=SEED)
 CONTAINS
 ! This simple PRNG might not be good enough for real work, but is

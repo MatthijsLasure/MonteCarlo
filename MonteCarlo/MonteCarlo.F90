@@ -47,6 +47,7 @@ PROGRAM MonteCarlo
     CHARACTER(LEN=30)   :: DATE
     INTEGER             :: STATUS
     INTEGER             :: ISTAT
+    real                :: etime, t(2)
 
     ! FILES
     !======
@@ -157,8 +158,6 @@ PROGRAM MonteCarlo
     IF (LJ_NPRINT .EQ. 0) LJ_NPRINT = huge(LJ_NPRINT)
     IF (GA_NPRINT .EQ. 0) GA_NPRINT = huge(GA_NPRINT)
 
-    START_PROD = LJ_STEPS + GA_STEPS - PROD_STEPS + 1
-
     ! Override stuff with command line
     IF (COMMAND_ARGUMENT_COUNT() .GT. 1) THEN ! Seriële modus
 
@@ -206,6 +205,11 @@ PROGRAM MonteCarlo
 
     DHOEKMAX = DHOEKMAX * PI
     DHOEKMIN = DHOEKMIN * PI
+
+    START_PROD = LJ_STEPS + GA_STEPS - PROD_STEPS + 1
+    IF (START_PROD .LT. 0) THEN
+        START_PROD = 0
+    END IF
 
     ! Standaard shit, altijd hetzelfde
     DMSO_FILE = files(2)
@@ -527,8 +531,9 @@ PROGRAM MonteCarlo
     END DO
     END IF
 
-    CALL system_clock(START)
-    !write (IOerr,*) START
+
+    WRITE (*,*) "Fase 2 done!"
+    WRITE (*,*) "Fase POST started!"
 
 !====================================================================
 !====================================================================
@@ -561,9 +566,7 @@ WRITE (*,*) "Steps acc: ", PROD_ACC, " / ", PROD_STEPS, " (", FLOAT(PROD_ACC) / 
     IF (LJ_STEPS .GT. 0) WRITE (*,"('Final energy (GA): ', ES20.10)") TOTENG_OLD
     
     IF (doDump) CALL DUMP(UNICORN+1, IOdump)
-    
-    WRITE (*,*) "Fase 2 done!"
-    WRITE (*,*) "Fase POST started!"
+
     
     WRITE (*,*) "Writing data..."
     
@@ -658,7 +661,7 @@ WRITE (*,*) "Steps acc: ", PROD_ACC, " / ", PROD_STEPS, " (", FLOAT(PROD_ACC) / 
     
     WRITE (*,*) "Fase POST done!"
     WRITE (*,*) "We're done here. Signing off!"
-    WRITE (*,*) "Walltime: ", OMP_GET_WTIME(), " seconds."
+    WRITE (*,"(A, F20.3, A)") "Walltime: ", ETIME(t), " seconds."
     WRITE (*,*) "Program finished @ ", DATE
 
 CONTAINS
