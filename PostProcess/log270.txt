@@ -1,0 +1,1856 @@
+ ****************************************
+ * Welcome to the MC simulation of DMSO *
+ * Author: Matthijs Lasure              *
+ ****************************************
+ Program initiated @ Sun Sep 11 14:00:15 2016      
+ Variable init Done!
+ Using the work directory /dev/shm/MC_270
+Using 01 threads.
+ Work directory initialized
+ Fase 0 started!
+ Reading config...
+ Reading config from: config270.ini
+ -----------------------
+ Serial Modus requested!
+ ID: 1
+ LJ: 0
+ GA: 50000
+ -----------------------
+BOX    s270/box_1.in
+DMSO   DMSO.txt
+SOL    s270/solute_1.in
+PARAM  param.txt
+OUT    s270/out_1.txt
+ERR    s270/err_1.txt
+DUMP   s270/dump_1.txt
+SOLV   s270/solventsolvent_1.txt
+RES    s270/box_1.out
+SOLOUT s270/solute_1.out
+ Outputstream started in s270/out_1.txt
+LJ:  1000 | GA:     1
+ Errorstream started in s270/err_1.txt
+ No Dumpfile requested!
+ Config loaded!
+SEED                    0
+ Loading data...
+ Error opening DMSO in DMSO.txt Code           29
+ Using internal coordinates.
+ Done loading data!
+Will use       5000 steps for production. (Start =      45001)
+ BOXL DPOSMAX DPOSMIN DHOEKMAX DHOEKMIN
+   7.78386856680000       5.000000000000000E-002  1.000000000000000E-010
+  0.166504410640259       3.141592653589793E-010
+Solvent rotation, max     5.00
+Bond   8 -   1 MAX   5.000000
+ E_SOL  (kJ/mol):   -444.956882197693     
+ E_DMSO (kJ/mol):   -131.189579414181     
+ Initial energy calculations of the system
+ Previous box read: (kJ/mol) [GA]   -897.464120624781     
+ findAtoms
+ rotlus
+Dihedral angle with 09 - 08 - 01 - 02
+Dihedral change from  -48.56 with    1.62 to  -46.94
+Solute old E / new E (kJ/mol):  -444.96 /  -445.13
+ Fase 0 done!
+ Fase 1 started!
+ Entering Lennard-Jones loop...
+ Exiting Lennard-Jones loop...
+ Writing data...
+ Fase 1 done!
+ Fase 2 started!
+Initial energy (GA):    -9.1863629910E+02
+ Entering Gaussian loop...
+ Production phase started!
+ Exiting Gaussian loop...
+ Fase 2 done!
+ Fase POST started!
+ PRODUCTION RUN RESULTS
+ ----------------------
+ Energy:      -872.640574199444     
+ Steps acc:         2522  /         5000  (   50.44000      %)
+New solute rejected! (Prev / Post)   -0.8974641206E+03 /    -8.7264057420E+02
+ Writing data...
+ Deallocating...
+ The error file is empty (POS = 0), and will be deleted.
+ Fase POST done!
+ We're done here. Signing off!
+Walltime:            15928.928 seconds.
+ Program finished @ Sun Sep 11 22:11:37 2016      
+ ****************************************
+ * Welcome to the MC simulation of DMSO *
+ * Author: Matthijs Lasure              *
+ ****************************************
+ Program initiated @ Sun Sep 11 22:11:37 2016      
+ Variable init Done!
+ Using the work directory /dev/shm/MC_270
+Using 01 threads.
+ Work directory initialized
+ Fase 0 started!
+ Reading config...
+ Reading config from: config270.ini
+ -----------------------
+ Serial Modus requested!
+ ID: 2
+ LJ: 0
+ GA: 50000
+ -----------------------
+BOX    s270/box_2.in
+DMSO   DMSO.txt
+SOL    s270/solute_2.in
+PARAM  param.txt
+OUT    s270/out_2.txt
+ERR    s270/err_2.txt
+DUMP   s270/dump_2.txt
+SOLV   s270/solventsolvent_2.txt
+RES    s270/box_2.out
+SOLOUT s270/solute_2.out
+ Outputstream started in s270/out_2.txt
+LJ:  1000 | GA:     1
+ Errorstream started in s270/err_2.txt
+ No Dumpfile requested!
+ Config loaded!
+SEED                    0
+ Loading data...
+ Error opening DMSO in DMSO.txt Code           29
+ Using internal coordinates.
+ Done loading data!
+Will use       5000 steps for production. (Start =      45001)
+ BOXL DPOSMAX DPOSMIN DHOEKMAX DHOEKMIN
+   7.78386856680000       5.000000000000000E-002  1.000000000000000E-010
+  0.166504410640259       3.141592653589793E-010
+Solvent rotation, max     5.00
+Bond   8 -   1 MAX   5.000000
+ E_SOL  (kJ/mol):   -444.956882197693     
+ E_DMSO (kJ/mol):   -131.189579414181     
+ Initial energy calculations of the system
+ Previous box read: (kJ/mol) [GA]   -897.464120624781     
+ findAtoms
+ rotlus
+Dihedral angle with 09 - 08 - 01 - 02
+Dihedral change from  -48.56 with   -2.03 to  -50.59
+Solute old E / new E (kJ/mol):  -444.96 /  -444.85
+ Fase 0 done!
+ Fase 1 started!
+ Entering Lennard-Jones loop...
+ Exiting Lennard-Jones loop...
+ Writing data...
+ Fase 1 done!
+ Fase 2 started!
+Initial energy (GA):    -9.2108929910E+02
+ Entering Gaussian loop...
+ Production phase started!
+ Exiting Gaussian loop...
+ Fase 2 done!
+ Fase POST started!
+ PRODUCTION RUN RESULTS
+ ----------------------
+ Energy:      -888.712844660838     
+ Steps acc:         2522  /         5000  (   50.44000      %)
+New solute rejected! (Prev / Post)   -0.8974641206E+03 /    -8.8871284466E+02
+ Writing data...
+ Deallocating...
+ The error file is empty (POS = 0), and will be deleted.
+ Fase POST done!
+ We're done here. Signing off!
+Walltime:            16016.468 seconds.
+ Program finished @ Mon Sep 12 06:20:48 2016      
+ ****************************************
+ * Welcome to the MC simulation of DMSO *
+ * Author: Matthijs Lasure              *
+ ****************************************
+ Program initiated @ Mon Sep 12 06:20:48 2016      
+ Variable init Done!
+ Using the work directory /dev/shm/MC_270
+Using 01 threads.
+ Work directory initialized
+ Fase 0 started!
+ Reading config...
+ Reading config from: config270.ini
+ -----------------------
+ Serial Modus requested!
+ ID: 3
+ LJ: 0
+ GA: 50000
+ -----------------------
+BOX    s270/box_3.in
+DMSO   DMSO.txt
+SOL    s270/solute_3.in
+PARAM  param.txt
+OUT    s270/out_3.txt
+ERR    s270/err_3.txt
+DUMP   s270/dump_3.txt
+SOLV   s270/solventsolvent_3.txt
+RES    s270/box_3.out
+SOLOUT s270/solute_3.out
+ Outputstream started in s270/out_3.txt
+LJ:  1000 | GA:     1
+ Errorstream started in s270/err_3.txt
+ No Dumpfile requested!
+ Config loaded!
+SEED                    0
+ Loading data...
+ Error opening DMSO in DMSO.txt Code           29
+ Using internal coordinates.
+ Done loading data!
+Will use       5000 steps for production. (Start =      45001)
+ BOXL DPOSMAX DPOSMIN DHOEKMAX DHOEKMIN
+   7.78386856680000       5.000000000000000E-002  1.000000000000000E-010
+  0.166504410640259       3.141592653589793E-010
+Solvent rotation, max     5.00
+Bond   8 -   1 MAX   5.000000
+ E_SOL  (kJ/mol):   -444.956882197693     
+ E_DMSO (kJ/mol):   -131.189579414181     
+ Initial energy calculations of the system
+ Previous box read: (kJ/mol) [GA]   -897.464120624781     
+ findAtoms
+ rotlus
+Dihedral angle with 09 - 08 - 01 - 02
+Dihedral change from  -48.56 with    3.80 to  -44.75
+Solute old E / new E (kJ/mol):  -444.96 /  -445.30
+ Fase 0 done!
+ Fase 1 started!
+ Entering Lennard-Jones loop...
+ Exiting Lennard-Jones loop...
+ Writing data...
+ Fase 1 done!
+ Fase 2 started!
+Initial energy (GA):    -9.1721929910E+02
+ Entering Gaussian loop...
+ Production phase started!
+ Exiting Gaussian loop...
+ Fase 2 done!
+ Fase POST started!
+ PRODUCTION RUN RESULTS
+ ----------------------
+ Energy:      -872.436300100323     
+ Steps acc:         2482  /         5000  (   49.64000      %)
+New solute rejected! (Prev / Post)   -0.8974641206E+03 /    -8.7243630010E+02
+ Writing data...
+ Deallocating...
+ The error file is empty (POS = 0), and will be deleted.
+ Fase POST done!
+ We're done here. Signing off!
+Walltime:            16251.624 seconds.
+ Program finished @ Mon Sep 12 14:33:41 2016      
+ ****************************************
+ * Welcome to the MC simulation of DMSO *
+ * Author: Matthijs Lasure              *
+ ****************************************
+ Program initiated @ Mon Sep 12 14:33:41 2016      
+ Variable init Done!
+ Using the work directory /dev/shm/MC_270
+Using 01 threads.
+ Work directory initialized
+ Fase 0 started!
+ Reading config...
+ Reading config from: config270.ini
+ -----------------------
+ Serial Modus requested!
+ ID: 4
+ LJ: 0
+ GA: 50000
+ -----------------------
+BOX    s270/box_4.in
+DMSO   DMSO.txt
+SOL    s270/solute_4.in
+PARAM  param.txt
+OUT    s270/out_4.txt
+ERR    s270/err_4.txt
+DUMP   s270/dump_4.txt
+SOLV   s270/solventsolvent_4.txt
+RES    s270/box_4.out
+SOLOUT s270/solute_4.out
+ Outputstream started in s270/out_4.txt
+LJ:  1000 | GA:     1
+ Errorstream started in s270/err_4.txt
+ No Dumpfile requested!
+ Config loaded!
+SEED                    0
+ Loading data...
+ Error opening DMSO in DMSO.txt Code           29
+ Using internal coordinates.
+ Done loading data!
+Will use       5000 steps for production. (Start =      45001)
+ BOXL DPOSMAX DPOSMIN DHOEKMAX DHOEKMIN
+   7.78386856680000       5.000000000000000E-002  1.000000000000000E-010
+  0.166504410640259       3.141592653589793E-010
+Solvent rotation, max     5.00
+Bond   8 -   1 MAX   5.000000
+ E_SOL  (kJ/mol):   -444.956882197693     
+ E_DMSO (kJ/mol):   -131.189579414181     
+ Initial energy calculations of the system
+ Previous box read: (kJ/mol) [GA]   -897.464120624781     
+ findAtoms
+ rotlus
+Dihedral angle with 09 - 08 - 01 - 02
+Dihedral change from  -48.56 with   -0.80 to  -49.36
+Solute old E / new E (kJ/mol):  -444.96 /  -444.95
+ Fase 0 done!
+ Fase 1 started!
+ Entering Lennard-Jones loop...
+ Exiting Lennard-Jones loop...
+ Writing data...
+ Fase 1 done!
+ Fase 2 started!
+Initial energy (GA):    -9.2024629910E+02
+ Entering Gaussian loop...
+ Production phase started!
+ Exiting Gaussian loop...
+ Fase 2 done!
+ Fase POST started!
+ PRODUCTION RUN RESULTS
+ ----------------------
+ Energy:      -918.528033336541     
+ Steps acc:         2515  /         5000  (   50.30000      %)
+New solute accepted! (Prev / Post)   -0.8974641206E+03 /    -9.1852803334E+02
+ Writing data...
+ Deallocating...
+ The error file is empty (POS = 0), and will be deleted.
+ Fase POST done!
+ We're done here. Signing off!
+Walltime:            16298.472 seconds.
+ Program finished @ Mon Sep 12 22:47:27 2016      
+ ****************************************
+ * Welcome to the MC simulation of DMSO *
+ * Author: Matthijs Lasure              *
+ ****************************************
+ Program initiated @ Mon Sep 12 22:47:27 2016      
+ Variable init Done!
+ Using the work directory /dev/shm/MC_270
+Using 01 threads.
+ Work directory initialized
+ Fase 0 started!
+ Reading config...
+ Reading config from: config270.ini
+ -----------------------
+ Serial Modus requested!
+ ID: 5
+ LJ: 0
+ GA: 50000
+ -----------------------
+BOX    s270/box_5.in
+DMSO   DMSO.txt
+SOL    s270/solute_5.in
+PARAM  param.txt
+OUT    s270/out_5.txt
+ERR    s270/err_5.txt
+DUMP   s270/dump_5.txt
+SOLV   s270/solventsolvent_5.txt
+RES    s270/box_5.out
+SOLOUT s270/solute_5.out
+ Outputstream started in s270/out_5.txt
+LJ:  1000 | GA:     1
+ Errorstream started in s270/err_5.txt
+ No Dumpfile requested!
+ Config loaded!
+SEED                    0
+ Loading data...
+ Error opening DMSO in DMSO.txt Code           29
+ Using internal coordinates.
+ Done loading data!
+Will use       5000 steps for production. (Start =      45001)
+ BOXL DPOSMAX DPOSMIN DHOEKMAX DHOEKMIN
+   7.78386856680000       5.000000000000000E-002  1.000000000000000E-010
+  0.166504410640259       3.141592653589793E-010
+Solvent rotation, max     5.00
+Bond   8 -   1 MAX   5.000000
+ E_SOL  (kJ/mol):   -444.948000000001     
+ E_DMSO (kJ/mol):   -131.189579414181     
+ Initial energy calculations of the system
+ Previous box read: (kJ/mol) [GA]   -918.528033336541     
+ findAtoms
+ rotlus
+Dihedral angle with 09 - 08 - 01 - 02
+Dihedral change from  -49.36 with    1.71 to  -47.65
+Solute old E / new E (kJ/mol):  -444.95 /  -445.08
+ Fase 0 done!
+ Fase 1 started!
+ Entering Lennard-Jones loop...
+ Exiting Lennard-Jones loop...
+ Writing data...
+ Fase 1 done!
+ Fase 2 started!
+Initial energy (GA):    -9.4162788738E+02
+ Entering Gaussian loop...
+ Production phase started!
+ Exiting Gaussian loop...
+ Fase 2 done!
+ Fase POST started!
+ PRODUCTION RUN RESULTS
+ ----------------------
+ Energy:      -897.353079218146     
+ Steps acc:         2526  /         5000  (   50.52000      %)
+New solute rejected! (Prev / Post)   -0.9185280333E+03 /    -8.9735307922E+02
+ Writing data...
+ Deallocating...
+ The error file is empty (POS = 0), and will be deleted.
+ Fase POST done!
+ We're done here. Signing off!
+Walltime:            16273.708 seconds.
+ Program finished @ Tue Sep 13 07:00:02 2016      
+ ****************************************
+ * Welcome to the MC simulation of DMSO *
+ * Author: Matthijs Lasure              *
+ ****************************************
+ Program initiated @ Tue Sep 13 07:00:02 2016      
+ Variable init Done!
+ Using the work directory /dev/shm/MC_270
+Using 01 threads.
+ Work directory initialized
+ Fase 0 started!
+ Reading config...
+ Reading config from: config270.ini
+ -----------------------
+ Serial Modus requested!
+ ID: 6
+ LJ: 0
+ GA: 50000
+ -----------------------
+BOX    s270/box_6.in
+DMSO   DMSO.txt
+SOL    s270/solute_6.in
+PARAM  param.txt
+OUT    s270/out_6.txt
+ERR    s270/err_6.txt
+DUMP   s270/dump_6.txt
+SOLV   s270/solventsolvent_6.txt
+RES    s270/box_6.out
+SOLOUT s270/solute_6.out
+ Outputstream started in s270/out_6.txt
+LJ:  1000 | GA:     1
+ Errorstream started in s270/err_6.txt
+ No Dumpfile requested!
+ Config loaded!
+SEED                    0
+ Loading data...
+ Error opening DMSO in DMSO.txt Code           29
+ Using internal coordinates.
+ Done loading data!
+Will use       5000 steps for production. (Start =      45001)
+ BOXL DPOSMAX DPOSMIN DHOEKMAX DHOEKMIN
+   7.78386856680000       5.000000000000000E-002  1.000000000000000E-010
+  0.166504410640259       3.141592653589793E-010
+Solvent rotation, max     5.00
+Bond   8 -   1 MAX   5.000000
+ E_SOL  (kJ/mol):   -444.948000000001     
+ E_DMSO (kJ/mol):   -131.189579414181     
+ Initial energy calculations of the system
+ Previous box read: (kJ/mol) [GA]   -918.528033336541     
+ findAtoms
+ rotlus
+Dihedral angle with 09 - 08 - 01 - 02
+Dihedral change from  -49.36 with   -1.62 to  -50.98
+Solute old E / new E (kJ/mol):  -444.95 /  -444.82
+ Fase 0 done!
+ Fase 1 started!
+ Entering Lennard-Jones loop...
+ Exiting Lennard-Jones loop...
+ Writing data...
+ Fase 1 done!
+ Fase 2 started!
+Initial energy (GA):    -9.4262988738E+02
+ Entering Gaussian loop...
+ Production phase started!
+ Exiting Gaussian loop...
+ Fase 2 done!
+ Fase POST started!
+ PRODUCTION RUN RESULTS
+ ----------------------
+ Energy:      -935.090274883193     
+ Steps acc:         2527  /         5000  (   50.54000      %)
+New solute accepted! (Prev / Post)   -0.9185280333E+03 /    -9.3509027488E+02
+ Writing data...
+ Deallocating...
+ The error file is empty (POS = 0), and will be deleted.
+ Fase POST done!
+ We're done here. Signing off!
+Walltime:            16323.268 seconds.
+ Program finished @ Tue Sep 13 15:02:02 2016      
+ ****************************************
+ * Welcome to the MC simulation of DMSO *
+ * Author: Matthijs Lasure              *
+ ****************************************
+ Program initiated @ Tue Sep 13 15:02:02 2016      
+ Variable init Done!
+ Using the work directory /dev/shm/MC_270
+Using 01 threads.
+ Work directory initialized
+ Fase 0 started!
+ Reading config...
+ Reading config from: config270.ini
+ -----------------------
+ Serial Modus requested!
+ ID: 7
+ LJ: 0
+ GA: 50000
+ -----------------------
+BOX    s270/box_7.in
+DMSO   DMSO.txt
+SOL    s270/solute_7.in
+PARAM  param.txt
+OUT    s270/out_7.txt
+ERR    s270/err_7.txt
+DUMP   s270/dump_7.txt
+SOLV   s270/solventsolvent_7.txt
+RES    s270/box_7.out
+SOLOUT s270/solute_7.out
+ Outputstream started in s270/out_7.txt
+LJ:  1000 | GA:     1
+ Errorstream started in s270/err_7.txt
+ No Dumpfile requested!
+ Config loaded!
+SEED                    0
+ Loading data...
+ Error opening DMSO in DMSO.txt Code           29
+ Using internal coordinates.
+ Done loading data!
+Will use       5000 steps for production. (Start =      45001)
+ BOXL DPOSMAX DPOSMIN DHOEKMAX DHOEKMIN
+   7.78386856680000       5.000000000000000E-002  1.000000000000000E-010
+  0.166504410640259       3.141592653589793E-010
+Solvent rotation, max     5.00
+Bond   8 -   1 MAX   5.000000
+ E_SOL  (kJ/mol):   -444.822000000001     
+ E_DMSO (kJ/mol):   -131.189579414181     
+ Initial energy calculations of the system
+ Previous box read: (kJ/mol) [GA]   -935.090274883193     
+ findAtoms
+ rotlus
+Dihedral angle with 09 - 08 - 01 - 02
+Dihedral change from  -50.98 with   -4.05 to  -55.03
+Solute old E / new E (kJ/mol):  -444.82 /  -444.51
+ Fase 0 done!
+ Fase 1 started!
+ Entering Lennard-Jones loop...
+ Exiting Lennard-Jones loop...
+ Writing data...
+ Fase 1 done!
+ Fase 2 started!
+Initial energy (GA):    -9.3603252269E+02
+ Entering Gaussian loop...
+ Production phase started!
+ Exiting Gaussian loop...
+ Fase 2 done!
+ Fase POST started!
+ PRODUCTION RUN RESULTS
+ ----------------------
+ Energy:      -955.579795663429     
+ Steps acc:         2540  /         5000  (   50.80000      %)
+New solute accepted! (Prev / Post)   -0.9350902749E+03 /    -9.5557979566E+02
+ Writing data...
+ Deallocating...
+ The error file is empty (POS = 0), and will be deleted.
+ Fase POST done!
+ We're done here. Signing off!
+Walltime:            16370.216 seconds.
+ Program finished @ Tue Sep 13 23:07:44 2016      
+ ****************************************
+ * Welcome to the MC simulation of DMSO *
+ * Author: Matthijs Lasure              *
+ ****************************************
+ Program initiated @ Tue Sep 13 23:07:44 2016      
+ Variable init Done!
+ Using the work directory /dev/shm/MC_270
+Using 01 threads.
+ Work directory initialized
+ Fase 0 started!
+ Reading config...
+ Reading config from: config270.ini
+ -----------------------
+ Serial Modus requested!
+ ID: 8
+ LJ: 0
+ GA: 50000
+ -----------------------
+BOX    s270/box_8.in
+DMSO   DMSO.txt
+SOL    s270/solute_8.in
+PARAM  param.txt
+OUT    s270/out_8.txt
+ERR    s270/err_8.txt
+DUMP   s270/dump_8.txt
+SOLV   s270/solventsolvent_8.txt
+RES    s270/box_8.out
+SOLOUT s270/solute_8.out
+ Outputstream started in s270/out_8.txt
+LJ:  1000 | GA:     1
+ Errorstream started in s270/err_8.txt
+ No Dumpfile requested!
+ Config loaded!
+SEED                    0
+ Loading data...
+ Error opening DMSO in DMSO.txt Code           29
+ Using internal coordinates.
+ Done loading data!
+Will use       5000 steps for production. (Start =      45001)
+ BOXL DPOSMAX DPOSMIN DHOEKMAX DHOEKMIN
+   7.78386856680000       5.000000000000000E-002  1.000000000000000E-010
+  0.166504410640259       3.141592653589793E-010
+Solvent rotation, max     5.00
+Bond   8 -   1 MAX   5.000000
+ E_SOL  (kJ/mol):   -444.515000000001     
+ E_DMSO (kJ/mol):   -131.189579414181     
+ Initial energy calculations of the system
+ Previous box read: (kJ/mol) [GA]   -955.579795663429     
+ findAtoms
+ rotlus
+Dihedral angle with 09 - 08 - 01 - 02
+Dihedral change from  -55.03 with   -0.61 to  -55.64
+Solute old E / new E (kJ/mol):  -444.52 /  -444.47
+ Fase 0 done!
+ Fase 1 started!
+ Entering Lennard-Jones loop...
+ Exiting Lennard-Jones loop...
+ Writing data...
+ Fase 1 done!
+ Fase 2 started!
+Initial energy (GA):    -9.3848872855E+02
+ Entering Gaussian loop...
+ Production phase started!
+ Exiting Gaussian loop...
+ Fase 2 done!
+ Fase POST started!
+ PRODUCTION RUN RESULTS
+ ----------------------
+ Energy:      -977.030627305749     
+ Steps acc:         2535  /         5000  (   50.70000      %)
+New solute accepted! (Prev / Post)   -0.9555797957E+03 /    -9.7703062731E+02
+ Writing data...
+ Deallocating...
+ The error file is empty (POS = 0), and will be deleted.
+ Fase POST done!
+ We're done here. Signing off!
+Walltime:            16185.092 seconds.
+ Program finished @ Wed Sep 14 07:13:44 2016      
+ ****************************************
+ * Welcome to the MC simulation of DMSO *
+ * Author: Matthijs Lasure              *
+ ****************************************
+ Program initiated @ Wed Sep 14 07:13:44 2016      
+ Variable init Done!
+ Using the work directory /dev/shm/MC_270
+Using 01 threads.
+ Work directory initialized
+ Fase 0 started!
+ Reading config...
+ Reading config from: config270.ini
+ -----------------------
+ Serial Modus requested!
+ ID: 9
+ LJ: 0
+ GA: 50000
+ -----------------------
+BOX    s270/box_9.in
+DMSO   DMSO.txt
+SOL    s270/solute_9.in
+PARAM  param.txt
+OUT    s270/out_9.txt
+ERR    s270/err_9.txt
+DUMP   s270/dump_9.txt
+SOLV   s270/solventsolvent_9.txt
+RES    s270/box_9.out
+SOLOUT s270/solute_9.out
+ Outputstream started in s270/out_9.txt
+LJ:  1000 | GA:     1
+ Errorstream started in s270/err_9.txt
+ No Dumpfile requested!
+ Config loaded!
+SEED                    0
+ Loading data...
+ Error opening DMSO in DMSO.txt Code           29
+ Using internal coordinates.
+ Done loading data!
+Will use       5000 steps for production. (Start =      45001)
+ BOXL DPOSMAX DPOSMIN DHOEKMAX DHOEKMIN
+   7.78386856680000       5.000000000000000E-002  1.000000000000000E-010
+  0.166504410640259       3.141592653589793E-010
+Solvent rotation, max     5.00
+Bond   8 -   1 MAX   5.000000
+ E_SOL  (kJ/mol):   -444.470999999999     
+ E_DMSO (kJ/mol):   -131.189579414181     
+ Initial energy calculations of the system
+ Previous box read: (kJ/mol) [GA]   -977.030627305749     
+ findAtoms
+ rotlus
+Dihedral angle with 09 - 08 - 01 - 02
+Dihedral change from  -55.64 with    1.11 to  -54.53
+Solute old E / new E (kJ/mol):  -444.47 /  -444.55
+ Fase 0 done!
+ Fase 1 started!
+ Entering Lennard-Jones loop...
+ Exiting Lennard-Jones loop...
+ Writing data...
+ Fase 1 done!
+ Fase 2 started!
+Initial energy (GA):    -9.6092745792E+02
+ Entering Gaussian loop...
+ Production phase started!
+ Exiting Gaussian loop...
+ Fase 2 done!
+ Fase POST started!
+ PRODUCTION RUN RESULTS
+ ----------------------
+ Energy:      -976.688862183655     
+ Steps acc:         2543  /         5000  (   50.86000      %)
+New solute accepted! (Prev / Post)   -0.9770306273E+03 /    -9.7668886218E+02
+ Writing data...
+ Deallocating...
+ The error file is empty (POS = 0), and will be deleted.
+ Fase POST done!
+ We're done here. Signing off!
+Walltime:            16011.632 seconds.
+ Program finished @ Wed Sep 14 15:18:13 2016      
+ ****************************************
+ * Welcome to the MC simulation of DMSO *
+ * Author: Matthijs Lasure              *
+ ****************************************
+ Program initiated @ Wed Sep 14 15:18:13 2016      
+ Variable init Done!
+ Using the work directory /dev/shm/MC_270
+Using 01 threads.
+ Work directory initialized
+ Fase 0 started!
+ Reading config...
+ Reading config from: config270.ini
+ -----------------------
+ Serial Modus requested!
+ ID: 10
+ LJ: 0
+ GA: 50000
+ -----------------------
+BOX    s270/box_10.in
+DMSO   DMSO.txt
+SOL    s270/solute_10.in
+PARAM  param.txt
+OUT    s270/out_10.txt
+ERR    s270/err_10.txt
+DUMP   s270/dump_10.txt
+SOLV   s270/solventsolvent_10.txt
+RES    s270/box_10.out
+SOLOUT s270/solute_10.out
+ Outputstream started in s270/out_10.txt
+LJ:  1000 | GA:     1
+ Errorstream started in s270/err_10.txt
+ No Dumpfile requested!
+ Config loaded!
+SEED                    0
+ Loading data...
+ Error opening DMSO in DMSO.txt Code           29
+ Using internal coordinates.
+ Done loading data!
+Will use       5000 steps for production. (Start =      45001)
+ BOXL DPOSMAX DPOSMIN DHOEKMAX DHOEKMIN
+   7.78386856680000       5.000000000000000E-002  1.000000000000000E-010
+  0.166504410640259       3.141592653589793E-010
+Solvent rotation, max     5.00
+Bond   8 -   1 MAX   5.000000
+ E_SOL  (kJ/mol):   -444.551999999999     
+ E_DMSO (kJ/mol):   -131.189579414181     
+ Initial energy calculations of the system
+ Previous box read: (kJ/mol) [GA]   -976.688862183655     
+ findAtoms
+ rotlus
+Dihedral angle with 09 - 08 - 01 - 02
+Dihedral change from  -54.53 with    0.10 to  -54.43
+Solute old E / new E (kJ/mol):  -444.55 /  -444.56
+ Fase 0 done!
+ Fase 1 started!
+ Entering Lennard-Jones loop...
+ Exiting Lennard-Jones loop...
+ Writing data...
+ Fase 1 done!
+ Fase 2 started!
+Initial energy (GA):    -9.9857156972E+02
+ Entering Gaussian loop...
+ Production phase started!
+ Exiting Gaussian loop...
+ Fase 2 done!
+ Fase POST started!
+ PRODUCTION RUN RESULTS
+ ----------------------
+ Energy:      -972.998944739047     
+ Steps acc:         2505  /         5000  (   50.10000      %)
+New solute accepted! (Prev / Post)   -0.9766888622E+03 /    -9.7299894474E+02
+ Writing data...
+ Deallocating...
+ The error file is empty (POS = 0), and will be deleted.
+ Fase POST done!
+ We're done here. Signing off!
+Walltime:            15884.280 seconds.
+ Program finished @ Wed Sep 14 23:19:21 2016      
+ ****************************************
+ * Welcome to the MC simulation of DMSO *
+ * Author: Matthijs Lasure              *
+ ****************************************
+ Program initiated @ Wed Sep 14 23:19:21 2016      
+ Variable init Done!
+ Using the work directory /dev/shm/MC_270
+Using 01 threads.
+ Work directory initialized
+ Fase 0 started!
+ Reading config...
+ Reading config from: config270.ini
+ -----------------------
+ Serial Modus requested!
+ ID: 11
+ LJ: 0
+ GA: 50000
+ -----------------------
+BOX    s270/box_11.in
+DMSO   DMSO.txt
+SOL    s270/solute_11.in
+PARAM  param.txt
+OUT    s270/out_11.txt
+ERR    s270/err_11.txt
+DUMP   s270/dump_11.txt
+SOLV   s270/solventsolvent_11.txt
+RES    s270/box_11.out
+SOLOUT s270/solute_11.out
+ Outputstream started in s270/out_11.txt
+LJ:  1000 | GA:     1
+ Errorstream started in s270/err_11.txt
+ No Dumpfile requested!
+ Config loaded!
+SEED                    0
+ Loading data...
+ Error opening DMSO in DMSO.txt Code           29
+ Using internal coordinates.
+ Done loading data!
+Will use       5000 steps for production. (Start =      45001)
+ BOXL DPOSMAX DPOSMIN DHOEKMAX DHOEKMIN
+   7.78386856680000       5.000000000000000E-002  1.000000000000000E-010
+  0.166504410640259       3.141592653589793E-010
+Solvent rotation, max     5.00
+Bond   8 -   1 MAX   5.000000
+ E_SOL  (kJ/mol):   -444.559000000000     
+ E_DMSO (kJ/mol):   -131.189579414181     
+ Initial energy calculations of the system
+ Previous box read: (kJ/mol) [GA]   -972.998944739047     
+ findAtoms
+ rotlus
+Dihedral angle with 09 - 08 - 01 - 02
+Dihedral change from  -54.43 with   -3.73 to  -58.16
+Solute old E / new E (kJ/mol):  -444.56 /  -444.30
+ Fase 0 done!
+ Fase 1 started!
+ Entering Lennard-Jones loop...
+ Exiting Lennard-Jones loop...
+ Writing data...
+ Fase 1 done!
+ Fase 2 started!
+Initial energy (GA):    -1.0048612521E+03
+ Entering Gaussian loop...
+ Production phase started!
+ Exiting Gaussian loop...
+ Fase 2 done!
+ Fase POST started!
+ PRODUCTION RUN RESULTS
+ ----------------------
+ Energy:      -1007.53884530485     
+ Steps acc:         2535  /         5000  (   50.70000      %)
+New solute accepted! (Prev / Post)   -0.9729989447E+03 /    -1.0075388453E+03
+ Writing data...
+ Deallocating...
+ The error file is empty (POS = 0), and will be deleted.
+ Fase POST done!
+ We're done here. Signing off!
+Walltime:            16114.128 seconds.
+ Program finished @ Thu Sep 15 07:26:44 2016      
+ ****************************************
+ * Welcome to the MC simulation of DMSO *
+ * Author: Matthijs Lasure              *
+ ****************************************
+ Program initiated @ Thu Sep 15 07:26:44 2016      
+ Variable init Done!
+ Using the work directory /dev/shm/MC_270
+Using 01 threads.
+ Work directory initialized
+ Fase 0 started!
+ Reading config...
+ Reading config from: config270.ini
+ -----------------------
+ Serial Modus requested!
+ ID: 12
+ LJ: 0
+ GA: 50000
+ -----------------------
+BOX    s270/box_12.in
+DMSO   DMSO.txt
+SOL    s270/solute_12.in
+PARAM  param.txt
+OUT    s270/out_12.txt
+ERR    s270/err_12.txt
+DUMP   s270/dump_12.txt
+SOLV   s270/solventsolvent_12.txt
+RES    s270/box_12.out
+SOLOUT s270/solute_12.out
+ Outputstream started in s270/out_12.txt
+LJ:  1000 | GA:     1
+ Errorstream started in s270/err_12.txt
+ No Dumpfile requested!
+ Config loaded!
+SEED                    0
+ Loading data...
+ Error opening DMSO in DMSO.txt Code           29
+ Using internal coordinates.
+ Done loading data!
+Will use       5000 steps for production. (Start =      45001)
+ BOXL DPOSMAX DPOSMIN DHOEKMAX DHOEKMIN
+   7.78386856680000       5.000000000000000E-002  1.000000000000000E-010
+  0.166504410640259       3.141592653589793E-010
+Solvent rotation, max     5.00
+Bond   8 -   1 MAX   5.000000
+ E_SOL  (kJ/mol):   -444.300000000001     
+ E_DMSO (kJ/mol):   -131.189579414181     
+ Initial energy calculations of the system
+ Previous box read: (kJ/mol) [GA]   -1007.53884530485     
+ findAtoms
+ rotlus
+Dihedral angle with 09 - 08 - 01 - 02
+Dihedral change from  -58.16 with    0.18 to  -57.98
+Solute old E / new E (kJ/mol):  -444.30 /  -444.31
+ Fase 0 done!
+ Fase 1 started!
+ Entering Lennard-Jones loop...
+ Exiting Lennard-Jones loop...
+ Writing data...
+ Fase 1 done!
+ Fase 2 started!
+Initial energy (GA):    -1.0371102521E+03
+ Entering Gaussian loop...
+ Production phase started!
+ Exiting Gaussian loop...
+ Fase 2 done!
+ Fase POST started!
+ PRODUCTION RUN RESULTS
+ ----------------------
+ Energy:      -984.820686885325     
+ Steps acc:         2503  /         5000  (   50.06000      %)
+New solute rejected! (Prev / Post)   -0.1007538845E+04 /    -9.8482068689E+02
+ Writing data...
+ Deallocating...
+ The error file is empty (POS = 0), and will be deleted.
+ Fase POST done!
+ We're done here. Signing off!
+Walltime:            16222.664 seconds.
+ Program finished @ Thu Sep 15 15:33:15 2016      
+ ****************************************
+ * Welcome to the MC simulation of DMSO *
+ * Author: Matthijs Lasure              *
+ ****************************************
+ Program initiated @ Thu Sep 15 15:33:15 2016      
+ Variable init Done!
+ Using the work directory /dev/shm/MC_270
+Using 01 threads.
+ Work directory initialized
+ Fase 0 started!
+ Reading config...
+ Reading config from: config270.ini
+ -----------------------
+ Serial Modus requested!
+ ID: 13
+ LJ: 0
+ GA: 50000
+ -----------------------
+BOX    s270/box_13.in
+DMSO   DMSO.txt
+SOL    s270/solute_13.in
+PARAM  param.txt
+OUT    s270/out_13.txt
+ERR    s270/err_13.txt
+DUMP   s270/dump_13.txt
+SOLV   s270/solventsolvent_13.txt
+RES    s270/box_13.out
+SOLOUT s270/solute_13.out
+ Outputstream started in s270/out_13.txt
+LJ:  1000 | GA:     1
+ Errorstream started in s270/err_13.txt
+ No Dumpfile requested!
+ Config loaded!
+SEED                    0
+ Loading data...
+ Error opening DMSO in DMSO.txt Code           29
+ Using internal coordinates.
+ Done loading data!
+Will use       5000 steps for production. (Start =      45001)
+ BOXL DPOSMAX DPOSMIN DHOEKMAX DHOEKMIN
+   7.78386856680000       5.000000000000000E-002  1.000000000000000E-010
+  0.166504410640259       3.141592653589793E-010
+Solvent rotation, max     5.00
+Bond   8 -   1 MAX   5.000000
+ E_SOL  (kJ/mol):   -444.300000000001     
+ E_DMSO (kJ/mol):   -131.189579414181     
+ Initial energy calculations of the system
+ Previous box read: (kJ/mol) [GA]   -1007.53884530485     
+ findAtoms
+ rotlus
+Dihedral angle with 09 - 08 - 01 - 02
+Dihedral change from  -58.16 with   -1.49 to  -59.64
+Solute old E / new E (kJ/mol):  -444.30 /  -444.21
+ Fase 0 done!
+ Fase 1 started!
+ Entering Lennard-Jones loop...
+ Exiting Lennard-Jones loop...
+ Writing data...
+ Fase 1 done!
+ Fase 2 started!
+Initial energy (GA):    -1.0380902521E+03
+ Entering Gaussian loop...
+ Production phase started!
+ Exiting Gaussian loop...
+ Fase 2 done!
+ Fase POST started!
+ PRODUCTION RUN RESULTS
+ ----------------------
+ Energy:      -1000.08984469723     
+ Steps acc:         2520  /         5000  (   50.40000      %)
+New solute rejected! (Prev / Post)   -0.1007538845E+04 /    -1.0000898447E+03
+ Writing data...
+ Deallocating...
+ The error file is empty (POS = 0), and will be deleted.
+ Fase POST done!
+ We're done here. Signing off!
+Walltime:            15894.500 seconds.
+ Program finished @ Thu Sep 15 23:32:14 2016      
+ ****************************************
+ * Welcome to the MC simulation of DMSO *
+ * Author: Matthijs Lasure              *
+ ****************************************
+ Program initiated @ Thu Sep 15 23:32:14 2016      
+ Variable init Done!
+ Using the work directory /dev/shm/MC_270
+Using 01 threads.
+ Work directory initialized
+ Fase 0 started!
+ Reading config...
+ Reading config from: config270.ini
+ -----------------------
+ Serial Modus requested!
+ ID: 14
+ LJ: 0
+ GA: 50000
+ -----------------------
+BOX    s270/box_14.in
+DMSO   DMSO.txt
+SOL    s270/solute_14.in
+PARAM  param.txt
+OUT    s270/out_14.txt
+ERR    s270/err_14.txt
+DUMP   s270/dump_14.txt
+SOLV   s270/solventsolvent_14.txt
+RES    s270/box_14.out
+SOLOUT s270/solute_14.out
+ Outputstream started in s270/out_14.txt
+LJ:  1000 | GA:     1
+ Errorstream started in s270/err_14.txt
+ No Dumpfile requested!
+ Config loaded!
+SEED                    0
+ Loading data...
+ Error opening DMSO in DMSO.txt Code           29
+ Using internal coordinates.
+ Done loading data!
+Will use       5000 steps for production. (Start =      45001)
+ BOXL DPOSMAX DPOSMIN DHOEKMAX DHOEKMIN
+   7.78386856680000       5.000000000000000E-002  1.000000000000000E-010
+  0.166504410640259       3.141592653589793E-010
+Solvent rotation, max     5.00
+Bond   8 -   1 MAX   5.000000
+ E_SOL  (kJ/mol):   -444.300000000001     
+ E_DMSO (kJ/mol):   -131.189579414181     
+ Initial energy calculations of the system
+ Previous box read: (kJ/mol) [GA]   -1007.53884530485     
+ findAtoms
+ rotlus
+Dihedral angle with 09 - 08 - 01 - 02
+Dihedral change from  -58.16 with    1.64 to  -56.52
+Solute old E / new E (kJ/mol):  -444.30 /  -444.41
+ Fase 0 done!
+ Fase 1 started!
+ Entering Lennard-Jones loop...
+ Exiting Lennard-Jones loop...
+ Writing data...
+ Fase 1 done!
+ Fase 2 started!
+Initial energy (GA):    -1.0362182521E+03
+ Entering Gaussian loop...
+ Production phase started!
+ Exiting Gaussian loop...
+ Fase 2 done!
+ Fase POST started!
+ PRODUCTION RUN RESULTS
+ ----------------------
+ Energy:      -977.362473898496     
+ Steps acc:         2521  /         5000  (   50.42000      %)
+New solute rejected! (Prev / Post)   -0.1007538845E+04 /    -9.7736247390E+02
+ Writing data...
+ Deallocating...
+ The error file is empty (POS = 0), and will be deleted.
+ Fase POST done!
+ We're done here. Signing off!
+Walltime:            15651.524 seconds.
+ Program finished @ Fri Sep 16 07:35:18 2016      
+ ****************************************
+ * Welcome to the MC simulation of DMSO *
+ * Author: Matthijs Lasure              *
+ ****************************************
+ Program initiated @ Fri Sep 16 07:35:18 2016      
+ Variable init Done!
+ Using the work directory /dev/shm/MC_270
+Using 01 threads.
+ Work directory initialized
+ Fase 0 started!
+ Reading config...
+ Reading config from: config270.ini
+ -----------------------
+ Serial Modus requested!
+ ID: 15
+ LJ: 0
+ GA: 50000
+ -----------------------
+BOX    s270/box_15.in
+DMSO   DMSO.txt
+SOL    s270/solute_15.in
+PARAM  param.txt
+OUT    s270/out_15.txt
+ERR    s270/err_15.txt
+DUMP   s270/dump_15.txt
+SOLV   s270/solventsolvent_15.txt
+RES    s270/box_15.out
+SOLOUT s270/solute_15.out
+ Outputstream started in s270/out_15.txt
+LJ:  1000 | GA:     1
+ Errorstream started in s270/err_15.txt
+ No Dumpfile requested!
+ Config loaded!
+SEED                    0
+ Loading data...
+ Error opening DMSO in DMSO.txt Code           29
+ Using internal coordinates.
+ Done loading data!
+Will use       5000 steps for production. (Start =      45001)
+ BOXL DPOSMAX DPOSMIN DHOEKMAX DHOEKMIN
+   7.78386856680000       5.000000000000000E-002  1.000000000000000E-010
+  0.166504410640259       3.141592653589793E-010
+Solvent rotation, max     5.00
+Bond   8 -   1 MAX   5.000000
+ E_SOL  (kJ/mol):   -444.300000000001     
+ E_DMSO (kJ/mol):   -131.189579414181     
+ Initial energy calculations of the system
+ Previous box read: (kJ/mol) [GA]   -1007.53884530485     
+ findAtoms
+ rotlus
+Dihedral angle with 09 - 08 - 01 - 02
+Dihedral change from  -58.16 with    3.47 to  -54.69
+Solute old E / new E (kJ/mol):  -444.30 /  -444.54
+ Fase 0 done!
+ Fase 1 started!
+ Entering Lennard-Jones loop...
+ Exiting Lennard-Jones loop...
+ Writing data...
+ Fase 1 done!
+ Fase 2 started!
+Initial energy (GA):    -1.0351432521E+03
+ Entering Gaussian loop...
+ Production phase started!
+ Exiting Gaussian loop...
+ Fase 2 done!
+ Fase POST started!
+ PRODUCTION RUN RESULTS
+ ----------------------
+ Energy:      -991.845232107096     
+ Steps acc:         2477  /         5000  (   49.54000      %)
+New solute rejected! (Prev / Post)   -0.1007538845E+04 /    -9.9184523211E+02
+ Writing data...
+ Deallocating...
+ The error file is empty (POS = 0), and will be deleted.
+ Fase POST done!
+ We're done here. Signing off!
+Walltime:            15708.876 seconds.
+ Program finished @ Fri Sep 16 15:36:50 2016      
+ ****************************************
+ * Welcome to the MC simulation of DMSO *
+ * Author: Matthijs Lasure              *
+ ****************************************
+ Program initiated @ Fri Sep 16 15:36:50 2016      
+ Variable init Done!
+ Using the work directory /dev/shm/MC_270
+Using 01 threads.
+ Work directory initialized
+ Fase 0 started!
+ Reading config...
+ Reading config from: config270.ini
+ -----------------------
+ Serial Modus requested!
+ ID: 16
+ LJ: 0
+ GA: 50000
+ -----------------------
+BOX    s270/box_16.in
+DMSO   DMSO.txt
+SOL    s270/solute_16.in
+PARAM  param.txt
+OUT    s270/out_16.txt
+ERR    s270/err_16.txt
+DUMP   s270/dump_16.txt
+SOLV   s270/solventsolvent_16.txt
+RES    s270/box_16.out
+SOLOUT s270/solute_16.out
+ Outputstream started in s270/out_16.txt
+LJ:  1000 | GA:     1
+ Errorstream started in s270/err_16.txt
+ No Dumpfile requested!
+ Config loaded!
+SEED                    0
+ Loading data...
+ Error opening DMSO in DMSO.txt Code           29
+ Using internal coordinates.
+ Done loading data!
+Will use       5000 steps for production. (Start =      45001)
+ BOXL DPOSMAX DPOSMIN DHOEKMAX DHOEKMIN
+   7.78386856680000       5.000000000000000E-002  1.000000000000000E-010
+  0.166504410640259       3.141592653589793E-010
+Solvent rotation, max     5.00
+Bond   8 -   1 MAX   5.000000
+ E_SOL  (kJ/mol):   -444.300000000001     
+ E_DMSO (kJ/mol):   -131.189579414181     
+ Initial energy calculations of the system
+ Previous box read: (kJ/mol) [GA]   -1007.53884530485     
+ findAtoms
+ rotlus
+Dihedral angle with 09 - 08 - 01 - 02
+Dihedral change from  -58.16 with    4.51 to  -53.65
+Solute old E / new E (kJ/mol):  -444.30 /  -444.62
+ Fase 0 done!
+ Fase 1 started!
+ Entering Lennard-Jones loop...
+ Exiting Lennard-Jones loop...
+ Writing data...
+ Fase 1 done!
+ Fase 2 started!
+Initial energy (GA):    -1.0345272521E+03
+ Entering Gaussian loop...
+ Production phase started!
+ Exiting Gaussian loop...
+ Fase 2 done!
+ Fase POST started!
+ PRODUCTION RUN RESULTS
+ ----------------------
+ Energy:      -1015.61963204043     
+ Steps acc:         2539  /         5000  (   50.78000      %)
+New solute accepted! (Prev / Post)   -0.1007538845E+04 /    -1.0156196320E+03
+ Writing data...
+ Deallocating...
+ The error file is empty (POS = 0), and will be deleted.
+ Fase POST done!
+ We're done here. Signing off!
+Walltime:            15796.272 seconds.
+ Program finished @ Fri Sep 16 23:35:59 2016      
+ ****************************************
+ * Welcome to the MC simulation of DMSO *
+ * Author: Matthijs Lasure              *
+ ****************************************
+ Program initiated @ Fri Sep 16 23:35:59 2016      
+ Variable init Done!
+ Using the work directory /dev/shm/MC_270
+Using 01 threads.
+ Work directory initialized
+ Fase 0 started!
+ Reading config...
+ Reading config from: config270.ini
+ -----------------------
+ Serial Modus requested!
+ ID: 17
+ LJ: 0
+ GA: 50000
+ -----------------------
+BOX    s270/box_17.in
+DMSO   DMSO.txt
+SOL    s270/solute_17.in
+PARAM  param.txt
+OUT    s270/out_17.txt
+ERR    s270/err_17.txt
+DUMP   s270/dump_17.txt
+SOLV   s270/solventsolvent_17.txt
+RES    s270/box_17.out
+SOLOUT s270/solute_17.out
+ Outputstream started in s270/out_17.txt
+LJ:  1000 | GA:     1
+ Errorstream started in s270/err_17.txt
+ No Dumpfile requested!
+ Config loaded!
+SEED                    0
+ Loading data...
+ Error opening DMSO in DMSO.txt Code           29
+ Using internal coordinates.
+ Done loading data!
+Will use       5000 steps for production. (Start =      45001)
+ BOXL DPOSMAX DPOSMIN DHOEKMAX DHOEKMIN
+   7.78386856680000       5.000000000000000E-002  1.000000000000000E-010
+  0.166504410640259       3.141592653589793E-010
+Solvent rotation, max     5.00
+Bond   8 -   1 MAX   5.000000
+ E_SOL  (kJ/mol):   -444.616999999999     
+ E_DMSO (kJ/mol):   -131.189579414181     
+ Initial energy calculations of the system
+ Previous box read: (kJ/mol) [GA]   -1015.61963204043     
+ findAtoms
+ rotlus
+Dihedral angle with 09 - 08 - 01 - 02
+Dihedral change from  -53.65 with   -3.78 to  -57.42
+Solute old E / new E (kJ/mol):  -444.62 /  -444.35
+ Fase 0 done!
+ Fase 1 started!
+ Entering Lennard-Jones loop...
+ Exiting Lennard-Jones loop...
+ Writing data...
+ Fase 1 done!
+ Fase 2 started!
+Initial energy (GA):    -1.0270604109E+03
+ Entering Gaussian loop...
+ Production phase started!
+ Exiting Gaussian loop...
+ Fase 2 done!
+ Fase POST started!
+ PRODUCTION RUN RESULTS
+ ----------------------
+ Energy:      -1018.81991210744     
+ Steps acc:         2519  /         5000  (   50.38000      %)
+New solute accepted! (Prev / Post)   -0.1015619632E+04 /    -1.0188199121E+03
+ Writing data...
+ Deallocating...
+ The error file is empty (POS = 0), and will be deleted.
+ Fase POST done!
+ We're done here. Signing off!
+Walltime:            15692.856 seconds.
+ Program finished @ Sat Sep 17 07:33:06 2016      
+ ****************************************
+ * Welcome to the MC simulation of DMSO *
+ * Author: Matthijs Lasure              *
+ ****************************************
+ Program initiated @ Sat Sep 17 07:33:06 2016      
+ Variable init Done!
+ Using the work directory /dev/shm/MC_270
+Using 01 threads.
+ Work directory initialized
+ Fase 0 started!
+ Reading config...
+ Reading config from: config270.ini
+ -----------------------
+ Serial Modus requested!
+ ID: 18
+ LJ: 0
+ GA: 50000
+ -----------------------
+BOX    s270/box_18.in
+DMSO   DMSO.txt
+SOL    s270/solute_18.in
+PARAM  param.txt
+OUT    s270/out_18.txt
+ERR    s270/err_18.txt
+DUMP   s270/dump_18.txt
+SOLV   s270/solventsolvent_18.txt
+RES    s270/box_18.out
+SOLOUT s270/solute_18.out
+ Outputstream started in s270/out_18.txt
+LJ:  1000 | GA:     1
+ Errorstream started in s270/err_18.txt
+ No Dumpfile requested!
+ Config loaded!
+SEED                    0
+ Loading data...
+ Error opening DMSO in DMSO.txt Code           29
+ Using internal coordinates.
+ Done loading data!
+Will use       5000 steps for production. (Start =      45001)
+ BOXL DPOSMAX DPOSMIN DHOEKMAX DHOEKMIN
+   7.78386856680000       5.000000000000000E-002  1.000000000000000E-010
+  0.166504410640259       3.141592653589793E-010
+Solvent rotation, max     5.00
+Bond   8 -   1 MAX   5.000000
+ E_SOL  (kJ/mol):   -444.348000000001     
+ E_DMSO (kJ/mol):   -131.189579414181     
+ Initial energy calculations of the system
+ Previous box read: (kJ/mol) [GA]   -1018.81991210744     
+ findAtoms
+ rotlus
+Dihedral angle with 09 - 08 - 01 - 02
+Dihedral change from  -57.42 with   -1.58 to  -59.00
+Solute old E / new E (kJ/mol):  -444.35 /  -444.25
+ Fase 0 done!
+ Fase 1 started!
+ Entering Lennard-Jones loop...
+ Exiting Lennard-Jones loop...
+ Writing data...
+ Fase 1 done!
+ Fase 2 started!
+Initial energy (GA):    -1.0292969344E+03
+ Entering Gaussian loop...
+ Production phase started!
+ Exiting Gaussian loop...
+ Fase 2 done!
+ Fase POST started!
+ PRODUCTION RUN RESULTS
+ ----------------------
+ Energy:      -1029.82095640398     
+ Steps acc:         2520  /         5000  (   50.40000      %)
+New solute accepted! (Prev / Post)   -0.1018819912E+04 /    -1.0298209564E+03
+ Writing data...
+ Deallocating...
+ The error file is empty (POS = 0), and will be deleted.
+ Fase POST done!
+ We're done here. Signing off!
+Walltime:            15688.420 seconds.
+ Program finished @ Sat Sep 17 15:27:28 2016      
+ ****************************************
+ * Welcome to the MC simulation of DMSO *
+ * Author: Matthijs Lasure              *
+ ****************************************
+ Program initiated @ Sat Sep 17 15:27:28 2016      
+ Variable init Done!
+ Using the work directory /dev/shm/MC_270
+Using 01 threads.
+ Work directory initialized
+ Fase 0 started!
+ Reading config...
+ Reading config from: config270.ini
+ -----------------------
+ Serial Modus requested!
+ ID: 19
+ LJ: 0
+ GA: 50000
+ -----------------------
+BOX    s270/box_19.in
+DMSO   DMSO.txt
+SOL    s270/solute_19.in
+PARAM  param.txt
+OUT    s270/out_19.txt
+ERR    s270/err_19.txt
+DUMP   s270/dump_19.txt
+SOLV   s270/solventsolvent_19.txt
+RES    s270/box_19.out
+SOLOUT s270/solute_19.out
+ Outputstream started in s270/out_19.txt
+LJ:  1000 | GA:     1
+ Errorstream started in s270/err_19.txt
+ No Dumpfile requested!
+ Config loaded!
+SEED                    0
+ Loading data...
+ Error opening DMSO in DMSO.txt Code           29
+ Using internal coordinates.
+ Done loading data!
+Will use       5000 steps for production. (Start =      45001)
+ BOXL DPOSMAX DPOSMIN DHOEKMAX DHOEKMIN
+   7.78386856680000       5.000000000000000E-002  1.000000000000000E-010
+  0.166504410640259       3.141592653589793E-010
+Solvent rotation, max     5.00
+Bond   8 -   1 MAX   5.000000
+ E_SOL  (kJ/mol):   -444.246000000001     
+ E_DMSO (kJ/mol):   -131.189579414181     
+ Initial energy calculations of the system
+ Previous box read: (kJ/mol) [GA]   -1029.82095640398     
+ findAtoms
+ rotlus
+Dihedral angle with 09 - 08 - 01 - 02
+Dihedral change from  -59.00 with   -2.12 to  -61.12
+Solute old E / new E (kJ/mol):  -444.25 /  -444.12
+ Fase 0 done!
+ Fase 1 started!
+ Entering Lennard-Jones loop...
+ Exiting Lennard-Jones loop...
+ Writing data...
+ Fase 1 done!
+ Fase 2 started!
+Initial energy (GA):    -1.0281255697E+03
+ Entering Gaussian loop...
+ Production phase started!
+ Exiting Gaussian loop...
+ Fase 2 done!
+ Fase POST started!
+ PRODUCTION RUN RESULTS
+ ----------------------
+ Energy:      -1035.12070007212     
+ Steps acc:         2528  /         5000  (   50.56000      %)
+New solute accepted! (Prev / Post)   -0.1029820956E+04 /    -1.0351207001E+03
+ Writing data...
+ Deallocating...
+ The error file is empty (POS = 0), and will be deleted.
+ Fase POST done!
+ We're done here. Signing off!
+Walltime:            15676.764 seconds.
+ Program finished @ Sat Sep 17 23:25:49 2016      
+ ****************************************
+ * Welcome to the MC simulation of DMSO *
+ * Author: Matthijs Lasure              *
+ ****************************************
+ Program initiated @ Sat Sep 17 23:25:49 2016      
+ Variable init Done!
+ Using the work directory /dev/shm/MC_270
+Using 01 threads.
+ Work directory initialized
+ Fase 0 started!
+ Reading config...
+ Reading config from: config270.ini
+ -----------------------
+ Serial Modus requested!
+ ID: 20
+ LJ: 0
+ GA: 50000
+ -----------------------
+BOX    s270/box_20.in
+DMSO   DMSO.txt
+SOL    s270/solute_20.in
+PARAM  param.txt
+OUT    s270/out_20.txt
+ERR    s270/err_20.txt
+DUMP   s270/dump_20.txt
+SOLV   s270/solventsolvent_20.txt
+RES    s270/box_20.out
+SOLOUT s270/solute_20.out
+ Outputstream started in s270/out_20.txt
+LJ:  1000 | GA:     1
+ Errorstream started in s270/err_20.txt
+ No Dumpfile requested!
+ Config loaded!
+SEED                    0
+ Loading data...
+ Error opening DMSO in DMSO.txt Code           29
+ Using internal coordinates.
+ Done loading data!
+Will use       5000 steps for production. (Start =      45001)
+ BOXL DPOSMAX DPOSMIN DHOEKMAX DHOEKMIN
+   7.78386856680000       5.000000000000000E-002  1.000000000000000E-010
+  0.166504410640259       3.141592653589793E-010
+Solvent rotation, max     5.00
+Bond   8 -   1 MAX   5.000000
+ E_SOL  (kJ/mol):   -444.121999999999     
+ E_DMSO (kJ/mol):   -131.189579414181     
+ Initial energy calculations of the system
+ Previous box read: (kJ/mol) [GA]   -1035.12070007212     
+ findAtoms
+ rotlus
+Dihedral angle with 09 - 08 - 01 - 02
+Dihedral change from  -61.12 with   -2.25 to  -63.37
+Solute old E / new E (kJ/mol):  -444.12 /  -444.01
+ Fase 0 done!
+ Fase 1 started!
+ Entering Lennard-Jones loop...
+ Exiting Lennard-Jones loop...
+ Writing data...
+ Fase 1 done!
+ Fase 2 started!
+Initial energy (GA):    -1.0438490932E+03
+ Entering Gaussian loop...
+ Production phase started!
+ Exiting Gaussian loop...
+ Fase 2 done!
+ Fase POST started!
+ PRODUCTION RUN RESULTS
+ ----------------------
+ Energy:      -1051.13851736627     
+ Steps acc:         2523  /         5000  (   50.46000      %)
+New solute accepted! (Prev / Post)   -0.1035120700E+04 /    -1.0511385174E+03
+ Writing data...
+ Deallocating...
+ The error file is empty (POS = 0), and will be deleted.
+ Fase POST done!
+ We're done here. Signing off!
+Walltime:            15645.956 seconds.
+ Program finished @ Sun Sep 18 07:23:36 2016      
+ ****************************************
+ * Welcome to the MC simulation of DMSO *
+ * Author: Matthijs Lasure              *
+ ****************************************
+ Program initiated @ Sun Sep 18 07:23:36 2016      
+ Variable init Done!
+ Using the work directory /dev/shm/MC_270
+Using 01 threads.
+ Work directory initialized
+ Fase 0 started!
+ Reading config...
+ Reading config from: config270.ini
+ -----------------------
+ Serial Modus requested!
+ ID: 21
+ LJ: 0
+ GA: 50000
+ -----------------------
+BOX    s270/box_21.in
+DMSO   DMSO.txt
+SOL    s270/solute_21.in
+PARAM  param.txt
+OUT    s270/out_21.txt
+ERR    s270/err_21.txt
+DUMP   s270/dump_21.txt
+SOLV   s270/solventsolvent_21.txt
+RES    s270/box_21.out
+SOLOUT s270/solute_21.out
+ Outputstream started in s270/out_21.txt
+LJ:  1000 | GA:     1
+ Errorstream started in s270/err_21.txt
+ No Dumpfile requested!
+ Config loaded!
+SEED                    0
+ Loading data...
+ Error opening DMSO in DMSO.txt Code           29
+ Using internal coordinates.
+ Done loading data!
+Will use       5000 steps for production. (Start =      45001)
+ BOXL DPOSMAX DPOSMIN DHOEKMAX DHOEKMIN
+   7.78386856680000       5.000000000000000E-002  1.000000000000000E-010
+  0.166504410640259       3.141592653589793E-010
+Solvent rotation, max     5.00
+Bond   8 -   1 MAX   5.000000
+ E_SOL  (kJ/mol):   -444.007000000001     
+ E_DMSO (kJ/mol):   -131.189579414181     
+ Initial energy calculations of the system
+ Previous box read: (kJ/mol) [GA]   -1051.13851736627     
+ findAtoms
+ rotlus
+Dihedral angle with 09 - 08 - 01 - 02
+Dihedral change from  -63.37 with   -4.86 to  -68.23
+Solute old E / new E (kJ/mol):  -444.01 /  -443.83
+ Fase 0 done!
+ Fase 1 started!
+ Entering Lennard-Jones loop...
+ Exiting Lennard-Jones loop...
+ Writing data...
+ Fase 1 done!
+ Fase 2 started!
+Initial energy (GA):    -1.0752140932E+03
+ Entering Gaussian loop...
+ Production phase started!
+ Exiting Gaussian loop...
+ Fase 2 done!
+ Fase POST started!
+ PRODUCTION RUN RESULTS
+ ----------------------
+ Energy:      -1019.20047612037     
+ Steps acc:         2520  /         5000  (   50.40000      %)
+New solute rejected! (Prev / Post)   -0.1051138517E+04 /    -1.0192004761E+03
+ Writing data...
+ Deallocating...
+ The error file is empty (POS = 0), and will be deleted.
+ Fase POST done!
+ We're done here. Signing off!
+Walltime:            15752.388 seconds.
+ Program finished @ Sun Sep 18 15:25:25 2016      
+ ****************************************
+ * Welcome to the MC simulation of DMSO *
+ * Author: Matthijs Lasure              *
+ ****************************************
+ Program initiated @ Sun Sep 18 15:25:26 2016      
+ Variable init Done!
+ Using the work directory /dev/shm/MC_270
+Using 01 threads.
+ Work directory initialized
+ Fase 0 started!
+ Reading config...
+ Reading config from: config270.ini
+ -----------------------
+ Serial Modus requested!
+ ID: 22
+ LJ: 0
+ GA: 50000
+ -----------------------
+BOX    s270/box_22.in
+DMSO   DMSO.txt
+SOL    s270/solute_22.in
+PARAM  param.txt
+OUT    s270/out_22.txt
+ERR    s270/err_22.txt
+DUMP   s270/dump_22.txt
+SOLV   s270/solventsolvent_22.txt
+RES    s270/box_22.out
+SOLOUT s270/solute_22.out
+ Outputstream started in s270/out_22.txt
+LJ:  1000 | GA:     1
+ Errorstream started in s270/err_22.txt
+ No Dumpfile requested!
+ Config loaded!
+SEED                    0
+ Loading data...
+ Error opening DMSO in DMSO.txt Code           29
+ Using internal coordinates.
+ Done loading data!
+Will use       5000 steps for production. (Start =      45001)
+ BOXL DPOSMAX DPOSMIN DHOEKMAX DHOEKMIN
+   7.78386856680000       5.000000000000000E-002  1.000000000000000E-010
+  0.166504410640259       3.141592653589793E-010
+Solvent rotation, max     5.00
+Bond   8 -   1 MAX   5.000000
+ E_SOL  (kJ/mol):   -444.007000000001     
+ E_DMSO (kJ/mol):   -131.189579414181     
+ Initial energy calculations of the system
+ Previous box read: (kJ/mol) [GA]   -1051.13851736627     
+ findAtoms
+ rotlus
+Dihedral angle with 09 - 08 - 01 - 02
+Dihedral change from  -63.37 with   -1.06 to  -64.43
+Solute old E / new E (kJ/mol):  -444.01 /  -443.96
+ Fase 0 done!
+ Fase 1 started!
+ Entering Lennard-Jones loop...
+ Exiting Lennard-Jones loop...
+ Writing data...
+ Fase 1 done!
+ Fase 2 started!
+Initial energy (GA):    -1.0770440932E+03
+ Entering Gaussian loop...
+ Production phase started!
+ Exiting Gaussian loop...
+ Fase 2 done!
+ Fase POST started!
+ PRODUCTION RUN RESULTS
+ ----------------------
+ Energy:      -1033.78618253234     
+ Steps acc:         2526  /         5000  (   50.52000      %)
+New solute rejected! (Prev / Post)   -0.1051138517E+04 /    -1.0337861825E+03
+ Writing data...
+ Deallocating...
+ The error file is empty (POS = 0), and will be deleted.
+ Fase POST done!
+ We're done here. Signing off!
+Walltime:            15829.188 seconds.
+ Program finished @ Sun Sep 18 23:28:16 2016      
+ ****************************************
+ * Welcome to the MC simulation of DMSO *
+ * Author: Matthijs Lasure              *
+ ****************************************
+ Program initiated @ Sun Sep 18 23:28:16 2016      
+ Variable init Done!
+ Using the work directory /dev/shm/MC_270
+Using 01 threads.
+ Work directory initialized
+ Fase 0 started!
+ Reading config...
+ Reading config from: config270.ini
+ -----------------------
+ Serial Modus requested!
+ ID: 23
+ LJ: 0
+ GA: 50000
+ -----------------------
+BOX    s270/box_23.in
+DMSO   DMSO.txt
+SOL    s270/solute_23.in
+PARAM  param.txt
+OUT    s270/out_23.txt
+ERR    s270/err_23.txt
+DUMP   s270/dump_23.txt
+SOLV   s270/solventsolvent_23.txt
+RES    s270/box_23.out
+SOLOUT s270/solute_23.out
+ Outputstream started in s270/out_23.txt
+LJ:  1000 | GA:     1
+ Errorstream started in s270/err_23.txt
+ No Dumpfile requested!
+ Config loaded!
+SEED                    0
+ Loading data...
+ Error opening DMSO in DMSO.txt Code           29
+ Using internal coordinates.
+ Done loading data!
+Will use       5000 steps for production. (Start =      45001)
+ BOXL DPOSMAX DPOSMIN DHOEKMAX DHOEKMIN
+   7.78386856680000       5.000000000000000E-002  1.000000000000000E-010
+  0.166504410640259       3.141592653589793E-010
+Solvent rotation, max     5.00
+Bond   8 -   1 MAX   5.000000
+ E_SOL  (kJ/mol):   -444.007000000001     
+ E_DMSO (kJ/mol):   -131.189579414181     
+ Initial energy calculations of the system
+ Previous box read: (kJ/mol) [GA]   -1051.13851736627     
+ findAtoms
+ rotlus
+Dihedral angle with 09 - 08 - 01 - 02
+Dihedral change from  -63.37 with   -0.35 to  -63.72
+Solute old E / new E (kJ/mol):  -444.01 /  -443.99
+ Fase 0 done!
+ Fase 1 started!
+ Entering Lennard-Jones loop...
+ Exiting Lennard-Jones loop...
+ Writing data...
+ Fase 1 done!
+ Fase 2 started!
+Initial energy (GA):    -1.0773730932E+03
+ Entering Gaussian loop...
+ Production phase started!
+ Exiting Gaussian loop...
+ Fase 2 done!
+ Fase POST started!
+ PRODUCTION RUN RESULTS
+ ----------------------
+ Energy:      -1021.65418439244     
+ Steps acc:         2510  /         5000  (   50.20000      %)
+New solute rejected! (Prev / Post)   -0.1051138517E+04 /    -1.0216541844E+03
+ Writing data...
+ Deallocating...
+ The error file is empty (POS = 0), and will be deleted.
+ Fase POST done!
+ We're done here. Signing off!
+Walltime:            15671.852 seconds.
+ Program finished @ Mon Sep 19 07:25:16 2016      
+ ****************************************
+ * Welcome to the MC simulation of DMSO *
+ * Author: Matthijs Lasure              *
+ ****************************************
+ Program initiated @ Mon Sep 19 07:25:16 2016      
+ Variable init Done!
+ Using the work directory /dev/shm/MC_270
+Using 01 threads.
+ Work directory initialized
+ Fase 0 started!
+ Reading config...
+ Reading config from: config270.ini
+ -----------------------
+ Serial Modus requested!
+ ID: 24
+ LJ: 0
+ GA: 50000
+ -----------------------
+BOX    s270/box_24.in
+DMSO   DMSO.txt
+SOL    s270/solute_24.in
+PARAM  param.txt
+OUT    s270/out_24.txt
+ERR    s270/err_24.txt
+DUMP   s270/dump_24.txt
+SOLV   s270/solventsolvent_24.txt
+RES    s270/box_24.out
+SOLOUT s270/solute_24.out
+ Outputstream started in s270/out_24.txt
+LJ:  1000 | GA:     1
+ Errorstream started in s270/err_24.txt
+ No Dumpfile requested!
+ Config loaded!
+SEED                    0
+ Loading data...
+ Error opening DMSO in DMSO.txt Code           29
+ Using internal coordinates.
+ Done loading data!
+Will use       5000 steps for production. (Start =      45001)
+ BOXL DPOSMAX DPOSMIN DHOEKMAX DHOEKMIN
+   7.78386856680000       5.000000000000000E-002  1.000000000000000E-010
+  0.166504410640259       3.141592653589793E-010
+Solvent rotation, max     5.00
+Bond   8 -   1 MAX   5.000000
+ E_SOL  (kJ/mol):   -444.007000000001     
+ E_DMSO (kJ/mol):   -131.189579414181     
+ Initial energy calculations of the system
+ Previous box read: (kJ/mol) [GA]   -1051.13851736627     
+ findAtoms
+ rotlus
+Dihedral angle with 09 - 08 - 01 - 02
+Dihedral change from  -63.37 with    2.23 to  -61.14
+Solute old E / new E (kJ/mol):  -444.01 /  -444.12
+ Fase 0 done!
+ Fase 1 started!
+ Entering Lennard-Jones loop...
+ Exiting Lennard-Jones loop...
+ Writing data...
+ Fase 1 done!
+ Fase 2 started!
+Initial energy (GA):    -1.0784700932E+03
+ Entering Gaussian loop...
