@@ -9,7 +9,7 @@ program postProcess
     DOUBLE PRECISION, DIMENSION(:,:), ALLOCATABLE :: ENERGY
     INTEGER, DIMENSION(:), ALLOCATABLE :: OLD, NOW, S
     LOGICAL, DIMENSION(:), ALLOCATABLE :: ACC
-    LOGICAL :: ISOK
+    LOGICAL :: ISOK, DRYRUN = .FALSE.
     CHARACTER*8 :: PRESTRING
     CHARACTER*255 :: OUTDIR, OUTFILE
     CHARACTER*2000 :: FORM, ROW, STR, COMMAND
@@ -52,7 +52,10 @@ program postProcess
 
     NUMARG = COMMAND_ARGUMENT_COUNT()
 
-    IF (NUMARG .EQ. 0) STOP "You need more arguments!"
+    IF (NUMARG .EQ. 0) THEN
+        CALL HELP()
+        STOP
+    END IF
     CALL GETARGS()
 
     ! Get number of runs in the first logfile
@@ -86,18 +89,21 @@ program postProcess
 
     ! END READING
 
+    WRITE (*,"(A,F6.2,A)") "Temperature: ", TEMPERATURE, " K"
     K = 0
     CALL COMPARE()
 
     ! PRINTING
     901 FORMAT(A, I3.3, A, I3.3, A, F6.2, A)
     WRITE (*,901) "Accepted: ", K, " / ", RUNS, " (", FLOAT(K) / FLOAT(RUNS) * 100, " %)"
-    WRITE (*,'(A)') "Legend: I rejected > old solute. - old solute. + new solute."
+    WRITE (*,'(A)') "Legend: I old solute with new rejected. - old solute. + new solute accepted. o new solute rejected"
     DO I=1,RUNS
         STR = "('| ', I4.4,' |"
         DO J=1,NUMLOG
-            IF (OLD(I) .EQ. J .AND. NOW(I) .EQ. J) THEN
+            IF (OLD(I) .EQ. J .AND. .NOT. ACC(I)) THEN
                 STR = TRIM(STR) // "I"
+            ELSEIF (NOW(I) .EQ. J .AND. .NOT. ACC(I)) THEN
+                STR = TRIM(STR) // "o"
             ELSEIF ( OLD(I) .EQ. J) THEN
                 STR = TRIM(STR) // "-"
             ELSEIF ( NOW(I) .EQ. J) THEN
@@ -135,7 +141,7 @@ program postProcess
                 WRITE (*,"(A,A,A)") "File '", TRIM(OUTFILE), "' exists. Skipping this one."
             ELSE
                 WRITE (*,"(A)") TRIM(COMMAND)
-                CALL SYSTEM(TRIM(COMMAND))
+                IF(.NOT. DRYRUN) CALL SYSTEM(TRIM(COMMAND))
             END IF
         END IF
     END DO
@@ -168,6 +174,9 @@ SUBROUTINE GETARGS() ! TODO more complicated
                 SKIP = 1
                 CALL GET_COMMAND_ARGUMENT(I+1, TEMP_C)
                 READ(TEMP_C, *) TEMPERATURE
+                LIST = .FALSE.
+            CASE ("-d")
+                DRYRUN = .TRUE.
                 LIST = .FALSE.
             CASE DEFAULT
                 IF (LIST) THEN
@@ -290,7 +299,7 @@ SUBROUTINE COMPARE()
         ELSE
             ACC(I) = .FALSE.
             OLD(I) = CURRENT
-            NOW(I) = CURRENT
+            NOW(I) = NEXT
         END IF
     END DO
 END SUBROUTINE COMPARE
@@ -308,5 +317,27 @@ FUNCTION Replace_Text (s,text,rep)  RESULT(outs)
 END FUNCTION Replace_Text
 
 ! =============================================================
+
+SUBROUTINE HELP()
+WRITE (*,"(A)") "PostProcess: extract boxes from the simulations.                                  "
+WRITE (*,"(A)") "                                                                                  "
+WRITE (*,"(A)") "Must be used in the directory of the MonteCarlo program (uses relative box paths) "
+WRITE (*,"(A)") "                                                                                  "
+WRITE (*,"(A)") "Usage: PostProcess.exe -l <logs> [args]                                           "
+WRITE (*,"(A)") "                                                                                  "
+WRITE (*,"(A)") "-l <logs>                                                                         "
+WRITE (*,"(A)") "List of log files to process.                                                     "
+WRITE (*,"(A)") "                                                                                  "
+WRITE (*,"(A)") "-T <temp>                                                                         "
+WRITE (*,"(A)") "Temperature for the MC, in Kelvin.                                                "
+WRITE (*,"(A)") "                                                                                  "
+WRITE (*,"(A)") "-d                                                                                "
+WRITE (*,"(A)") "Do not actually copy the files, just print information.                           "
+WRITE (*,"(A)") "                                                                                  "
+WRITE (*,"(A)") "NOTICE                                                                            "
+WRITE (*,"(A)") "This program will save the seed upon the first run.                               "
+WRITE (*,"(A)") "In this way, the results will be the same in the same folder.                     "
+WRITE (*,"(A)") "Please do not delete the 'seed' file.                                             "
+END SUBROUTINE HELP
 
 end program postProcess
