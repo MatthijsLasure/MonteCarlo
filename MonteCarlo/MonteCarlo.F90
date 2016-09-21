@@ -189,6 +189,19 @@ PROGRAM MonteCarlo
         RESULT_FILE = trim(files(9)) // "_" // trim(ID_TEMP) // ".out"
         SOLOUT_FILE = trim(files(11)) // "_" // trim(ID_TEMP) // ".out"
 
+        910 FORMAT (A, '_', I6.6, A)
+        ! INPUT
+        WRITE(BOX_FILE,910) trim(files(1)), RUN_ID, ".in"
+        WRITE(SOL_FILE,910) trim(files(3)), RUN_ID, ".in"
+
+        ! OUTPUT
+        WRITE(OUT_FILE,910) trim(files(5)), RUN_ID, ".txt"
+        WRITE(ERR_FILE,910) trim(files(6)), RUN_ID, ".txt"
+        WRITE(DUMP_FILE,910) trim(files(7)), RUN_ID, ".txt"
+        WRITE(SOLVSOLV_FILE,910) trim(files(8)), RUN_ID, ".txt"
+        WRITE(RESULT_FILE,910) trim(files(9)), RUN_ID, ".out"
+        WRITE(SOLOUT_FILE,910) trim(files(11)), RUN_ID, ".out"
+
     ELSE ! No command line given
         ! INPUT
         BOX_FILE = files(1)
@@ -575,14 +588,14 @@ WRITE (*,*) "Steps acc: ", PROD_ACC, " / ", PROD_STEPS, " (", FLOAT(PROD_ACC) / 
     WRITE (IOwork, *) BOXL ! Box grootte
     WRITE (IOwork, *) NCOM ! Lees aantal moleculen
     WRITE (IOwork, *) POST_ENG
-    WRITE (IOwork, *) "BOX ", trim(ID_TEMP)
+    WRITE (IOwork, *) "BOX ", trim(ADJUSTL(ID_TEMP))
     DO I= 1, NCOM
         WRITE(IOwork,*) CoM(I)%X, CoM(I)%Y, CoM(I)%Z, hoek(I)%X, hoek(I)%Y, hoek(I)%Z
     END DO
     WRITE (IOwork, *) "SOLUTE"
     ! solute.txt: conformatie opgeloste molecule (sol)
     WRITE (IOwork, *) NSOL ! Schrijf aantal atomen
-    WRITE (IOwork, *) trim(SOLNAME) ! Comment line
+    WRITE (IOwork, "(A)") trim(ADJUSTL(SOLNAME)) ! Comment line
     DO I=1, NSOL ! Schrijf de coördinaten uit
         WRITE (IOwork,*) sol_sym(I), solute(I)%X, solute(I)%Y, solute(I)%Z
     END DO
@@ -1062,9 +1075,6 @@ SUBROUTINE read_norm
         CLOSE(IOwork)
     END IF
 
-
-
-
     ! box.txt: plaatsen van de moleculen (CoM, hoek)
     OPEN (UNIT=IOwork, FILE=BOX_FILE, ACTION='READ', STATUS='OLD', IOSTAT=istat)
     IF (istat .NE. 0) THEN
@@ -1159,10 +1169,124 @@ END SUBROUTINE read_norm
 !====================================================================
 
 ! Read input files as binary
-SUBROUTINE read_bin
+SUBROUTINE READ_BIN()
+
+! DMSO.txt: conformatie DMSO
+    OPEN (UNIT=IOwork, FILE=DMSO_FILE, ACTION='READ', STATUS='OLD', IOSTAT=istat)
+    IF (istat .NE. 0) THEN
+        WRITE (*,*) "Error opening DMSO in ", TRIM(DMSO_FILE), " Code ", istat
+        WRITE (*,*) "Using internal coordinates."
+
+        ALLOCATE(DMSO(10))
+        ALLOCATE(DMSO_SYM(10))
+        CALL DMSO_init(nDMSO, DMSO_sym, DMSO, E_DMSO)
+        !STOP
+    ELSE
+        READ (IOwork, *) nDMSO ! Lees aantal atomen
+        READ (IOwork, *) ! Comment line
+        ALLOCATE(DMSO(NDMSO)) ! Ken correcte groottes toe aan de arrays
+        ALLOCATE(DMSO_sym(NDMSO))
+        IF (LJ_STEPS .GT. 0) ALLOCATE(TABLE_DMSO(NDMSO, 3))
+        DO I=1, NDMSO
+            READ (IOwork,*) DMSO_sym(I), DMSO(I)%X, DMSO(I)%Y, DMSO(I)%Z
+        END DO
+        READ (IOwork,*) E_DMSO
+        CLOSE(IOwork)
+    END IF
+
+    ! box.txt: plaatsen van de moleculen (CoM, hoek)
+    OPEN (UNIT=IOwork, FILE=BOX_FILE, ACTION='READ', STATUS='OLD', IOSTAT=istat)
+    IF (istat .NE. 0) THEN
+        WRITE (*,*) "Error opening box in ", TRIM(BOX_FILE)
+        STOP
+    END IF
+    READ (IOwork, *) BOXL ! Box grootte
+    READ (IOwork, *) nCoM ! Lees aantal moleculen
+    READ (IOwork,"(E20.10)", IOSTAT=istat) PRE_ENG ! Energy from previous run
+    IF (istat .NE. 0) THEN
+        WRITE (*,*) "No energy detected in input box. Will be calculated."
+        WRITE (*,*) istat
+        PRE_ENG = 123456.789
+        BACKSPACE(IOwork)
+    END IF
+
+    READ (IOwork, *)      ! Box ID
+    ALLOCATE(CoM(NCOM))
+    ALLOCATE(hoek(NCOM))
+    ALLOCATE(CoM_old(NCOM))
+    ALLOCATE(hoek_old(NCOM))
+    ALLOCATE(COM_FIRST(NCOM))
+    ALLOCATE(HOEK_FIRST(NCOM))
+    DO I= 1, NCOM
+        READ(IOwork,*) CoM(I)%X, CoM(I)%Y, CoM(I)%Z, hoek(I)%X, hoek(I)%Y, hoek(I)%Z
+    END DO
+
+    ! solute.txt: conformatie opgeloste molecule (sol)
+    ! NOW INCORPERATED IN BOX.TXT
+    READ (IOwork, *) ! Line with SOLUTE
+    READ (IOwork, *) nSol ! Lees aantal atomen
+    READ (IOwork, "(A)") SOLNAME ! Comment line
+    ALLOCATE(solute(NSOL)) ! Maak de arrays groot genoeg
+    ALLOCATE(SOLUTE_OLD(NSOL))
+    ALLOCATE(sol_sym(NSOL))
+    IF (LJ_STEPS .GT. 0) ALLOCATE(SOL_Q(NSOL))
+    IF (LJ_STEPS .GT. 0) ALLOCATE(TABLE_SOL(NSOL, 3))
+    DO I=1, NSOL ! Lees de coÃ¶rdinaten uit
+        READ (IOwork,*) sol_sym(I), solute(I)%X, solute(I)%Y, solute(I)%Z
+    END DO
+    READ (IOwork,*) E_sol
+    READ (IOwork,*) NDIHOEK
+    ALLOCATE(DIHOEK(NDIHOEK, 2))
+    ALLOCATE(DROTSOLU_ARRAY(NDIHOEK))
+    DO I=1, NDIHOEK
+        READ (IOwork,"(I3, 1X, I3, 1X, F10.6)") DIHOEK(I,1), DIHOEK(I,2), DROTSOLU_ARRAY(I)
+        IF (DROTSOLU_ARRAY(I) .EQ. 0.D0) DROTSOLU_ARRAY(I) = -1.D0
+        IF (DROTSOLU_ARRAY(I) .GT. DROTSOLU) DROTSOLU_ARRAY(I) = DROTSOLU
+    END DO
+
+    CLOSE (IOwork)
 
 
-END SUBROUTINE read_bin
+    IF ( LJ_STEPS .GT. 0) THEN
+        ! param.txt: parameters voor LJ etc
+        OPEN (UNIT=IOwork, FILE=PARAM_FILE, ACTION='READ', STATUS='OLD', IOSTAT=istat)
+        IF (istat .NE. 0) THEN
+            WRITE (*,*) "Error opening param in ", TRIM(PARAM_FILE)
+            STOP
+        END IF
+        READ (IOwork, *) nParam ! Aantal beschikbare parameters
+        READ (IOwork, *) ! skip comment line
+        ALLOCATE(sym(NPARAM))
+        ALLOCATE(Q(NPARAM))
+        ALLOCATE(epsilon(NPARAM))
+        ALLOCATE(sigma(NPARAM))
+        DO I= 1,NPARAM
+            READ (IOwork,*) sym(I), Q(I), epsilon(I), sigma(I)
+        END DO
+        CLOSE(IOwork)
+
+        ! par_solute.txt: parameters voor LJ van het solute
+        OPEN (UNIT=IOwork, FILE=PARSOL_FILE, ACTION='READ', STATUS='OLD', IOSTAT=istat)
+        IF (istat .NE. 0) THEN
+            WRITE (*,*) "Error opening parsol in ", TRIM(PARSOL_FILE)
+            STOP
+        END IF
+        READ (IOwork, *) NPARSOL
+        READ (IOwork, *) ! Comment line
+        ALLOCATE(SOLPAR_SYM(NPARSOL))
+        ALLOCATE(SOL_EPSILON(NPARSOL))
+        ALLOCATE(SOL_SIGMA(NPARSOL))
+        DO I= 1,NPARSOL
+            READ (IOwork,*) SOLPAR_SYM(I), SOL_EPSILON(I), SOL_SIGMA(I)
+        END DO
+        CLOSE(IOwork)
+    END IF
+
+END SUBROUTINE READ_BIN
+
+SUBROUTINE WRITE_NORM()
+
+END SUBROUTINE WRITE_NORM
 
 !====================================================================
 !====================================================================

@@ -26,7 +26,6 @@ program changeDih
     INTEGER :: NDIHOEK
     DOUBLE PRECISION :: BOXL, EN, E_SOL
     INTEGER :: NCOM, NDMSO, NSOL
-
     CALL ARGLOAD()
 
     IF ( .NOT. SILENT) THEN
@@ -42,7 +41,7 @@ program changeDih
 
     THISHOEK = GETDIHEDRAL(solute, A1, A2, A3, A4) * 180 / PI
     IF (SILENT) THEN
-        WRITE (*,*) THISHOEK
+        WRITE (*,"(F10.5)") THISHOEK
     ELSE
         501 FORMAT("Dihedral angle of ", I3.3, " - ", I3.3, " - ", I3.3, &
         " - ", I3.3, " is ", F15.10, " degrees.")
@@ -74,7 +73,7 @@ SUBROUTINE ARGLOAD()
     INTEGER :: FLAG, NUMFLAGS
 
     NUMFLAGS = COMMAND_ARGUMENT_COUNT()
-    IF ( NUMFLAGS .EQ. 0) THEN
+    IF ( NUMFLAGS .LE. 1) THEN
         CALL HELP()
         STOP
     END IF

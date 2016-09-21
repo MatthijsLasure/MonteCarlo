@@ -6,12 +6,12 @@ program postProcess
     INTEGER :: NUMARG, I, J, K, ISTAT, IOwork = 10, RUNS, NUMLOG
     CHARACTER*255, DIMENSION(:), ALLOCATABLE :: LOGLIST
     CHARACTER*255, DIMENSION(:,:), ALLOCATABLE :: BOXES
-    DOUBLE PRECISION, DIMENSION(:,:), ALLOCATABLE :: ENERGY
+    DOUBLE PRECISION, DIMENSION(:,:), ALLOCATABLE :: ENERGY, HOEKEN
     INTEGER, DIMENSION(:), ALLOCATABLE :: OLD, NOW, S
     LOGICAL, DIMENSION(:), ALLOCATABLE :: ACC
     LOGICAL :: ISOK, DRYRUN = .FALSE.
     CHARACTER*8 :: PRESTRING
-    CHARACTER*255 :: OUTDIR, OUTFILE
+    CHARACTER*255 :: OUTDIR = 'output', OUTFILE
     CHARACTER*2000 :: FORM, ROW, STR, COMMAND
     DOUBLE PRECISION :: TEMPERATURE = 300.D0
 
@@ -117,7 +117,6 @@ program postProcess
     END DO
 
     ! COPY
-    OUTDIR = "output"
 #ifdef __GFORTRAN__
     INQUIRE(FILE=OUTDIR, EXIST=ISOK)
 #endif
@@ -126,7 +125,7 @@ program postProcess
     ELSE
         WRITE (*,"(A)") "Directory does not exist, creating..."
         COMMAND="mkdir " // trim(OUTDIR)
-        CALL SYSTEM(TRIM(COMMAND))
+        IF(.NOT. DRYRUN) CALL SYSTEM(TRIM(COMMAND))
     END IF
 
     DO I=1,RUNS
@@ -327,6 +326,9 @@ WRITE (*,"(A)") "Usage: PostProcess.exe -l <logs> [args]                        
 WRITE (*,"(A)") "                                                                                  "
 WRITE (*,"(A)") "-l <logs>                                                                         "
 WRITE (*,"(A)") "List of log files to process.                                                     "
+WRITE (*,"(A)") "                                                                                  "
+WRITE (*,"(A)") "-o <directory>                                                                    "
+WRITE (*,"(A)") "Output directory. Will be created if not present. Default is output               "
 WRITE (*,"(A)") "                                                                                  "
 WRITE (*,"(A)") "-T <temp>                                                                         "
 WRITE (*,"(A)") "Temperature for the MC, in Kelvin.                                                "
