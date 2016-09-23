@@ -58,7 +58,7 @@
 					<folderInfo id="photran.managedbuild.config.gnu.fortran.win32.exe.release.610490418." name="/" resourcePath="">
 						<toolChain id="photran.managedbuild.toolchain.gnu.fortran.win32.exe.release.870619520" name="GCC Fortran" superClass="photran.managedbuild.toolchain.gnu.fortran.win32.exe.release">
 							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.PE" id="photran.managedbuild.target.gnu.platform.fortran.win32.exe.release.690735171" name="Release Platform" osList="win32" superClass="photran.managedbuild.target.gnu.platform.fortran.win32.exe.release"/>
-							<builder buildPath="${workspace_loc:/boxbin}/Release" id="photran.managedbuild.target.gnu.builder.win32.exe.release.588536855" managedBuildOn="true" name="Gnu Make Builder.Release" superClass="photran.managedbuild.target.gnu.builder.win32.exe.release"/>
+							<builder buildPath="${workspace_loc:/boxbin}/Release" id="photran.managedbuild.target.gnu.builder.win32.exe.release.588536855" keepEnvironmentInBuildfile="false" managedBuildOn="true" name="Gnu Make Builder" superClass="photran.managedbuild.target.gnu.builder.win32.exe.release"/>
 							<tool id="photran.managedbuild.tool.gnu.c.compiler.win32.exe.release.1844840337" name="GCC C Compiler" superClass="photran.managedbuild.tool.gnu.c.compiler.win32.exe.release">
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.7982357" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
 							</tool>
