@@ -3,6 +3,7 @@
 	<name>MonteCarlo</name>
 	<comment></comment>
 	<projects>
+		<project>MC_lib</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
