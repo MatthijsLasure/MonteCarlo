@@ -129,40 +129,7 @@ MODULE lib
         RV%z = (RAND() - 0.5D0) * 2 * MAX
     END FUNCTION randVecHoek
 
-    ! DMSO: return DMSO molecule
-    !===========================
-    SUBROUTINE DMSO_init(NDMSO, SYM, LOC, E)
-        INTEGER             :: NDMSO
-        DOUBLE PRECISION    :: E
-        CHARACTER*4 , DIMENSION(:)      :: SYM
-        TYPE (vector), DIMENSION(:)     :: LOC
 
-        NDMSO = 10
-        E =  -.0499674791107
-
-        LOC(01) = VECTOR(-0.000001,  0.243032, -0.439459)
-        LOC(02) = VECTOR(-1.363478, -0.822308,  0.180148)
-        LOC(03) = VECTOR(-1.275543, -0.934699,  1.264845)
-        LOC(04) = VECTOR(-2.300201, -0.313459, -0.059709)
-        LOC(05) = VECTOR(-1.332307, -1.796078, -0.318322)
-        LOC(06) = VECTOR( 1.363477, -0.822310,  0.180148)
-        LOC(07) = VECTOR( 1.332384, -1.796034, -0.318417)
-        LOC(08) = VECTOR( 2.300186, -0.313388, -0.059610)
-        LOC(09) = VECTOR( 1.275493, -0.934809,  1.264829)
-        LOC(10) = VECTOR( 0.000001,  1.508457,  0.386993)
-
-        SYM(01) = "S"
-        SYM(02) = "C"
-        SYM(03) = "H"
-        SYM(04) = "H"
-        SYM(05) = "H"
-        SYM(06) = "C"
-        SYM(07) = "H"
-        SYM(08) = "H"
-        SYM(09) = "H"
-        SYM(10) = "O"
-
-    END SUBROUTINE DMSO_init
 
     SUBROUTINE HELP
         WRITE (*,"(A)") "Convert binary to text and back!                                    "
