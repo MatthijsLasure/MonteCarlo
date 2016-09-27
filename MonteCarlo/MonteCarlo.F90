@@ -136,6 +136,14 @@ PROGRAM MonteCarlo
     CALL prepGaussian( WORKDIR )
     WRITE (*,*) "Work directory initialized"
 
+#ifdef USE_PIPES
+WRITE (*,"(A)") "Compiled with USE_PIPES. Will use pipes."
+#endif
+
+#ifdef DEBUG
+WRITE (*,"(A)") "Compiled with DEBUG. Will print debug information."
+#endif
+
 
     ! Start reading the config file procedure.
     WRITE (*,*) "Fase 0 started!"
