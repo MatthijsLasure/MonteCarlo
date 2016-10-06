@@ -45,5 +45,5 @@ lib_read.o: lib_read.f90 vector_class.o
 dihedral.o: dihedral.f90 MCconstants.o vector_class.o
 
 clean:
-	-$(RM) $(OBJS) MC_lib.dll
+	-$(RM) $(OBJS) MC_lib.so
 	-@echo " "

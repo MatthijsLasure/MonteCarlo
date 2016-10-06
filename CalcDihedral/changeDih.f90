@@ -13,7 +13,6 @@ program changeDih
 
     LOGICAL             :: DOROTATION = .FALSE.
     INTEGER             :: I, ISTATUS
-    INTEGER             :: MODE, IOout = 11, IOin = 10
     INTEGER             :: A1, A2, A3, A4
     DOUBLE PRECISION    :: THISHOEK, HOEKROT, HOEK_POST
 
@@ -202,5 +201,28 @@ SUBROUTINE WRITE_NORM()
     END DO
     CLOSE(IOwork)
 END SUBROUTINE WRITE_NORM
+
+        SUBROUTINE HELP()
+
+        WRITE (*,*) "Utility for calculating and changing dihedral angles.                    "
+        WRITE (*,*) "Usage: ./calcDihedral [FLAGS]                                            "
+        WRITE (*,*) "                                                                         "
+        WRITE (*,*) "-r <angle> / --rotate <angle>                                            "
+        WRITE (*,*) "Rotate the solute with given angle in degrees.                           "
+        WRITE (*,*) "                                                                         "
+        WRITE (*,*) "-b <box> / --box <box>                                                   "
+        WRITE (*,*) "Input box.                                                               "
+        WRITE (*,*) "                                                                         "
+        WRITE (*,*) "-o <output> / --output <output>                                          "
+        WRITE (*,*) "File for new box after rotation                                          "
+        WRITE (*,*) "                                                                         "
+        WRITE (*,*) "-n <a1> <a2> <a3> <a4> / --atoms <a1> <a2> <a3> <a4>                     "
+        WRITE (*,*) "Atoms for the dihedral angle                                             "
+        WRITE (*,*) "                                                                         "
+        WRITE (*,*) "-q / -quiet                                                              "
+        WRITE (*,*) "Do not produce user friendly output. Will still print angle.             "
+        WRITE (*,*) "If an error occurs with the rotation, ERROR will be printed to STDERR.   "
+
+    END SUBROUTINE HELP
 
 end program changeDih
